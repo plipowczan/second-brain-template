@@ -1,0 +1,16 @@
+# Normalize line endings across platforms. Text is stored LF in the repo and in
+# working trees, so the skill scripts and shell hooks stay consistent on Windows,
+# macOS, and Linux.
+* text=auto eol=lf
+
+# Shell hooks and Python must be LF to run.
+*.sh text eol=lf
+*.py text eol=lf
+
+# Binary assets.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.svg binary
+*.pdf binary

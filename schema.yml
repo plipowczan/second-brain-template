@@ -1,0 +1,16 @@
+# Frontmatter contract per note type. `/lint` enforces the `required` fields for
+# each type. Edit this to match your conventions; DELETE this file to fall back to
+# the built-in default type list with no required-field enforcement.
+types:
+  basic-note:
+    required: [title, date, type]
+  knowledge-note:
+    required: [title, date, type, tags, summary]
+  tool:
+    required: [title, date, type, tags, summary]
+  book-note:
+    required: [title, date, type, tags]
+  answer-note:
+    required: [title, date, type, summary]
+  compiled-note:
+    required: [title, date, type, tags, summary]

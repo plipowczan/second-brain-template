@@ -1,0 +1,4 @@
+# Required for reindex/lint scripts
+PyYAML>=6.0
+# Optional: only needed for `/ingest` of YouTube URLs
+# yt-dlp>=2024.1.0

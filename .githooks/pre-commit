@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Optional KB pre-commit hook. NOT installed by default.
+# Enable:  git config core.hooksPath .githooks
+# Blocks the commit if lint finds missing frontmatter or schema violations.
+out="$(python .claude/skills/lint/scripts/lint_scan.py)" || exit 0
+echo "$out" | python -c "import sys,json; c=json.load(sys.stdin)['counts']; sys.exit(1 if (c['missing_frontmatter'] or c['schema_violation']) else 0)" && exit 0
+echo 'KB lint: fix missing frontmatter / schema violations before committing (run /lint).' >&2
+exit 1

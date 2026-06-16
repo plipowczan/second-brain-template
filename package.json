@@ -1,0 +1,12 @@
+{
+  "name": "kb-template",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Claude Code knowledge-base template",
+  "scripts": {
+    "format": "prettier --write \"content/**/*.md\""
+  },
+  "devDependencies": {
+    "prettier": "3.2.5"
+  }
+}
