@@ -4,6 +4,7 @@ issues. If a schema.yml is present in the working directory, the allowed types a
 its keys and each type's `required` fields are enforced (schema_violation)."""
 import os
 import re
+import sys
 import json
 from datetime import date
 
@@ -141,6 +142,8 @@ def scan(root=ROOT, schema=None):
 
 
 def main():
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")  # avoid cp1252 crash on non-Latin content
     result = scan(ROOT, load_schema())
     print(json.dumps(result, indent=1, ensure_ascii=False))
     return 0

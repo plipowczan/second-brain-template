@@ -52,6 +52,8 @@ def analyze(text):
 
 
 def main(argv=None):
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")  # avoid cp1252 crash on non-Latin content
     ap = argparse.ArgumentParser(description="Structural gap signals from the link graph.")
     ap.add_argument("--graph", default=os.path.join("content", "_indexes", "graph.md"))
     args = ap.parse_args(argv)

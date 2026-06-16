@@ -117,6 +117,8 @@ def main(argv=None):
         sp.add_argument("--old", required=True)
         sp.add_argument("--new", required=True)
     args = ap.parse_args(argv)
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")  # avoid cp1252 crash on non-Latin content
     try:
         result = rename(args.old, args.new) if args.cmd == "rename" else relink(args.old, args.new)
     except RefactorError as e:
