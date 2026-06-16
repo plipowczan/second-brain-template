@@ -26,10 +26,23 @@ def parse_fm(text):
     fm_raw = text[3:end].strip()
     body = text[end + 4:]
     fm = {}
+    last_key = None
     for line in fm_raw.splitlines():
+        item = re.match(r'^\s+-\s+(.*)$', line)
+        if item and last_key is not None:
+            # block-style YAML list item (e.g. `tags:` followed by `  - book`)
+            cur = fm.get(last_key, "")
+            if not isinstance(cur, list):
+                cur = [] if cur in ("", None) else [cur]
+                fm[last_key] = cur
+            cur.append(item.group(1).strip())
+            continue
         m = re.match(r'^([A-Za-z0-9_-]+):\s*(.*)$', line)
         if m:
             fm[m.group(1)] = m.group(2).strip()
+            last_key = m.group(1)
+        else:
+            last_key = None
     return fm, body
 
 

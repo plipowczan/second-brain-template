@@ -50,5 +50,24 @@ class TestScanIntegration(unittest.TestCase):
             self.assertEqual(res["issues"]["bad_type"], [])
 
 
+class TestBlockStyleFrontmatter(unittest.TestCase):
+    def test_parse_fm_collects_block_list(self):
+        fm, _ = lint_scan.parse_fm(
+            '---\ntitle: "X"\ntags:\n  - book\n  - learning\ntype: book-note\n---\nbody\n')
+        self.assertEqual(fm["tags"], ["book", "learning"])
+        self.assertEqual(fm["title"], '"X"')
+
+    def test_scan_does_not_flag_block_style_tags(self):
+        with tempfile.TemporaryDirectory() as d:
+            c = Path(d) / "content" / "T"
+            c.mkdir(parents=True)
+            (c / "Block.md").write_text(
+                '---\ntitle: "Block"\ndate: 2026-01-01\ntype: book-note\n'
+                'tags:\n  - book\n  - learning\nsummary: "s"\n---\n# Block\n' + ("x " * 200),
+                encoding="utf-8")
+            res = lint_scan.scan(str(Path(d) / "content"))
+            self.assertEqual(res["issues"]["missing_tags"], [])
+
+
 if __name__ == "__main__":
     unittest.main()
