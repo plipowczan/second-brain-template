@@ -1,10 +1,27 @@
 # Knowledge Base Template
 
-A Claude Code–driven knowledge base: an Obsidian-style markdown vault plus a set
-of skills that ingest sources, compile articles, answer questions, lint for
-quality, and keep navigation indexes up to date. Publishing (Quartz/GitHub
-Pages) is intentionally **not** included — this template is about *managing*
-knowledge, not publishing it.
+> A second brain for agents *and* humans — built on Karpathy's **LLM Wiki**
+> idea, portable via the **OKF** standard.
+
+RAG searches raw documents on every query. An LLM Wiki flips it: a Claude
+Code agent **incrementally builds and maintains** a living markdown vault —
+cross-linked, indexed, synthesized. Knowledge **compounds** instead of piling
+up. Because it's plain markdown with `type` frontmatter (the OKF minimum), the
+base stays portable — `git clone` and it's yours — and readable by agent and
+human alike.
+
+The trick that makes it scale without embeddings or a vector DB: **index-first
+reads**. The agent starts from a navigation map and opens only the relevant
+notes, keeping context up to ~28× smaller per query — good for ~500 sources on
+plain markdown alone.
+
+Live instance: **[brain.lipowczan.pl](https://brain.lipowczan.pl)**.
+
+This template is about *managing* knowledge, not publishing it — the Quartz /
+GitHub Pages pipeline is intentionally **not** included (see
+[Adding publishing later](#adding-publishing-later)). What you get is an
+Obsidian-style vault plus the skills that ingest sources, compile articles,
+answer questions, lint for quality, and keep navigation indexes current.
 
 ## What you get
 
