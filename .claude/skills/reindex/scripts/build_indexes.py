@@ -1,7 +1,7 @@
 """Full rebuild of the three vault indexes from all notes under content/.
 
 Deterministic: parses frontmatter + wikilinks from every .md note (excluding
-_raw, _indexes, _outputs, templates, .obsidian) and regenerates
+_raw, _indexes, _outputs, _graveyard, templates, .obsidian) and regenerates
 vault-map.md, catalog.md, graph.md per CLAUDE.md "Navigation Protocol".
 """
 from __future__ import annotations
@@ -14,7 +14,7 @@ from collections import Counter, defaultdict
 import yaml
 
 CONTENT = "content"
-EXCLUDE = {"_raw", "_indexes", "_outputs", "templates", ".obsidian"}
+EXCLUDE = {"_raw", "_indexes", "_outputs", "_graveyard", "templates", ".obsidian"}
 # Non-note markdown files at the content root (meta docs + unrendered templates).
 EXCLUDE_FILES = {"WRITING_STYLE.md", "WRITING_STYLE_ANALYSIS.md", "_index.md"}
 WIKILINK = re.compile(r"\[\[([^\]]+)\]\]")

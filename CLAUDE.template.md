@@ -26,6 +26,7 @@ Primary language: **{{PRIMARY_LANGUAGE}}** (keep established technical terms in 
 | `/content/_indexes/` | Auto-maintained navigation indexes | No |
 | `/content/_outputs/answers/` | Saved Q&A results | No |
 | `/content/_outputs/reports/` | Lint/health reports | No |
+| `/content/_graveyard/` | Retired notes (reversible; excluded from indexes) | No |
 | `/content/templates/` | Note templates | No |
 
 Sub-patterns within topics: `BOOKS/`, `TOOLS/`, `KNOWLEDGE/INFO/`, `KNOWLEDGE/HOWTO/`,
@@ -103,11 +104,12 @@ Each workflow is a skill with a matching slash command:
 - **OUTPUT** (`/output`) — generate a report/summary.
 - **REFACTOR** (`/refactor`) — rename/move/merge/split notes with automatic wikilink + index repair.
 - **GAPS** (`/gaps`) — coverage analysis: weakly-connected notes, missing topics, thin areas.
+- **CURATE** (`/curate`) — staleness/relevance hygiene: scores notes (age, isolation, dead links, duplication), proposes archive/merge/refresh, retires confirmed notes to `_graveyard/` (reversible, gated on confirmation).
 
 ## Safety Rules
 
 - Never modify `.obsidian/` or `.claude/` internals unless the task is about them.
-- Never delete user-authored content without confirmation.
+- Never delete user-authored content without confirmation. Retirement is reversible: `/curate` moves notes to `_graveyard/`, never `git rm`.
 - Always preserve existing frontmatter when editing.
 - Always add `agent-created: true` to new notes.
 - Always update indexes after every write.

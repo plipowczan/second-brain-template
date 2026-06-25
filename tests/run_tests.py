@@ -15,6 +15,7 @@ LINT_SCAN = SKILLS / "lint" / "scripts" / "lint_scan.py"
 LINT_LINKS = SKILLS / "lint" / "scripts" / "lint_links.py"
 REFACTOR = SKILLS / "refactor" / "scripts" / "refactor.py"
 GAPS = SKILLS / "gaps" / "scripts" / "gaps.py"
+CURATE_SCRIPTS = SKILLS / "curate" / "scripts"
 
 PAD = " padding" * 30
 NOTE_A = ('---\ntitle: "Alpha"\ndate: 2026-01-01\ntags: ["x"]\ntype: knowledge-note\n'
@@ -44,10 +45,14 @@ def main():
         (Path(d) / "content" / "_indexes").mkdir()
         (c / "Alpha.md").write_text(NOTE_A, encoding="utf-8")
         (c / "Beta.md").write_text(NOTE_B, encoding="utf-8")
+        # A retired note in _graveyard/ must be excluded from indexing (curate skill).
+        grave = Path(d) / "content" / "_graveyard"
+        grave.mkdir()
+        (grave / "Retired.md").write_text(NOTE_A.replace("Alpha", "Retired"), encoding="utf-8")
 
         r = run(BUILD, cwd=d)
         check("build_indexes runs", r.returncode == 0, r.stderr)
-        check("build_indexes notes=2", "notes=2" in r.stdout, r.stdout)
+        check("build_indexes notes=2 (_graveyard excluded)", "notes=2" in r.stdout, r.stdout)
 
         r = run(LINT_SCAN, cwd=d)
         scan = json.loads(r.stdout)
@@ -66,6 +71,11 @@ def main():
         alpha = (c / "Alpha.md").read_text(encoding="utf-8")
         check("refactor rewrote link", "[[Gamma]]" in alpha and "[[Beta]]" not in alpha)
         check("refactor renamed file", (c / "Gamma.md").exists())
+
+    # curate skill: run its pure-function unit suites (scoring + link classification).
+    r = subprocess.run([sys.executable, "-m", "unittest", "-v"],
+                       cwd=str(CURATE_SCRIPTS), capture_output=True, text=True)
+    check("curate unit tests pass", r.returncode == 0, r.stderr)
 
     print("---")
     if failures:

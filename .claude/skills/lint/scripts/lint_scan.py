@@ -9,7 +9,7 @@ import json
 from datetime import date
 
 ROOT = "content"
-EXCLUDE_TOP = {"_raw", "_indexes", "_outputs", "templates", "ATTACHMENTS", ".obsidian"}
+EXCLUDE_TOP = {"_raw", "_indexes", "_outputs", "_graveyard", "templates", "ATTACHMENTS", ".obsidian"}
 # Non-note markdown files at the content root (meta docs + unrendered templates).
 EXCLUDE_FILES = {"WRITING_STYLE.md", "WRITING_STYLE_ANALYSIS.md", "_index.md"}
 DEFAULT_TYPES = {"basic-note", "book-note", "knowledge-note", "tool",
