@@ -8,6 +8,16 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
 ## [Unreleased]
 
 ### Added
+- **Scheduled maintenance workflow** (`.github/workflows/kb-maintain.yml`) — an optional
+  GitHub Action that keeps navigation fresh without anyone remembering to run `/reindex`.
+  Weekly (and on-demand via the Actions tab) it rebuilds `content/_indexes/` and runs the
+  lint scanner, then opens **one** pull request only if the rebuild changed the indexes in
+  substance — a restamped `updated:` timestamp alone never triggers a PR. It never edits
+  your notes; the only writes are to `_indexes/`, via a PR you review. Encodes OpenWiki's
+  "doc drift is a CI problem, not a discipline problem" idea. Delete the file to opt out.
+  - **Enable it:** it runs automatically once the file is on your default branch. Under
+    **Settings → Actions → General**, allow workflows to *"Read and write"* and to
+    *"create and approve pull requests"* so the bot can open the maintenance PR.
 - **`/curate` skill** — vault hygiene: scores notes for staleness, isolation, dead links,
   and duplication; proposes archive/merge/refresh; retires confirmed notes to
   `content/_graveyard/` (reversible — never `git rm`, gated on your confirmation).
