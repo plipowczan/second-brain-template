@@ -3,7 +3,7 @@ import os, re, sys, json
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")  # avoid cp1252 crash on non-Latin content
 ROOT="content"
-EXCLUDE_TOP={"_raw","_indexes","_outputs","templates","ATTACHMENTS",".obsidian"}
+EXCLUDE_TOP={"_raw","_indexes","_outputs","_graveyard","templates","ATTACHMENTS",".obsidian"}
 EXCLUDE_FILES={"WRITING_STYLE.md","WRITING_STYLE_ANALYSIS.md","_index.md"}
 # build note index: basename and rel-path (no ext)
 names=set(); paths=set(); notes=[]

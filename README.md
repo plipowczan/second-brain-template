@@ -60,6 +60,7 @@ answer questions, lint for quality, and keep navigation indexes current.
 | `/reindex` | Rebuild `vault-map.md`, `catalog.md`, `graph.md` from all notes. |
 | `/refactor` | Rename/move/merge/split notes with automatic wikilink repair. |
 | `/gaps` | Coverage analysis: weakly-connected notes, missing topics, thin areas. |
+| `/curate` | Staleness hygiene: score notes (age, isolation, dead links, duplication), propose archive/merge/refresh, retire confirmed notes to `_graveyard/` (reversible). |
 | (skill) `excalidraw-diagram` | Generate Excalidraw diagram JSON to embed in notes. |
 | (skill) `research`, `research-deep`, … | Structured multi-item web research into the vault (best-effort; depends on your Claude Code web tools). |
 
