@@ -8,6 +8,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
 ## [Unreleased]
 
 ### Added
+- **`LICENSE` (MIT)** — the template now ships an explicit MIT license, so forks have
+  real permission to use, modify, and redistribute it. Without a license file a public
+  repo defaults to "all rights reserved," which silently contradicted the "git clone and
+  it's yours" invitation. Also adds a **License** section to the README. Existing bases:
+  pull `LICENSE` if you intend to republish or share your clone.
 - **Scheduled maintenance workflow** (`.github/workflows/kb-maintain.yml`) — an optional
   GitHub Action that keeps navigation fresh without anyone remembering to run `/reindex`.
   Weekly (and on-demand via the Actions tab) it rebuilds `content/_indexes/` and runs the

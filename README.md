@@ -76,3 +76,8 @@ answer questions, lint for quality, and keep navigation indexes current.
 This template omits the Quartz static-site pipeline and the optional `brain-mcp`
 server on purpose. Either can be layered on top of `content/` later without
 changing how the skills work.
+
+## License
+
+[MIT](LICENSE) — use it, fork it, make it yours. The example notes under
+`content/` are scaffolding meant to be replaced; they carry the same license.
