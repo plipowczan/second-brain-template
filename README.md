@@ -46,6 +46,23 @@ answer questions, lint for quality, and keep navigation indexes current.
 > Prefer to set things up by hand? You can skip `/onboard`, rename the
 > `*.template.md` files yourself, and edit the `{{PLACEHOLDERS}}` directly.
 
+## Works beyond Claude Code
+
+The template is plain markdown files plus instructions for an agent. Drive it in
+any tool where an AI assistant can reach your files: Claude Code, Claude Desktop
+(the **Code** tab), GitHub Copilot (VS Code), Codex, Cursor, or Antigravity.
+
+- **Commands go in the agent's chat.** In Claude Code / Claude Desktop (Code)
+  they run directly as `/onboard`, `/ingest`. In other tools, ask in a sentence:
+  *"follow the instructions in `.claude/commands/ingest.md`."*
+- **No terminal needed.** Git without commands: tell the agent "save my changes,"
+  use the panel buttons (VS Code–based tools), or use a cloud mode where the agent
+  opens the pull request itself.
+- **Don't want git at all?** Download a ZIP: the **Code** button → **Download
+  ZIP** → unzip, and open the folder in your tool.
+
+See [`ENVIRONMENTS.md`](ENVIRONMENTS.md) for the full tool-by-tool matrix.
+
 ## Skills
 
 | Command | What it does |

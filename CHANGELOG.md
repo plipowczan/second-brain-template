@@ -8,6 +8,17 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
 ## [Unreleased]
 
 ### Added
+- **"Works beyond Claude Code" docs** — the template now documents that it runs *outside*
+  Claude Code, with **no terminal and no git commands**. Three doc-only additions: a new
+  README section listing the supported tools (Claude Desktop Code tab, GitHub Copilot,
+  Codex, Cursor, Antigravity) and how to run commands / save changes in each; a note in
+  `AGENTS.template.md` explaining which tool reads `AGENTS.md` vs `CLAUDE.md` and why the
+  `@AGENTS.md` import keeps one source of truth; and a new **`ENVIRONMENTS.md`** carrying
+  the full verified tool-by-tool matrix (file access, native vs conversational commands,
+  git-without-commands, which instruction file each tool reads). No skill or
+  generation-logic changes. Existing bases: pull `ENVIRONMENTS.md` and add the
+  README / `AGENTS.md` paragraphs if you want the same guidance (your rendered `AGENTS.md`
+  predates the note — paste it in by hand).
 - **`LICENSE` (MIT)** — the template now ships an explicit MIT license, so forks have
   real permission to use, modify, and redistribute it. Without a license file a public
   repo defaults to "all rights reserved," which silently contradicted the "git clone and

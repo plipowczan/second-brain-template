@@ -3,6 +3,10 @@
 **Single source of truth for every agent** (Claude Code, Codex, Gemini CLI, OpenCode, …).
 `CLAUDE.md` is a thin pointer that imports this file — edit **AGENTS.md**, never `CLAUDE.md`.
 
+Agents **outside** Claude Code — Codex, GitHub Copilot, Cursor, Antigravity — read this
+`AGENTS.md` natively. Claude Code and Claude Desktop read `CLAUDE.md`, which carries an
+`@AGENTS.md` import line, so both see the same instructions from one source.
+
 ## Role
 
 You are the **Knowledge Base Agent** for {{KB_OWNER}}'s knowledge base, "{{KB_NAME}}" —
