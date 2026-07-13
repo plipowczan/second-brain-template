@@ -197,7 +197,7 @@ class TestFetchToArchive(unittest.TestCase):
         meta = {
             "id": "abc12345678", "video_id": "abc12345678",
             "title": "Demo", "channel": "Chan", "uploader_id": "@c",
-            "duration": 30, "upload_date": "20250115", "language": "en",
+            "duration": 30, "upload_date": "20260101", "language": "en",
             "tags": [], "categories": [], "chapters": [],
             "webpage_url": "https://youtu.be/abc12345678",
         }
@@ -206,13 +206,13 @@ class TestFetchToArchive(unittest.TestCase):
             out_dir = Path(tmp)
             result = fetch_to_archive(
                 meta=meta, cues=cues, transcription="captions",
-                out_dir=out_dir, today=datetime.date(2025, 1, 15),
-                fetched_iso="2025-01-15T00:00:00Z",
+                out_dir=out_dir, today=datetime.date(2026, 5, 22),
+                fetched_iso="2026-05-22T00:00:00Z",
             )
             self.assertIsInstance(result, FetchResult)
             self.assertEqual(result.video_id, "abc12345678")
             self.assertTrue(result.archive_path.exists())
-            self.assertEqual(result.archive_path.name, "2025-01-15_yt-abc12345678_demo.md")
+            self.assertEqual(result.archive_path.name, "2026-05-22_yt-abc12345678_demo.md")
             content = result.archive_path.read_text(encoding="utf-8")
             self.assertIn("video_id: abc12345678", content)
             self.assertIn("[0:00] hi", content)

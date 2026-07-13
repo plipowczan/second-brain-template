@@ -128,7 +128,7 @@ Merge {step1_output}, {step2_output} and user's existing fields, generate two fi
 - uncertain: Uncertain fields list (reserved field, auto-filled in deep phase)
 
 ### Step 5: Output and Confirm
-- Create directory: `content/_raw/research-workspaces/{topic_slug}/` (relative to project root `C:\PROJEKTY\brain`)
+- Create directory: `content/_raw/research-workspaces/{topic_slug}/` (relative to the vault/project root)
 - Save: `outline.yaml` and `fields.yaml` inside it
 - Show to user for confirmation
 

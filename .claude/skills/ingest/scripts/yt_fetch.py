@@ -130,13 +130,21 @@ def yt_dlp_available() -> bool:
     return shutil.which("yt-dlp") is not None
 
 
-def fetch_metadata(url: str, timeout: int = 60) -> dict:
+def _client_args(player_client: str | None) -> list[str]:
+    """Return yt-dlp extractor-args for an alternate player client, or []."""
+    if not player_client:
+        return []
+    return ["--extractor-args", f"youtube:player_client={player_client}"]
+
+
+def fetch_metadata(url: str, timeout: int = 60, player_client: str | None = None) -> dict:
     """Run yt-dlp to get full video metadata as a dict."""
     if not yt_dlp_available():
         raise YTFetchError("yt-dlp not on PATH")
     try:
         proc = subprocess.run(
-            ["yt-dlp", "--dump-single-json", "--skip-download", "--no-warnings", url],
+            ["yt-dlp", "--dump-single-json", "--skip-download", "--no-warnings",
+             *_client_args(player_client), url],
             capture_output=True, text=True, timeout=timeout, check=True,
         )
     except subprocess.CalledProcessError as e:
@@ -155,7 +163,8 @@ import time
 _DEFAULT_LANGS = ("en", "en-US", "en-GB", "pl")
 
 
-def _try_one_lang(url: str, lang: str, out_template: str, timeout: int, retries: int = 2) -> bool:
+def _try_one_lang(url: str, lang: str, out_template: str, timeout: int, retries: int = 2,
+                  player_client: str | None = None) -> bool:
     """Try to fetch subs for a single language. Returns True on success, False on hard failure.
 
     Retries on HTTP 429 with short backoff; treats "no subs for this lang" as a soft miss (False).
@@ -167,6 +176,7 @@ def _try_one_lang(url: str, lang: str, out_template: str, timeout: int, retries:
                     "yt-dlp", "--write-subs", "--write-auto-subs",
                     "--sub-langs", lang, "--sub-format", "vtt",
                     "--skip-download", "--no-warnings",
+                    *_client_args(player_client),
                     "-o", out_template, url,
                 ],
                 capture_output=True, text=True, timeout=timeout, check=True,
@@ -184,7 +194,8 @@ def _try_one_lang(url: str, lang: str, out_template: str, timeout: int, retries:
     return False
 
 
-def fetch_captions_vtt(url: str, langs: str | tuple[str, ...] = _DEFAULT_LANGS, timeout: int = 120) -> str | None:
+def fetch_captions_vtt(url: str, langs: str | tuple[str, ...] = _DEFAULT_LANGS, timeout: int = 120,
+                       player_client: str | None = None) -> str | None:
     """Download caption VTT for the URL. Returns VTT text or None if no captions available.
 
     Iterates per-language so a 429 / missing-subs on one language does not abort the rest.
@@ -200,7 +211,7 @@ def fetch_captions_vtt(url: str, langs: str | tuple[str, ...] = _DEFAULT_LANGS, 
     with tempfile.TemporaryDirectory() as tmp:
         out_template = os.path.join(tmp, "sub")
         for lang in lang_list:
-            if _try_one_lang(url, lang, out_template, timeout):
+            if _try_one_lang(url, lang, out_template, timeout, player_client=player_client):
                 break  # stop at the first language that yields anything
 
         vtt_files = sorted(Path(tmp).glob("*.vtt"))
@@ -384,13 +395,13 @@ def fetch_to_archive(
     )
 
 
-def process_url(url: str, out_dir: Path) -> FetchResult:
+def process_url(url: str, out_dir: Path, player_client: str | None = None) -> FetchResult:
     """End-to-end: URL → archived source file. Raises YTFetchError on failure."""
     video_id = normalize_url(url)
-    meta = fetch_metadata(url)
+    meta = fetch_metadata(url, player_client=player_client)
     meta["video_id"] = video_id
 
-    vtt = fetch_captions_vtt(url)
+    vtt = fetch_captions_vtt(url, player_client=player_client)
     if vtt:
         cues = parse_vtt(vtt)
         transcription = "captions"
@@ -421,10 +432,14 @@ def main(argv: list[str] | None = None) -> int:
         "--out-dir", required=True, type=Path,
         help="Directory to write the archived source (e.g. content/_raw/processed/)",
     )
+    parser.add_argument(
+        "--player-client", default=None,
+        help="yt-dlp youtube player_client (e.g. android) to bypass bot-check/DRM",
+    )
     args = parser.parse_args(argv)
 
     try:
-        result = process_url(args.url, args.out_dir)
+        result = process_url(args.url, args.out_dir, player_client=args.player_client)
     except YTUrlError as e:
         print(f"ERROR url: {e}", file=sys.stderr)
         return 2

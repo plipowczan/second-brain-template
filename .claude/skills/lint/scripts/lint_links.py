@@ -31,12 +31,12 @@ broken={}; incoming=set(); outdeg={}
 for p,name in notes:
     txt=strip_code(open(p,encoding="utf-8").read())
     for raw in linkre.findall(txt):
-        tgt=raw.split("|")[0].split("#")[0].strip()
+        tgt=raw.replace("\\|","|").split("|")[0].split("#")[0].strip()  # \| = table-escaped alias pipe
         if not tgt: continue
         base=tgt.split("/")[-1]
         ok = tgt in paths or tgt.lower() in paths or base in names or base.lower() in names_l \
              or tgt.startswith("templates/") or tgt.lower().endswith(".png") or tgt.lower().endswith(".pdf") \
-             or "ATTACHMENTS" in tgt or tgt.lower().endswith((".jpg",".jpeg",".webm",".gif",".svg"))
+             or "ATTACHMENTS" in tgt or tgt.lower().endswith((".jpg",".jpeg",".webm",".gif",".svg",".webp"))
         if not ok:
             broken.setdefault(p,[]).append(tgt)
         else:
