@@ -7,6 +7,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-07-13
+
+First tagged release of the second-brain template.
+
 ### Fixed
 - **`/lint` link scanner no longer false-flags escaped-pipe aliases** —
   `.claude/skills/lint/scripts/lint_links.py` split link targets on `|` but not on the
