@@ -32,7 +32,7 @@ assistant can reach your files can drive it.
 - `.claude/commands/*.md` are **native** slash commands only in Claude Code and
   Claude Desktop (Code). Everywhere else they still work **through conversation** —
   they are ordinary instruction files ("follow the instructions in
-  `.claude/commands/ingest.md`").
+  `.claude/commands/b/ingest.md`").
 - `AGENTS.md` is the cross-tool instruction file (Codex, Copilot, Cursor, and
   Antigravity read it natively). Claude reads `CLAUDE.md`, wired to `AGENTS.md`
   by the `@AGENTS.md` import line — one source of truth.

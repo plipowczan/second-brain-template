@@ -1,6 +1,6 @@
 # Sample source: Zettelkasten in one page
 
-(This is a sample raw source. Run `/ingest` to watch it become a wiki note,
+(This is a sample raw source. Run `/b:ingest` to watch it become a wiki note,
 then delete it. It is intentionally rough — raw sources do not need frontmatter
 or polish.)
 

@@ -11,8 +11,8 @@ summary: "A worked example note showing the conventions this knowledge base uses
 
 # Example Note 📒
 
-This is a worked example. It exists so the management skills (`/qa`, `/lint`,
-`/enhance`, `/reindex`) have real content to operate on the moment you open the
+This is a worked example. It exists so the management skills (`/b:qa`, `/b:lint`,
+`/b:enhance`, `/b:reindex`) have real content to operate on the moment you open the
 template. When you run onboarding you will be offered the chance to delete the
 whole `REFERENCE/` folder.
 

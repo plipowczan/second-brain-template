@@ -72,7 +72,7 @@ After creating or editing ANY note, update indexes IMMEDIATELY — don't defer.
   changed; recompute outgoing links and affected incoming links in graph.
 - **On delete:** remove from all three indexes, decrement counts, clean up incoming links.
 
-You may also run the deterministic rebuild: `python .claude/skills/reindex/scripts/build_indexes.py`.
+You may also run the deterministic rebuild: `python .claude/skills/brain-reindex/scripts/build_indexes.py`.
 
 ## Writing Style
 
@@ -101,24 +101,24 @@ summary: "One-line description for indexes"
 
 Each workflow is a skill with a matching slash command:
 
-- **ONBOARD** (`/onboard`) — interview + scaffold a fresh knowledge base from the template.
-- **INGEST** (`/ingest`) — process raw sources / YouTube URLs into wiki notes.
-- **COMPILE** (`/compile`) — synthesize a new article from existing notes.
-- **ENHANCE** (`/enhance`) — improve a single note; fill gaps; add wikilinks.
-- **REINDEX** (`/reindex`) — rebuild the three indexes.
-- **Q&A** (`/qa`) — answer a question from the vault, citing notes.
-- **LINT** (`/lint`) — audit vault health.
-- **OUTPUT** (`/output`) — generate a report/summary.
-- **REFACTOR** (`/refactor`) — rename/move/merge/split notes with automatic wikilink + index repair.
-- **GAPS** (`/gaps`) — coverage analysis: weakly-connected notes, missing topics, thin areas.
-- **CURATE** (`/curate`) — staleness/relevance hygiene: scores notes (age, isolation, dead links, duplication), proposes archive/merge/refresh, retires confirmed notes to `_graveyard/` (reversible, gated on confirmation).
-- **EXPORT** (`/export`) — pack selected notes (list/tag/folder) into a portable `brain-pack-*.zip` bundle; default level verbatim and read-only, `--public` runs a redaction pipeline (default policy + `content/_privacy.md` overrides, one verdict table, pattern-sweep + audit nets, local redaction report).
-- **IMPORT** (`/import`) — import a brain-pack bundle from another base: validate, triage collisions, adapt placement to this vault's taxonomy, stamp provenance, update indexes, write a report; at most 2 prompts per run.
+- **ONBOARD** (`/b:onboard`) — interview + scaffold a fresh knowledge base from the template.
+- **INGEST** (`/b:ingest`) — process raw sources / YouTube URLs into wiki notes.
+- **COMPILE** (`/b:compile`) — synthesize a new article from existing notes.
+- **ENHANCE** (`/b:enhance`) — improve a single note; fill gaps; add wikilinks.
+- **REINDEX** (`/b:reindex`) — rebuild the three indexes.
+- **Q&A** (`/b:qa`) — answer a question from the vault, citing notes.
+- **LINT** (`/b:lint`) — audit vault health.
+- **OUTPUT** (`/b:output`) — generate a report/summary.
+- **REFACTOR** (`/b:refactor`) — rename/move/merge/split notes with automatic wikilink + index repair.
+- **GAPS** (`/b:gaps`) — coverage analysis: weakly-connected notes, missing topics, thin areas.
+- **CURATE** (`/b:curate`) — staleness/relevance hygiene: scores notes (age, isolation, dead links, duplication), proposes archive/merge/refresh, retires confirmed notes to `_graveyard/` (reversible, gated on confirmation).
+- **EXPORT** (`/b:export`) — pack selected notes (list/tag/folder) into a portable `brain-pack-*.zip` bundle; default level verbatim and read-only, `--public` runs a redaction pipeline (default policy + `content/_privacy.md` overrides, one verdict table, pattern-sweep + audit nets, local redaction report).
+- **IMPORT** (`/b:import`) — import a brain-pack bundle from another base: validate, triage collisions, adapt placement to this vault's taxonomy, stamp provenance, update indexes, write a report; at most 2 prompts per run.
 
 ## Safety Rules
 
 - Never modify `.obsidian/` or `.claude/` internals unless the task is about them.
-- Never delete user-authored content without confirmation. Retirement is reversible: `/curate` moves notes to `_graveyard/`, never `git rm`.
+- Never delete user-authored content without confirmation. Retirement is reversible: `/b:curate` moves notes to `_graveyard/`, never `git rm`.
 - Always preserve existing frontmatter when editing.
 - Always add `agent-created: true` to new notes.
 - Always update indexes after every write.

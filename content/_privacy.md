@@ -1,7 +1,7 @@
 # Privacy rules for /export --public
 
 Optional per-vault overrides for the default redaction policy (see
-`.claude/skills/export/SKILL.md` → step 3a). This file is read only during
+`.claude/skills/brain-export/SKILL.md` → step 3a). This file is read only during
 `--public` exports. It is underscore-prefixed, so it is excluded from the site
 build, the indexes, and can never be packed into a bundle itself.
 

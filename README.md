@@ -34,16 +34,16 @@ answer questions, lint for quality, and keep navigation indexes current.
 
 1. Open this folder in Claude Code.
 2. Install script prerequisites: `pip install -r requirements.txt`.
-3. Run **`/onboard`** — it interviews you (KB name, owner, topics, language,
+3. Run **`/b:onboard`** — it interviews you (KB name, owner, topics, language,
    voice) and then personalizes the brain (`CLAUDE.md`, `AGENTS.md`,
    `content/WRITING_STYLE.md`), creates your topic folders, and builds the
    navigation indexes.
 4. Start using the vault:
-   - Drop a file in `content/_raw/inbox/` and run `/ingest`.
-   - Ask `/qa what does this vault say about …`.
-   - Run `/lint` for a health check.
+   - Drop a file in `content/_raw/inbox/` and run `/b:ingest`.
+   - Ask `/b:qa what does this vault say about …`.
+   - Run `/b:lint` for a health check.
 
-> Prefer to set things up by hand? You can skip `/onboard`, rename the
+> Prefer to set things up by hand? You can skip `/b:onboard`, rename the
 > `*.template.md` files yourself, and edit the `{{PLACEHOLDERS}}` directly.
 
 ## Works beyond Claude Code
@@ -53,8 +53,8 @@ any tool where an AI assistant can reach your files: Claude Code, Claude Desktop
 (the **Code** tab), GitHub Copilot (VS Code), Codex, Cursor, or Antigravity.
 
 - **Commands go in the agent's chat.** In Claude Code / Claude Desktop (Code)
-  they run directly as `/onboard`, `/ingest`. In other tools, ask in a sentence:
-  *"follow the instructions in `.claude/commands/ingest.md`."*
+  they run directly as `/b:onboard`, `/b:ingest`. In other tools, ask in a sentence:
+  *"follow the instructions in `.claude/commands/b/ingest.md`."*
 - **No terminal needed.** Git without commands: tell the agent "save my changes,"
   use the panel buttons (VS Code–based tools), or use a cloud mode where the agent
   opens the pull request itself.
@@ -67,17 +67,17 @@ See [`ENVIRONMENTS.md`](ENVIRONMENTS.md) for the full tool-by-tool matrix.
 
 | Command | What it does |
 |---------|--------------|
-| `/onboard` | Interview + scaffold a fresh knowledge base from the template (personalizes the brain, creates topics, builds indexes). |
-| `/ingest` | Turn raw sources (files in `_raw/inbox/`, or YouTube URLs) into wiki notes; updates indexes. |
-| `/compile` | Synthesize a new article from existing notes on a topic. |
-| `/enhance` | Improve a single note: fill gaps, add wikilinks, mark reviewed. |
-| `/qa` | Answer a question from the vault, citing notes. |
-| `/lint` | Audit vault health: frontmatter, broken links, orphans, stubs, stale notes. |
-| `/output` | Generate a report/summary (reading list, topic map, timeline). |
-| `/reindex` | Rebuild `vault-map.md`, `catalog.md`, `graph.md` from all notes. |
-| `/refactor` | Rename/move/merge/split notes with automatic wikilink repair. |
-| `/gaps` | Coverage analysis: weakly-connected notes, missing topics, thin areas. |
-| `/curate` | Staleness hygiene: score notes (age, isolation, dead links, duplication), propose archive/merge/refresh, retire confirmed notes to `_graveyard/` (reversible). |
+| `/b:onboard` | Interview + scaffold a fresh knowledge base from the template (personalizes the brain, creates topics, builds indexes). |
+| `/b:ingest` | Turn raw sources (files in `_raw/inbox/`, or YouTube URLs) into wiki notes; updates indexes. |
+| `/b:compile` | Synthesize a new article from existing notes on a topic. |
+| `/b:enhance` | Improve a single note: fill gaps, add wikilinks, mark reviewed. |
+| `/b:qa` | Answer a question from the vault, citing notes. |
+| `/b:lint` | Audit vault health: frontmatter, broken links, orphans, stubs, stale notes. |
+| `/b:output` | Generate a report/summary (reading list, topic map, timeline). |
+| `/b:reindex` | Rebuild `vault-map.md`, `catalog.md`, `graph.md` from all notes. |
+| `/b:refactor` | Rename/move/merge/split notes with automatic wikilink repair. |
+| `/b:gaps` | Coverage analysis: weakly-connected notes, missing topics, thin areas. |
+| `/b:curate` | Staleness hygiene: score notes (age, isolation, dead links, duplication), propose archive/merge/refresh, retire confirmed notes to `_graveyard/` (reversible). |
 | (skill) `excalidraw-diagram` | Generate Excalidraw diagram JSON to embed in notes. |
 | (skill) `research`, `research-deep`, … | Structured multi-item web research into the vault (best-effort; depends on your Claude Code web tools). |
 

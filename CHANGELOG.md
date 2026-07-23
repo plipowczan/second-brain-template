@@ -7,6 +7,70 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
 
 ## [Unreleased]
 
+### Changed
+- **BREAKING: all workflow commands and skills are namespaced** — command wrappers moved
+  from `.claude/commands/*.md` to `.claude/commands/b/*.md` (subdirectory = native `:`
+  namespace, so `/ingest` is now `/b:ingest`), and every vault skill directory gained a
+  `brain-` prefix with its frontmatter `name:` updated to match (`ingest` → `brain-ingest`).
+  This stops collisions with same-named skills from installed plugins and groups the
+  vault's commands in the slash menu. Skill **descriptions are unchanged**, so
+  natural-language triggering ("process inbox", "health check") works exactly as before.
+  The research suite also gained command wrappers (`/b:research`, `/b:research-deep`,
+  `/b:research-report`, `/b:research-add-items`, `/b:research-add-fields`) — previously
+  it was invocable only by bare skill name. `excalidraw-diagram` (generic utility) keeps
+  its name. All cross-references in skills, scripts, docs, and the test suite's
+  path constants (`tests/run_tests.py`) updated.
+
+  | Old command | New command | Old skill | New skill |
+  |---|---|---|---|
+  | `/onboard` | `/b:onboard` | `onboard` | `brain-onboard` |
+  | `/ingest` | `/b:ingest` | `ingest` | `brain-ingest` |
+  | `/compile` | `/b:compile` | `compile` | `brain-compile` |
+  | `/enhance` | `/b:enhance` | `enhance` | `brain-enhance` |
+  | `/reindex` | `/b:reindex` | `reindex` | `brain-reindex` |
+  | `/qa` | `/b:qa` | `qa` | `brain-qa` |
+  | `/lint` | `/b:lint` | `lint` | `brain-lint` |
+  | `/output` | `/b:output` | `output` | `brain-output` |
+  | `/refactor` | `/b:refactor` | `refactor` | `brain-refactor` |
+  | `/gaps` | `/b:gaps` | `gaps` | `brain-gaps` |
+  | `/curate` | `/b:curate` | `curate` | `brain-curate` |
+  | `/export` | `/b:export` | `export` | `brain-export` |
+  | `/import` | `/b:import` | `import` | `brain-import` |
+  | — | `/b:research` | `research` | `brain-research` |
+  | — | `/b:research-deep` | `research-deep` | `brain-research-deep` |
+  | — | `/b:research-report` | `research-report` | `brain-research-report` |
+  | — | `/b:research-add-items` | `research-add-items` | `brain-research-add-items` |
+  | — | `/b:research-add-fields` | `research-add-fields` | `brain-research-add-fields` |
+
+  Existing bases: `git mv` your `.claude/commands/*.md` into `.claude/commands/b/`,
+  `git mv` each skill dir to its `brain-*` name, update each `SKILL.md` `name:` field
+  to match the new directory name, then re-pull the updated docs (README, AGENTS
+  template, REFERENCE notes). Muscle-memory note: type `/b:` and tab-complete.
+
+### Fixed
+- **`/research-deep` JSON validator was a silent no-op** —
+  `.claude/skills/research/validate_json.py` only read the `field_categories:` /
+  `category:` schema, but `/research` Step 4 emits `fields.yaml` with `categories:` /
+  `name:`. On that schema the loader parsed **0 fields** and every file "passed"
+  trivially (100% of nothing). The loader now accepts **both** schema styles
+  (`field_categories`|`categories`, category label `category`|`name`). Second fix:
+  `valid` gated only on `required` fields, and nothing was ever marked `required`, so
+  even a correctly-parsed schema passed with fields missing — when a schema marks
+  nothing required the validator now **treats all defined fields as required and
+  enforces full coverage** (a file missing any field FAILs with exit 1). Backward
+  compatible: schemas that set explicit `required:` flags keep the original gating.
+  Existing bases: re-pull `.claude/skills/research/validate_json.py`.
+
+### Changed
+- **`web-search-agent` no longer hard-depends on a Unix `date` call** — step 0 ("Get
+  Current Date") ran `date +%Y-%m-%d`, which errors in a PowerShell-only environment
+  (`date` is a `Get-Date` alias that rejects `+%Y-%m-%d`). It now takes today's date from
+  the harness-injected context (no shell call), and only falls back to a tool call —
+  Bash `date +%Y-%m-%d` or PowerShell `Get-Date -Format yyyy-MM-dd` — if the date is
+  genuinely unavailable. Shell-agnostic; the failure was cosmetic (date is only used to
+  filter "recent" results) but this removes it. Existing bases: re-pull
+  `.claude/agents/web-search-agent.md`.
+
 ## [0.1.0] - 2026-07-13
 
 First tagged release of the second-brain template.

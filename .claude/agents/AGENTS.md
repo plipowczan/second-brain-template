@@ -31,5 +31,5 @@ the upstream of the `research*` skills. See the vault note `AI/TOOLS/Deep-Resear
 
 ## Verify
 
-Trigger `/research-deep` on a small outline; confirm the sub-agent Reads a module from
+Trigger `/b:research-deep` on a small outline; confirm the sub-agent Reads a module from
 `.claude/agents/web-search-modules/` before its first `WebSearch`.

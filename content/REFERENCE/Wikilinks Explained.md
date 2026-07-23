@@ -20,14 +20,14 @@ title.
 - A link `[[Wikilinks Explained]]` resolves to the file
   `Wikilinks Explained.md`, regardless of which folder it lives in.
 - If a link does not resolve, the usual cause is that the filename does not
-  match the link text. Rename the file to match, then run `/reindex`.
+  match the link text. Rename the file to match, then run `/b:reindex`.
 - Use the shortest unambiguous form; add a folder path only when two notes
   share a title.
 
 ## ☘️ Why it matters
 
 The link graph is what makes a pile of notes into a knowledge base. The
-`/reindex` skill reads these links to build `graph.md`, and `/lint` reports
+`/b:reindex` skill reads these links to build `graph.md`, and `/b:lint` reports
 broken links and orphan notes. This note links back to [[Example Note]] so the
 two form a small connected graph.
 

@@ -10,12 +10,12 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 SKILLS = ROOT / ".claude" / "skills"
-BUILD = SKILLS / "reindex" / "scripts" / "build_indexes.py"
-LINT_SCAN = SKILLS / "lint" / "scripts" / "lint_scan.py"
-LINT_LINKS = SKILLS / "lint" / "scripts" / "lint_links.py"
-REFACTOR = SKILLS / "refactor" / "scripts" / "refactor.py"
-GAPS = SKILLS / "gaps" / "scripts" / "gaps.py"
-CURATE_SCRIPTS = SKILLS / "curate" / "scripts"
+BUILD = SKILLS / "brain-reindex" / "scripts" / "build_indexes.py"
+LINT_SCAN = SKILLS / "brain-lint" / "scripts" / "lint_scan.py"
+LINT_LINKS = SKILLS / "brain-lint" / "scripts" / "lint_links.py"
+REFACTOR = SKILLS / "brain-refactor" / "scripts" / "refactor.py"
+GAPS = SKILLS / "brain-gaps" / "scripts" / "gaps.py"
+CURATE_SCRIPTS = SKILLS / "brain-curate" / "scripts"
 
 PAD = " padding" * 30
 NOTE_A = ('---\ntitle: "Alpha"\ndate: 2026-01-01\ntags: ["x"]\ntype: knowledge-note\n'
