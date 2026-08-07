@@ -1,11 +1,8 @@
 ---
-updated: 2026-07-20T07:02:37Z
-entries: 3
+updated: 2026-08-07T09:26:58Z
+entries: 2
 ---
 # Note Catalog
-
-## (root)
-- **_privacy** | untyped |  | [] | Optional per-vault overrides for the default redaction policy (see | → -
 
 ## REFERENCE
 - **Example Note** | knowledge-note | 2026-06-15 | [knowledge, example] | A worked example note showing the conventions this knowledge base uses. | → Wikilinks Explained

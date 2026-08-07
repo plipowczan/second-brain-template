@@ -1,13 +1,12 @@
 ---
-updated: 2026-07-20T07:02:37Z
-total_notes: 3
+updated: 2026-08-07T09:26:58Z
+total_notes: 2
 ---
 # Vault Map
 
 ## Folders
 | folder | notes | types | top-tags |
 |--------|------:|-------|----------|
-| (root) | 1 | untyped(1) |  |
 | REFERENCE | 2 | knowledge-note(2) | knowledge, example |
 
 ## Tag Cloud

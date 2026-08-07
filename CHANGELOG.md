@@ -7,6 +7,56 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
 
 ## [Unreleased]
 
+### Fixed
+- **`brain-ingest` no longer forces every vault to English.** The "Language enforcement"
+  paragraph in Phase 2 declared "the canonical vault language is **English**" and told the
+  agent to translate Polish (or any other) sources on ingest — a value leaked from the
+  template author's own base. Every vault onboarded from this template sets
+  `{{PRIMARY_LANGUAGE}}` in `content/WRITING_STYLE.md`, so a Polish-language base would get
+  its own notes silently translated into English against its stated style. The skill now
+  reads the primary language from `content/WRITING_STYLE.md` instead of assuming one, and
+  translates *into* that language. Its cluster-detection step no longer hardcodes
+  "English/Polish stop-words" either.
+
+  The rule now also names **both** writing-style filenames — `content/WRITING_STYLE.md`
+  (what `/b:onboard` generates) and `content/WRITING_STYLE_ANALYSIS.md` (what vaults
+  predating that template carry). The first pass replaced a hardcoded *language* with a
+  hardcoded *filename*, which would have sent the agent to a file that does not exist in
+  an older base. Naming both also keeps this skill byte-identical between `.claude/skills/`
+  and `kb-template/.claude/skills/`, so `scripts/check-kb-template-drift.sh` stays quiet —
+  the scripts already excluded both filenames (`build_indexes.py` `EXCLUDE_FILES`), so this
+  just brings the skill in line with the rest of the codebase.
+
+  Known remaining hardcode: `brain-research-deep` still instructs research agents that
+  "all field values must be in English". That one is arguably intentional (machine-readable
+  JSON), but it flows into `/b:research-report`, so a non-English vault gets an
+  English report.
+- **`brain-reindex` no longer indexes underscore-prefixed files like `content/_privacy.md`.**
+  `_privacy.md` documents that it is "underscore-prefixed, so it is excluded from the site
+  build, the indexes, and can never be packed into a bundle itself" — but `build_indexes.py`
+  only skipped underscore-prefixed *directories* (`_raw/`, `_indexes/`, `_outputs/`,
+  `_graveyard/`) plus three files listed by name. A loose `_*.md` was indexed, so every
+  vault built from this template carried a phantom `| (root) | 1 | untyped(1) |` row in
+  `vault-map.md` and a matching catalog entry for a config file. The rule now matches the
+  documented convention: underscore prefix means infrastructure, not a note. The template's
+  own checked-in indexes are regenerated accordingly (3 → 2 notes, which is the real count).
+
+  Existing bases: re-pull `.claude/skills/brain-reindex/scripts/build_indexes.py` and run
+  `/b:reindex`. Harmless if your vault has no loose `_*.md` under `content/`.
+- **`brain-reindex` no longer destroys the `## Recent Changes` section.**
+  `scripts/build_indexes.py` regenerated that section from "the 15 newest notes by
+  `date:`" with a 75-character `summary:` snippet. But Recent Changes is a hand-maintained
+  *change log* — "what changed and why" — which no frontmatter field records, so every
+  rebuild silently replaced curated narrative with a derived listing. The script now
+  preserves an existing `## Recent Changes` section verbatim and only falls back to the
+  derived listing when the section is absent (fresh vault); the fallback also now emits 10
+  entries, matching the "last 10 changes" contract in `AGENTS.md` instead of 15.
+
+  If you run the scheduled `kb-maintain` workflow, this was also making **every** run
+  report a substantive index diff and open a no-op PR whose only effect was clobbering
+  that section. After this fix a clean vault reproduces all three indexes exactly
+  (0 substantive diff), so the workflow opens a PR only on genuine drift.
+
 ### Changed
 - **BREAKING: all workflow commands and skills are namespaced** — command wrappers moved
   from `.claude/commands/*.md` to `.claude/commands/b/*.md` (subdirectory = native `:`

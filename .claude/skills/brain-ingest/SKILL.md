@@ -48,7 +48,7 @@ Skipped entirely for files-only invocations.
 1. Read `content/_indexes/vault-map.md` to understand current vault structure.
 2. List `content/_raw/inbox/` AND merge in any `Source` objects built by Phase 0. If both are empty, report "Inbox empty and no URLs provided, nothing to process" and exit.
 3. **Cluster detection.** For each pair of sources (file or YT):
-   - Tokenize titles (or YT video titles): split on spaces, hyphens, underscores; lowercase; drop English/Polish stop-words.
+   - Tokenize titles (or YT video titles): split on spaces, hyphens, underscores; lowercase; drop stop-words of the vault language and of the source language.
    - Read the first ~200 characters of each source body (file content or transcript) for additional tokens. YT sources also contribute their channel name and chapter titles as tokens.
    - Group files sharing **≥2 distinctive tokens** OR one strong product-name token appearing in multiple titles.
    - A cluster requires **≥2 files** to form.
@@ -75,7 +75,7 @@ For each file or cluster (cluster handling per the user's choice from Phase 1):
 
 6. Determine topic folder and note type per CLAUDE.md rules (sub-patterns: `BOOKS/`, `TOOLS/`, `KNOWLEDGE/INFO/`, `KNOWLEDGE/HOWTO/`, `NOTES/`, `HABITS/`). For YT-origin sources, classification input is `title + description + channel + chapter titles + first ~2000 chars of transcript`. YT-origin sources always use `type: knowledge-note` with template `templates/knowledge_note_info.md`.
 
-   **Language enforcement:** The canonical vault language is **English** (see CLAUDE.md "Writing Style"). If the source content is in Polish or any other language, **translate it to English while ingesting**. This applies to: body prose, frontmatter `title` / `summary` / `tags`, and any quoted material. Preserve verbatim: proper nouns (vendor/product/person/place names), code blocks, URLs, dates, wikilinks, emoji. Polish proper nouns (e.g., place names like Bieszczady, vendor names like Pstryk) stay in Polish; their surrounding prose is translated.
+   **Language enforcement:** The canonical vault language is whatever this vault's writing-style document declares as its primary language — `content/WRITING_STYLE.md`, or `content/WRITING_STYLE_ANALYSIS.md` in vaults that predate the onboarding template (AGENTS.md "Writing Style" points at whichever this vault uses). Read whichever exists before writing — never assume a language. If the source content is in another language, **translate it into the vault language while ingesting**. This applies to: body prose, frontmatter `title` / `summary` / `tags`, and any quoted material. Preserve verbatim: proper nouns (vendor/product/person/place names), established technical terms, code blocks, URLs, dates, wikilinks, emoji.
 7. Check `content/_indexes/catalog.md` for overlap with existing notes:
    - Overlap → merge into existing note, preserving all user-authored content.
    - No overlap → create from the appropriate template under `content/templates/` (per CLAUDE.md "Templates" table).
