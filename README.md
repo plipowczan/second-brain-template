@@ -46,6 +46,9 @@ answer questions, lint for quality, and keep navigation indexes current.
 > Prefer to set things up by hand? You can skip `/b:onboard`, rename the
 > `*.template.md` files yourself, and edit the `{{PLACEHOLDERS}}` directly.
 
+Want a step-by-step guide? There's a course that walks through setting this up
+from scratch: [pawel.lipowczan.pl/llm-wiki/kurs](https://pawel.lipowczan.pl/llm-wiki/kurs).
+
 ## Works beyond Claude Code
 
 The template is plain markdown files plus instructions for an agent. Drive it in
