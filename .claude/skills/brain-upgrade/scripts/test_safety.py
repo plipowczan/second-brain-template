@@ -17,7 +17,8 @@ from test_planner import V2, make_instance
 UNSAFE = ["../../outside.txt", "/etc/outside.txt", "C:/outside.txt", "C:outside.txt",
           "//server/share/outside.txt", ".claude\\hooks\\hook.py", ".claude/./hooks/hook.py",
           "a/../../outside.txt", ".claude/hooks./hook.py", ".claude/hooks /hook.py",
-          ".git/config", "a:stream"]
+          ".git/config", "a:stream", "GIT~1/config", "CONTEN~1/notes.md", "content/NUL",
+          ".claude/aux.md", ".claude/COM1.txt", ".claude/a|b.md", ".claude/a?b.md"]
 
 
 def snapshot(root: Path) -> tuple[dict, set]:
@@ -81,6 +82,11 @@ class PathRuleTest(unittest.TestCase):
                   kt.ONBOARD_VALUES, ".kb-upgrade-backup/0.2.0-x/schema.yml"):
             self.assertTrue(kt.protected(p), p)
         self.assertFalse(kt.protected("schema.yml"))
+
+    def test_unicode_normal_forms_collide(self):
+        composed, decomposed = "café.md", "café.md"
+        self.assertTrue(kt.case_collisions([composed, decomposed]))
+        self.assertTrue(kt.protected("CONTENT/x.md"))
 
     def test_collisions(self):
         self.assertTrue(kt.case_collisions(["a/SKILL.md", "A/skill.md"]))
@@ -207,7 +213,8 @@ class ApplyGuardTest(SafetyCase):
         self.planfile.write_text(json.dumps(plan), encoding="utf-8")
 
     def test_tampered_plan_paths_refused(self):
-        for path in ("../outside.txt", "content/REFERENCE/Example.md", "README.md"):
+        for path in ("../outside.txt", "content/REFERENCE/Example.md", "README.md",
+                     kt.STAMP, kt.ONBOARD_VALUES, "CONTEN~1/x.md"):
             with self.subTest(path=path):
                 code, out, err = self.plan(self.source(changes={".claude/hooks/hook.py": "v2\n"}))
                 self.assertEqual(code, 0, err)
@@ -234,6 +241,34 @@ class ApplyGuardTest(SafetyCase):
         self.assertEqual(code, 1)
         self.assertIn("outside the base", err)
         self.assertEqual(list(outside.iterdir()), [])
+
+
+    def test_link_inside_the_base_into_notes_refused(self):
+        link = self.base / ".claude" / "notes"
+        try:
+            os.symlink(self.base / "content", link, target_is_directory=True)
+        except (OSError, NotImplementedError):
+            self.skipTest("cannot create a directory symlink here")
+        fx.git(self.base, "add", "-A")
+        fx.git(self.base, "commit", "-q", "-m", "link")
+        code, out, err = self.plan(self.source(changes={".claude/notes/x.md": "x\n"}))
+        self.assertEqual(code, 0, err)
+        before = snapshot(self.base)
+        code, out, err = self.apply()
+        self.assertEqual(code, 1)
+        self.assertIn("through a link or an alias", err)
+        self.assertFalse((self.base / "content" / "x.md").exists())
+        self.assertEqual(snapshot(self.base)[0], before[0])
+
+    def test_no_git_backup_waits_for_the_checks(self):
+        plain = make_instance(self.tmp.path / "plain", git=False)
+        self.base = plain
+        code, out, err = self.plan(self.source(changes={".claude/hooks/hook.py": "v2\n"}))
+        self.assertEqual(code, 0, err)
+        self.tamper("../outside.txt")
+        code, out, err = self.apply()
+        self.assertEqual(code, 1)
+        self.assertFalse((plain / kt.BACKUP_DIR).exists())
 
 
 class RollbackTest(SafetyCase):

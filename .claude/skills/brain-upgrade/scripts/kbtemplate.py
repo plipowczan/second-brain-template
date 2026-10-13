@@ -20,6 +20,7 @@ import json
 import re
 import shutil
 import subprocess
+import unicodedata
 from pathlib import Path
 
 MANIFEST = ".kb-manifest.json"
@@ -45,10 +46,21 @@ class TemplateError(Exception):
 
 WRITING_STYLE = "content/WRITING_STYLE.md"
 _DRIVE = re.compile(r"^[A-Za-z]:")
+_SHORT_NAME = re.compile(r"~\d")  # GIT~1, CONTEN~1: Windows 8.3 aliases of long names
+_DEVICES = ({"con", "prn", "aux", "nul", "conin$", "conout$"}
+            | {f"{d}{i}" for d in ("com", "lpt") for i in "0123456789¹²³"})
+_WINDOWS_BAD = set('<>"|?*') | {chr(i) for i in range(32)}
+
+
+def fold(path: str) -> str:
+    """The form two names share when a case-insensitive, normalising filesystem (NTFS,
+    APFS) would treat them as one: NFC, then casefold."""
+    return unicodedata.normalize("NFC", path).casefold()
 
 
 def path_problem(path) -> str | None:
-    """Why `path` is not a safe relative path, or None when it is."""
+    """Why `path` is not a safe relative path, or None when it is. The test is what the
+    path means on Windows and macOS too, not only how it reads."""
     if not isinstance(path, str) or not path:
         return "empty"
     if "\\" in path:
@@ -61,28 +73,34 @@ def path_problem(path) -> str | None:
         return "':' (a Windows stream name)"
     if "\0" in path:
         return "NUL byte"
+    if any(c in _WINDOWS_BAD for c in path):
+        return "a character Windows does not allow"
     for seg in path.split("/"):
         if seg in ("", ".", ".."):
             return "empty, '.' or '..' segment"
         if seg != seg.rstrip(". "):
             return "a segment ends with a dot or a space"
-        if seg.casefold() == ".git":
+        if fold(seg) == ".git":
             return "inside .git"
+        if _SHORT_NAME.search(seg):
+            return "a Windows short name (~1), which can alias another name"
+        if fold(seg.split(".", 1)[0]) in _DEVICES:
+            return "a Windows device name"
     return None
 
 
 def case_collisions(paths) -> list[tuple[str, str]]:
     """Pairs of paths that would be one file (or a file and a folder) on a
-    case-insensitive filesystem such as Windows or macOS."""
+    case-insensitive or normalising filesystem such as Windows or macOS."""
     seen: dict[str, str] = {}
     out = []
     for p in sorted(paths):
-        key = p.casefold()
+        key = fold(p)
         if key in seen and seen[key] != p:
             out.append((seen[key], p))
         seen.setdefault(key, p)
     for p in sorted(paths):
-        parts = p.casefold().split("/")
+        parts = fold(p).split("/")
         for i in range(1, len(parts)):
             prefix = "/".join(parts[:i])
             if prefix in seen:
@@ -108,7 +126,7 @@ def protected(path: str) -> bool:
     """Paths an upgrade never writes or deletes as a file action, whatever a manifest
     says: the owner's notes and README.md, and brain-upgrade's own bookkeeping. The one
     exception, content/WRITING_STYLE.md on a requested re-render, is handled by callers."""
-    p = path.casefold()
+    p = fold(path)
     return (p == "readme.md" or p.startswith("content/") or p in (STAMP, ONBOARD_VALUES)
             or p.startswith(BACKUP_DIR + "/"))
 

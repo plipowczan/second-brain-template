@@ -177,13 +177,23 @@ def stale_paths(plan: dict, instance: Path) -> list[str]:
     return sorted(set(stale))
 
 
-def target_of(instance: Path, rel: str, rerendered: set) -> Path:
-    """The file a planned path names, checked again right before it is touched: a safe
-    relative path, not one of the base's own files (the requested re-render of
-    content/WRITING_STYLE.md aside), and still inside the base once links resolve."""
+def may_touch(rel: str, role: str) -> bool:
+    """`role` is "action" (a planned add/update/delete), "render" (a requested re-render)
+    or "own" (apply's own bookkeeping: the stamp and .kb-onboard.json)."""
+    if role == "own":
+        return rel in (kt.STAMP, kt.ONBOARD_VALUES)
+    if not kt.protected(rel):
+        return True
+    return role == "render" and rel == kt.WRITING_STYLE
+
+
+def target_of(instance: Path, rel: str, role: str) -> Path:
+    """The file a planned path names, checked before anything is written: a safe relative
+    path that this role may touch, which resolves to that same path inside the base. A
+    link, a junction or a Windows short name (CONTEN~1) that leads elsewhere, even
+    elsewhere inside the base, is refused."""
     kt.check_paths([rel], "apply")
-    if kt.protected(rel) and rel not in (kt.STAMP, kt.ONBOARD_VALUES) and not (
-            rel == kt.WRITING_STYLE and rel in rerendered):
+    if not may_touch(rel, role):
         raise kt.TemplateError(f"apply: refusing to touch {rel}, which belongs to the base. "
                                "Nothing was written.")
     root = instance.resolve()
@@ -191,6 +201,9 @@ def target_of(instance: Path, rel: str, rerendered: set) -> Path:
     if root not in target.parents:
         raise kt.TemplateError(f"apply: {rel} resolves outside the base ({target}). "
                                "Nothing was written.")
+    if target.relative_to(root).as_posix().casefold() != rel.casefold():
+        raise kt.TemplateError(f"apply: {rel} resolves to {target.relative_to(root).as_posix()} "
+                               "through a link or an alias. Nothing was written.")
     return target
 
 
@@ -209,16 +222,21 @@ def _unlink(path: Path) -> None:
     path.unlink()
 
 
-def transaction(instance: Path, mutations: list, rerendered: set = frozenset()) -> None:
-    """Apply (path, bytes | None for delete) in order, all or nothing.
+def resolve_mutations(instance: Path, mutations: list) -> list:
+    """(path, bytes | None, role) -> (path, target, bytes | None), every target checked."""
+    kt.check_paths([rel for rel, _, _ in mutations], "apply")
+    return [(rel, target_of(instance, rel, role), data) for rel, data, role in mutations]
+
+
+def transaction(instance: Path, items: list) -> None:
+    """Apply (path, target, bytes | None for delete) in order, all or nothing.
 
     Before the first change it journals each target's previous bytes (or that it did not
     exist). On any failure it puts every touched target back, removes the files and the
     folders it created, and raises: the base is then as it was before apply.
     """
-    targets = [target_of(instance, rel, rerendered) for rel, _ in mutations]
-    kt.check_paths([rel for rel, _ in mutations], "apply")
-    journal = [(t, t.read_bytes() if t.is_file() else None) for t in targets]
+    journal = [(t, t.read_bytes() if t.is_file() else None) for _, t, _ in items]
+    mutations = [(rel, data) for rel, _, data in items]
     created: list[Path] = []
     step = -1
     try:
@@ -266,6 +284,7 @@ def transaction(instance: Path, mutations: list, rerendered: set = frozenset()) 
 
 
 def remove_empty_dirs(instance: Path, start: Path) -> None:
+    instance = instance.resolve()
     d = start
     while d != instance and instance in d.parents:
         try:
@@ -287,6 +306,10 @@ def cmd_apply(args) -> int:
     if plan["up_to_date"]:
         say("Up to date: nothing to apply.")
         return 0
+    # The plan sat in a temp folder: check its paths like any untrusted input before
+    # reading anything through them.
+    planner.check_invariants(plan)
+    kt.check_paths([e["template"] for e in plan["rendered"]], "the plan's templates")
 
     stale = stale_paths(plan, instance)
     if stale:
@@ -353,6 +376,26 @@ def cmd_apply(args) -> int:
         renders.append((e, out))
 
     blobs = {a["path"]: verified(plan, f"src/{a['path']}", a["S"]) for a in writes}
+    s = plan["stamp"]
+    rendered = dict(s["rendered"])
+    for e, out in renders:
+        rendered[e["path"]] = {"template": e["template"], "template_hash": e["S_template"],
+                               "output_hash": kt.content_hash(out)}
+    stamp = kt.make_stamp(s["repository"], s["version"], s["commit"], s["files"], rendered,
+                          s.get("seeded"))
+    mutations = [(a["path"], blobs[a["path"]], "action") for a in writes]
+    mutations += [(a["path"], None, "action") for a in deletes]
+    mutations += [(e["path"], out, "render") for e, out in renders]
+    if new_values:
+        values = planner.read_values(instance) or {}
+        values.update(new_values)
+        mutations.append((kt.ONBOARD_VALUES, kt.dump_json(values), "own"))
+    mutations.append((kt.STAMP, kt.dump_json(stamp), "own"))  # last: it names the new version
+    # Every target is checked here, before the dirty check, the backup or any write.
+    items = resolve_mutations(instance, mutations)
+    for a in merges:
+        target_of(instance, a["path"], "action")
+
     targets = [a["path"] for a in writes + deletes + merges] + [e["path"] for e, _ in renders]
     if plan["git"]:
         dirty = planner.dirty_paths(instance, targets)
@@ -363,34 +406,18 @@ def cmd_apply(args) -> int:
 
     backup = None
     if not plan["git"]:
-        saved = [p for p in targets if (instance / p).is_file()]
-        saved += [p for p in (kt.STAMP, kt.ONBOARD_VALUES) if (instance / p).is_file()
-                  and (p == kt.STAMP or new_values)]
-        stamp = kt.utc_now().replace(":", "").replace("-", "")
-        backup = instance / kt.BACKUP_DIR / f"{plan['to_version']}-{stamp}"
-        for p in saved:
-            dst = backup / p
-            dst.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(instance / p, dst)
+        when = kt.utc_now().replace(":", "").replace("-", "")
+        backup = instance.resolve() / kt.BACKUP_DIR / f"{plan['to_version']}-{when}"
+        for rel, target, _ in items:
+            if target.is_file():
+                dst = backup / rel
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(target, dst)
 
-    s = plan["stamp"]
-    rendered = dict(s["rendered"])
-    for e, out in renders:
-        rendered[e["path"]] = {"template": e["template"], "template_hash": e["S_template"],
-                               "output_hash": kt.content_hash(out)}
-    stamp = kt.make_stamp(s["repository"], s["version"], s["commit"], s["files"], rendered,
-                          s.get("seeded"))
-    mutations = [(a["path"], blobs[a["path"]]) for a in writes]
-    mutations += [(a["path"], None) for a in deletes]
-    mutations += [(e["path"], out) for e, out in renders]
-    if new_values:
-        values = planner.read_values(instance) or {}
-        values.update(new_values)
-        mutations.append((kt.ONBOARD_VALUES, kt.dump_json(values)))
-    mutations.append((kt.STAMP, kt.dump_json(stamp)))  # last: it names the new version
-    transaction(instance, mutations, rerendered={e["path"] for e, _ in renders})
-    for a in deletes:
-        remove_empty_dirs(instance, (instance / a["path"]).parent)
+    transaction(instance, items)
+    for rel, target, data in items:
+        if data is None:
+            remove_empty_dirs(instance, target.parent)
 
     plan["applied"] = {
         "time": kt.utc_now(),
