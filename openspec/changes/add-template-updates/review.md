@@ -208,3 +208,58 @@ another repository, and plans it with `--allow-repository`.
 Checks: `python tests/run_tests.py` — ALL PASS; brain-upgrade `python -m unittest` —
 161 passed; brain-onboard, brain-export, brain-gaps, brain-lint, brain-refactor suites —
 OK; `python dev/check_manifest.py` — ok
+
+Also fixed after round 5 (two background security reviews named "authentication-bypass /
+trust-boundary" and "provenance spoofing", on 92d5dc3 and 8efe5f8):
+
+- In 8efe5f8: the provenance took the repository from the source's own manifest, so a
+  download from another repository whose archive claimed the base's repository raised no
+  warning, and a folder's or zip's tag came from its own history index; the
+  `--allow-repository` gate lived only in `plan`, inside the source's not-yet-trusted
+  engine. Now a download is judged by the repository in the HTTPS URL it was fetched
+  from (a differing claim is reported), a folder or zip is marked unverified with no tag,
+  and `fetch`, run with the base's own engine, refuses a repository switch before it
+  unpacks anything; `plan` keeps its check as a second line.
+- In 9b81b24: a clone, zip or folder could still claim the base's repository and pass.
+  Now a git clone is verified only through a GitHub origin remote (the repository comes
+  from that URL); anything else is unverified (repository and `same_repository`
+  unknown), and `fetch` unpacks nothing until the owner accepts the claimed repository
+  with `--allow-repository`. `SKILL.md` says both stops in plain words.
+
+Tests in `test_safety.py` (`ProvenanceTest`): a download from a fork whose archive claims
+the base's repository; a clone of a fork claiming the base's repository; a clone without
+a GitHub origin; a folder and a zip claiming the base's repository (refused until
+accepted, then reported with `verified: null` and no tag).
+
+Test changes:
+- `.claude/skills/brain-upgrade/scripts/test_safety.py` — the follow-up above: `test_fetch_reports_a_git_release` now gives its clone a GitHub origin and expects that origin as the verification; `test_folder_or_zip_only_claims` (was `test_unproven_source_says_commit_unknown`) and `test_other_repository_needs_consent_before_it_is_unpacked` (was `test_other_repository_is_flagged`) expect `fetch` to refuse an unverified source until the owner accepts it
+
+## Round 6 — adversarial (Codex, focused) — 2026-10-13 — reviewed e41fff1
+
+Same focus, run from the coordinating session.
+
+| id | sev | where | finding | outcome |
+|---|---|---|---|---|
+| R6-1 | high | .claude/skills/brain-upgrade/scripts/upgrade.py:548-569 | commit stages with `git add -A` without checking content: a file changed after apply goes into the update commit unverified, and a file apply deleted but a sync client restored is committed instead of the deletion, while the stamp says it is gone | fixed in 8221a35 |
+
+How it was fixed:
+
+- apply records in the plan's `applied` record the postimage of every path it wrote or
+  deleted (hash, or absent), the stamp and `.kb-onboard.json` included; this is the same
+  rule as the rollback journal (R5-2).
+- commit reads every applied path once and refuses with "changed after apply: …" when a
+  non-merge path differs; merge paths are taken as they are (the owner's edits there are
+  intended). It builds the commit from exactly those bytes in a temporary index (HEAD plus
+  the applied contents), checks the working tree again right before `git commit`, and
+  only after the commit brings the owner's index in line for those paths. On a refusal
+  nothing is staged and nothing is committed; other staged work stays out of the commit.
+
+New tests in `test_safety.py` (`CommitGuardTest`): an applied write edited before
+commit, an applied deletion restored before commit, the stamp edited before commit, and a
+change between the check and `git commit` are all refused with HEAD, the index and the
+status unchanged; an untouched apply commits exactly what apply left and leaves a clean
+status.
+
+Checks: `python tests/run_tests.py` — ALL PASS; brain-upgrade `python -m unittest` —
+169 passed; brain-onboard, brain-export, brain-gaps, brain-lint, brain-refactor suites —
+OK; `python dev/check_manifest.py` — ok
