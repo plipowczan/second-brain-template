@@ -109,7 +109,7 @@ def case_collisions(paths) -> list[tuple[str, str]]:
     return out
 
 
-def _is_link(p: Path) -> bool:
+def is_link(p: Path) -> bool:
     isjunction = getattr(os.path, "isjunction", None)  # Python 3.12+
     return p.is_symlink() or bool(isjunction and isjunction(p))
 
@@ -123,7 +123,7 @@ def link_in_path(root: Path, rel: str) -> str | None:
         p = p / part
         if not os.path.lexists(p):
             return None
-        if _is_link(p):
+        if is_link(p):
             return p.relative_to(root).as_posix()
     return None
 

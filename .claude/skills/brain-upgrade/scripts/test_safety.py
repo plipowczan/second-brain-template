@@ -401,6 +401,110 @@ class DirtyBookkeepingTest(SafetyCase):
             encoding="utf-8"))["NEW_KEY"], "answer")
 
 
+class RaceTest(SafetyCase):
+    """Something changes a checked target after resolve_mutations() and before (or
+    between) the writes. Apply must notice at that step, put everything back, and write
+    nothing anywhere."""
+    CHANGES = {".claude/hooks/hook.py": "print('hook v2')\n",
+               ".claude/skills/new/a.md": "a\n", ".claude/skills/new/b.md": "b\n",
+               ".claude/skills/demo/scripts/tool.py": None}
+
+    def setUp(self):
+        super().setUp()
+        code, out, err = self.plan(self.source(changes=self.CHANGES))
+        self.assertEqual(code, 0, err)
+        self.outside = self.tmp.path / "outside"
+        self.outside.mkdir()
+        self.before = snapshot(self.base)
+
+    def swap_for_link(self, rel: str, junction=False):
+        import shutil
+        path = self.base / rel
+        shutil.rmtree(path)
+        try:
+            if junction:
+                import _winapi
+                _winapi.CreateJunction(str(self.outside), str(path))
+            else:
+                os.symlink(self.outside, path, target_is_directory=True)
+        except (OSError, NotImplementedError) as e:
+            self.skipTest(f"this system does not let the test create a link ({e})")
+
+    def after_resolution(self, sabotage):
+        """Strike after every check before the transaction (resolve_mutations, the git
+        check, the backup), right as the transaction starts."""
+        real = upgrade.transaction
+
+        def wrapper(*a, **k):
+            sabotage()
+            self.sabotaged = snapshot(self.base)
+            return real(*a, **k)
+        with mock.patch.object(upgrade, "transaction", wrapper):
+            return self.apply()
+
+    def after_writes(self, n, sabotage):
+        real, calls = upgrade._write, {"n": 0}
+
+        def wrapper(path, data):
+            real(path, data)
+            calls["n"] += 1
+            if calls["n"] == n:
+                sabotage()
+        with mock.patch.object(upgrade, "_write", wrapper):
+            return self.apply()
+
+    def assert_stopped(self, result):
+        code, out, err = result
+        self.assertEqual(code, 1, out)
+        self.assertIn("Nothing was changed", err)
+        self.assertEqual(list(self.outside.iterdir()), [])
+        plan = json.loads(self.planfile.read_text(encoding="utf-8"))
+        self.assertNotIn("applied", plan)
+
+    def test_content_changed_after_the_checks(self):
+        hook = self.base / ".claude/hooks/hook.py"
+        result = self.after_resolution(lambda: hook.write_text("print('racing edit')\n", encoding="utf-8"))
+        self.assert_stopped(result)
+        self.assertIn("changed while the update was running", result[2])
+        self.assertEqual(snapshot(self.base), self.sabotaged)
+
+    def test_content_changed_between_two_writes(self):
+        manifest = self.base / ".kb-manifest.json"
+        racing = b'{"edited": "while apply ran"}\n'
+        result = self.after_writes(1, lambda: manifest.write_bytes(racing))
+        self.assert_stopped(result)
+        files, dirs = self.before
+        self.assertEqual(snapshot(self.base), ({**files, ".kb-manifest.json": racing}, dirs))
+
+    def test_parent_swapped_for_a_symlink_after_the_checks(self):
+        (self.outside / "hook.py").write_text("print('hook v1')\n", encoding="utf-8")
+        result = self.after_resolution(lambda: self.swap_for_link(".claude/hooks"))
+        code, out, err = result
+        self.assertEqual(code, 1, out)
+        self.assertIn("link or junction", err)
+        self.assertEqual((self.outside / "hook.py").read_text(encoding="utf-8"), "print('hook v1')\n")
+        self.assertEqual([p.name for p in self.outside.iterdir()], ["hook.py"])
+        self.assertEqual(snapshot(self.base), self.sabotaged)
+
+    @unittest.skipUnless(os.name == "nt", "junctions exist only on Windows")
+    def test_parent_swapped_for_a_junction_after_the_checks(self):
+        result = self.after_resolution(lambda: self.swap_for_link(".claude/skills/demo", junction=True))
+        self.assert_stopped(result)
+        self.assertEqual(snapshot(self.base), self.sabotaged)
+
+    def test_created_folder_swapped_for_a_link_between_writes(self):
+        # Write 1 is the hook, write 2 creates .claude/skills/new/ for a.md; then the new
+        # folder becomes a link out of the base before b.md is written into it.
+        result = self.after_writes(2, lambda: self.swap_for_link(".claude/skills/new"))
+        code, out, err = result
+        self.assertEqual(code, 1, out)
+        self.assertIn("link or junction", err)
+        self.assertEqual(list(self.outside.iterdir()), [])
+        self.assertEqual((self.base / ".claude/hooks/hook.py").read_bytes(),
+                         self.before[0][".claude/hooks/hook.py"])
+        self.assertTrue((self.base / ".claude/skills/demo/scripts/tool.py").is_file())
+
+
 class RollbackTest(SafetyCase):
     CHANGES = {".claude/hooks/hook.py": "print('hook v2')\n",                 # update
                ".claude/skills/new/deep/SKILL.md": "new\n",                    # add, new folders

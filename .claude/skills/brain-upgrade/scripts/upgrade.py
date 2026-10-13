@@ -228,42 +228,81 @@ def _unlink(path: Path) -> None:
 
 
 def resolve_mutations(instance: Path, mutations: list) -> list:
-    """(path, bytes | None, role) -> (path, target, bytes | None), every target checked."""
-    kt.check_paths([rel for rel, _, _ in mutations], "apply")
-    return [(rel, target_of(instance, rel, role), data) for rel, data, role in mutations]
+    """(path, bytes | None, role, expected hash) -> (path, target, bytes | None, expected
+    hash), every target checked. The expected hash is what the dry run read (None: the
+    file did not exist)."""
+    kt.check_paths([m[0] for m in mutations], "apply")
+    return [(rel, target_of(instance, rel, role), data, expected)
+            for rel, data, role, expected in mutations]
+
+
+class ChangedDuringApply(Exception):
+    """A target no longer matches the dry run, or a link appeared, while apply ran."""
+
+
+def recheck(root: Path, rel: str, target: Path) -> None:
+    """Right before a step touches `target`: no link or junction anywhere on its path,
+    and it still resolves to the checked target."""
+    link = kt.link_in_path(root, rel)
+    if link:
+        raise ChangedDuringApply(f"{link} became a link or junction")
+    if (root / rel).resolve() != target:
+        raise ChangedDuringApply(f"{rel} now resolves elsewhere")
+
+
+def make_parents(root: Path, target: Path, created: list) -> None:
+    """Create the missing folders above `target` one by one, checking each for links
+    before and after it is made."""
+    missing = []
+    d = target.parent
+    while not os.path.lexists(d):
+        missing.append(d)
+        d = d.parent
+    for d in reversed(missing):
+        rel = d.relative_to(root).as_posix()
+        if kt.link_in_path(root, rel):
+            raise ChangedDuringApply(f"a folder above {rel} became a link or junction")
+        d.mkdir()
+        created.append(d)
+        if kt.is_link(d):
+            raise ChangedDuringApply(f"{rel} became a link or junction")
 
 
 def transaction(instance: Path, items: list) -> None:
-    """Apply (path, target, bytes | None for delete) in order, all or nothing.
+    """Apply (path, target, bytes | None for delete, expected hash) in order, all or
+    nothing.
 
-    Before the first change it journals each target's previous bytes (or that it did not
-    exist). On any failure it puts every touched target back, removes the files and the
-    folders it created, and raises: the base is then as it was before apply.
+    Right before each step it checks the target again: no link or junction on its path
+    (folders made on the way included), and its current content still has the hash the
+    dry run read. That same read is the step's entry in the rollback journal. On any
+    failure every journaled target is put back, created files and folders are removed,
+    and it raises: the base is then as it was before apply.
     """
-    journal = [(t, t.read_bytes() if t.is_file() else None) for _, t, _ in items]
-    mutations = [(rel, data) for rel, _, data in items]
+    root = instance.resolve()
+    journal: list[tuple[str, Path, bytes | None]] = []
     created: list[Path] = []
-    step = -1
+    failed_rel = "?"
     try:
-        for step, ((rel, data), (target, before)) in enumerate(zip(mutations, journal)):
+        for rel, target, data, expected in items:
+            failed_rel = rel
+            recheck(root, rel, target)
+            before = target.read_bytes() if target.is_file() else None
+            if (kt.content_hash(before) if before is not None else None) != expected:
+                raise ChangedDuringApply(f"{rel} changed while the update was running")
+            journal.append((rel, target, before))
             if data is None:
                 if before is not None:
                     _unlink(target)
                 continue
-            missing = []
-            d = target.parent
-            while not d.exists():
-                missing.append(d)
-                d = d.parent
-            for d in reversed(missing):
-                d.mkdir()
-                created.append(d)
+            make_parents(root, target, created)
+            recheck(root, rel, target)
             _write(target, data)
     except BaseException as e:
-        failed_rel = mutations[step][0] if step >= 0 else "?"
         problems = []
-        for target, before in reversed(journal[:step + 1]):
+        for rel, target, before in reversed(journal):
             try:
+                if kt.link_in_path(root, rel):  # never restore through a link
+                    raise OSError("its path is now a link or junction")
                 if before is None:
                     if target.exists():
                         _unlink(target)
@@ -271,10 +310,11 @@ def transaction(instance: Path, items: list) -> None:
                     target.parent.mkdir(parents=True, exist_ok=True)
                     _write(target, before)
             except BaseException as err:  # keep going: restore as much as possible
-                problems.append(f"{target.relative_to(instance.resolve())} ({err})")
+                problems.append(f"{rel} ({err})")
         for d in reversed(created):
             try:
-                d.rmdir()
+                if not kt.is_link(d):
+                    d.rmdir()
             except OSError:
                 pass
         if problems:
@@ -282,6 +322,10 @@ def transaction(instance: Path, items: list) -> None:
                 f"apply failed at {failed_rel} ({e}), and these could not be put back: "
                 + "; ".join(problems) + ". Restore them from git (git status) or the backup "
                 "folder before anything else.") from e
+        if isinstance(e, ChangedDuringApply):
+            raise kt.TemplateError(
+                f"apply stopped: {e}. Nothing was changed: every file was put back as it "
+                "was. Run plan again.") from e
         raise kt.TemplateError(
             f"apply failed at {failed_rel} ({e}). Every change was rolled back: the base "
             "is as it was before apply. Fix the cause (a locked file, a full disk) and run "
@@ -388,14 +432,16 @@ def cmd_apply(args) -> int:
                                "output_hash": kt.content_hash(out)}
     stamp = kt.make_stamp(s["repository"], s["version"], s["commit"], s["files"], rendered,
                           s.get("seeded"))
-    mutations = [(a["path"], blobs[a["path"]], "action") for a in writes]
-    mutations += [(a["path"], None, "action") for a in deletes]
-    mutations += [(e["path"], out, "render") for e, out in renders]
+    # Each mutation carries the hash its target had at the dry run (None: absent).
+    mutations = [(a["path"], blobs[a["path"]], "action", a["L"]) for a in writes]
+    mutations += [(a["path"], None, "action", a["L"]) for a in deletes]
+    mutations += [(e["path"], out, "render", e["L"]) for e, out in renders]
     if new_values:
         values = planner.read_values(instance) or {}
         values.update(new_values)
-        mutations.append((kt.ONBOARD_VALUES, kt.dump_json(values), "own"))
-    mutations.append((kt.STAMP, kt.dump_json(stamp), "own"))  # last: it names the new version
+        mutations.append((kt.ONBOARD_VALUES, kt.dump_json(values), "own", plan["onboard_before"]))
+    # Last: it names the new version.
+    mutations.append((kt.STAMP, kt.dump_json(stamp), "own", plan["stamp_before"]))
     # Every target is checked here, before the dirty check, the backup or any write.
     items = resolve_mutations(instance, mutations)
     for a in merges:
@@ -403,7 +449,7 @@ def cmd_apply(args) -> int:
 
     # Every path apply writes or deletes, the stamp and .kb-onboard.json included, plus
     # the files left for a merge: uncommitted work in any of them would be lost.
-    targets = [rel for rel, _, _ in items] + [a["path"] for a in merges]
+    targets = [item[0] for item in items] + [a["path"] for a in merges]
     if plan["git"]:
         dirty = planner.dirty_paths(instance, targets)
         if dirty:
@@ -415,14 +461,14 @@ def cmd_apply(args) -> int:
     if not plan["git"]:
         when = kt.utc_now().replace(":", "").replace("-", "")
         backup = instance.resolve() / kt.BACKUP_DIR / f"{plan['to_version']}-{when}"
-        for rel, target, _ in items:
+        for rel, target, _, _ in items:
             if target.is_file():
                 dst = backup / rel
                 dst.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(target, dst)
 
     transaction(instance, items)
-    for rel, target, data in items:
+    for rel, target, data, _ in items:
         if data is None:
             remove_empty_dirs(instance, target.parent)
 

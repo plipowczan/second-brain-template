@@ -23,7 +23,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
   (`chore(template): upgrade to …`); without git every replaced file is copied to
   `.kb-upgrade-backup/` first. Applying is all or nothing: if a write fails halfway (a
   file locked by OneDrive or an antivirus, a full disk), every file is put back as it was
-  and the run says so. Whatever a downloaded manifest, a history index or your stamp
+  and the run says so; the same happens when a planned file changes, or a link appears,
+  while the update runs. Whatever a downloaded manifest, a history index or your stamp
   claims, it writes nothing outside your base, nothing under `content/` (except
   `content/WRITING_STYLE.md` when you ask for its re-render) and never your `README.md`,
   and it refuses paths that Windows or macOS would treat as one file. It never writes
