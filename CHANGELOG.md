@@ -26,7 +26,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
   and the run says so. Whatever a downloaded manifest, a history index or your stamp
   claims, it writes nothing outside your base, nothing under `content/` (except
   `content/WRITING_STYLE.md` when you ask for its re-render) and never your `README.md`,
-  and it refuses paths that Windows or macOS would treat as one file. The base records
+  and it refuses paths that Windows or macOS would treat as one file. It never writes
+  through a symbolic link or a junction: when a template file, or a folder above it, is
+  one, the dry run stops and names it. Uncommitted edits to `.kb-template.json` or
+  `.kb-onboard.json` stop apply just like edits to any planned file. The base records
   its template version and what the template shipped in a new stamp, `.kb-template.json`.
   The scripts (`.claude/skills/brain-upgrade/scripts/`) need only the Python standard
   library.

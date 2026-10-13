@@ -17,6 +17,7 @@ from __future__ import annotations
 import datetime as dt
 import hashlib
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -106,6 +107,25 @@ def case_collisions(paths) -> list[tuple[str, str]]:
             if prefix in seen:
                 out.append((seen[prefix], p))
     return out
+
+
+def _is_link(p: Path) -> bool:
+    isjunction = getattr(os.path, "isjunction", None)  # Python 3.12+
+    return p.is_symlink() or bool(isjunction and isjunction(p))
+
+
+def link_in_path(root: Path, rel: str) -> str | None:
+    """The first part of `rel` under `root` that is a symbolic link or a Windows junction
+    (the file itself or any folder above it), or None. brain-upgrade never reads a
+    template file or writes through one: a link could lead into the owner's notes."""
+    p = Path(root)
+    for part in rel.split("/"):
+        p = p / part
+        if not os.path.lexists(p):
+            return None
+        if _is_link(p):
+            return p.relative_to(root).as_posix()
+    return None
 
 
 def check_paths(paths, where: str) -> None:

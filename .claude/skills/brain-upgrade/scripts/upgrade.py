@@ -197,13 +197,18 @@ def target_of(instance: Path, rel: str, role: str) -> Path:
         raise kt.TemplateError(f"apply: refusing to touch {rel}, which belongs to the base. "
                                "Nothing was written.")
     root = instance.resolve()
+    link = kt.link_in_path(root, rel)
+    if link:
+        raise kt.TemplateError(f"apply: {rel} is reached through a link or junction ({link}). "
+                               "Nothing was written.")
     target = (root / rel).resolve()
     if root not in target.parents:
         raise kt.TemplateError(f"apply: {rel} resolves outside the base ({target}). "
                                "Nothing was written.")
-    if target.relative_to(root).as_posix().casefold() != rel.casefold():
-        raise kt.TemplateError(f"apply: {rel} resolves to {target.relative_to(root).as_posix()} "
-                               "through a link or an alias. Nothing was written.")
+    real = target.relative_to(root).as_posix()
+    if real.casefold() != rel.casefold() or kt.path_problem(real) or not may_touch(real, role):
+        raise kt.TemplateError(f"apply: {rel} resolves to {real} through a link or an alias. "
+                               "Nothing was written.")
     return target
 
 
@@ -396,7 +401,9 @@ def cmd_apply(args) -> int:
     for a in merges:
         target_of(instance, a["path"], "action")
 
-    targets = [a["path"] for a in writes + deletes + merges] + [e["path"] for e, _ in renders]
+    # Every path apply writes or deletes, the stamp and .kb-onboard.json included, plus
+    # the files left for a merge: uncommitted work in any of them would be lost.
+    targets = [rel for rel, _, _ in items] + [a["path"] for a in merges]
     if plan["git"]:
         dirty = planner.dirty_paths(instance, targets)
         if dirty:

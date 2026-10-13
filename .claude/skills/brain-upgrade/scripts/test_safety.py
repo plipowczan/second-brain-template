@@ -225,40 +225,48 @@ class ApplyGuardTest(SafetyCase):
                 self.assertEqual(snapshot(self.base), before)
                 self.assertFalse((self.tmp.path / "outside.txt").exists())
 
+    def link_folder(self, link: Path, target: Path):
+        try:
+            os.symlink(target, link, target_is_directory=True)
+        except (OSError, NotImplementedError) as e:
+            self.skipTest(f"this system does not let the test create a symlink ({e})")
+
     def test_link_out_of_the_base_refused(self):
         outside = self.tmp.path / "elsewhere"
         outside.mkdir()
-        link = self.base / ".claude" / "linked"
+        src = self.source(changes={".claude/linked/x.md": "x\n"})
+        # A link that is there at the dry run stops the dry run ...
+        self.link_folder(self.base / ".claude" / "linked", outside)
+        code, out, err = self.plan(src)
+        self.assertEqual(code, 1)
+        self.assertIn("link or junction", err)
+        # ... and one planted after it stops apply.
         try:
-            os.symlink(outside, link, target_is_directory=True)
-        except (OSError, NotImplementedError):
-            self.skipTest("cannot create a directory symlink here")
-        fx.git(self.base, "add", "-A")
-        fx.git(self.base, "commit", "-q", "-m", "link")
-        code, out, err = self.plan(self.source(changes={".claude/linked/x.md": "x\n"}))
+            (self.base / ".claude" / "linked").unlink()
+        except OSError:  # a folder link on Windows
+            os.rmdir(self.base / ".claude" / "linked")
+        code, out, err = self.plan(src)
         self.assertEqual(code, 0, err)
+        self.link_folder(self.base / ".claude" / "linked", outside)
         code, out, err = self.apply()
         self.assertEqual(code, 1)
-        self.assertIn("outside the base", err)
+        self.assertIn("link or junction", err)
         self.assertEqual(list(outside.iterdir()), [])
 
-
     def test_link_inside_the_base_into_notes_refused(self):
-        link = self.base / ".claude" / "notes"
-        try:
-            os.symlink(self.base / "content", link, target_is_directory=True)
-        except (OSError, NotImplementedError):
-            self.skipTest("cannot create a directory symlink here")
-        fx.git(self.base, "add", "-A")
-        fx.git(self.base, "commit", "-q", "-m", "link")
-        code, out, err = self.plan(self.source(changes={".claude/notes/x.md": "x\n"}))
+        src = self.source(changes={".claude/notes/x.md": "x\n"})
+        code, out, err = self.plan(src)
         self.assertEqual(code, 0, err)
+        self.link_folder(self.base / ".claude" / "notes", self.base / "content")
         before = snapshot(self.base)
         code, out, err = self.apply()
         self.assertEqual(code, 1)
-        self.assertIn("through a link or an alias", err)
+        self.assertIn("link or junction", err)
         self.assertFalse((self.base / "content" / "x.md").exists())
         self.assertEqual(snapshot(self.base)[0], before[0])
+        code, out, err = self.plan(src)
+        self.assertEqual(code, 1)
+        self.assertIn("link or junction", err)
 
     def test_no_git_backup_waits_for_the_checks(self):
         plain = make_instance(self.tmp.path / "plain", git=False)
@@ -269,6 +277,128 @@ class ApplyGuardTest(SafetyCase):
         code, out, err = self.apply()
         self.assertEqual(code, 1)
         self.assertFalse((plain / kt.BACKUP_DIR).exists())
+
+
+class LinkTest(SafetyCase):
+    """A template path that is, or sits under, a link must stop the dry run already."""
+    HOOK = ".claude/hooks/hook.py"
+    HOOK_V1 = "print('hook v1')\n"
+
+    def symlink(self, link: Path, target: Path, is_dir=False):
+        if link.exists() or link.is_symlink():
+            if link.is_dir() and not link.is_symlink():
+                import shutil
+                shutil.rmtree(link)
+            else:
+                link.unlink()
+        try:
+            os.symlink(target, link, target_is_directory=is_dir)
+        except (OSError, NotImplementedError) as e:
+            self.skipTest(f"this system does not let the test create a symlink ({e})")
+
+    def assert_dry_run_refuses(self, protected_file: Path):
+        before = protected_file.read_bytes()
+        code, out, err = self.plan(self.source(changes={self.HOOK: "print('hook v2')\n"}))
+        self.assertEqual(code, 1, out)
+        self.assertIn("link or junction", err)
+        self.assertEqual(protected_file.read_bytes(), before)
+        self.assertFalse(self.planfile.exists())
+
+    def test_owned_file_linked_to_a_note(self):
+        note = self.base / "content" / "important.md"
+        note.write_text(self.HOOK_V1, encoding="utf-8")  # same bytes: it looks pristine
+        self.symlink(self.base / self.HOOK, note)
+        self.assert_dry_run_refuses(note)
+
+    def test_owned_folder_linked_into_notes(self):
+        folder = self.base / "content" / "hooks-copy"
+        folder.mkdir()
+        (folder / "hook.py").write_text(self.HOOK_V1, encoding="utf-8")
+        self.symlink(self.base / ".claude" / "hooks", folder, is_dir=True)
+        self.assert_dry_run_refuses(folder / "hook.py")
+
+    def test_owned_file_linked_to_readme(self):
+        self.symlink(self.base / self.HOOK, self.base / "README.md")
+        self.assert_dry_run_refuses(self.base / "README.md")
+
+    def test_owned_file_linked_to_a_file_outside_the_manifest(self):
+        mine = self.base / "my-own" / "skill.md"
+        mine.parent.mkdir()
+        mine.write_text(self.HOOK_V1, encoding="utf-8")
+        self.symlink(self.base / self.HOOK, mine)
+        self.assert_dry_run_refuses(mine)
+
+    @unittest.skipUnless(os.name == "nt", "junctions exist only on Windows")
+    def test_owned_folder_through_a_junction(self):
+        import _winapi
+        import shutil
+        folder = self.base / "content" / "hooks-copy"
+        folder.mkdir()
+        (folder / "hook.py").write_text(self.HOOK_V1, encoding="utf-8")
+        shutil.rmtree(self.base / ".claude" / "hooks")
+        _winapi.CreateJunction(str(folder), str(self.base / ".claude" / "hooks"))
+        self.assert_dry_run_refuses(folder / "hook.py")
+
+    def test_link_planted_after_the_dry_run(self):
+        code, out, err = self.plan(self.source(changes={self.HOOK: "print('hook v2')\n"}))
+        self.assertEqual(code, 0, err)
+        note = self.base / "content" / "important.md"
+        note.write_text(self.HOOK_V1, encoding="utf-8")
+        self.symlink(self.base / self.HOOK, note)  # same content: the stale check passes
+        code, out, err = self.apply()
+        self.assertEqual(code, 1)
+        self.assertIn("link or junction", err)
+        self.assertEqual(note.read_text(encoding="utf-8"), self.HOOK_V1)
+
+
+class DirtyBookkeepingTest(SafetyCase):
+    def test_uncommitted_stamp_is_not_overwritten(self):
+        for staged in (False, True):
+            with self.subTest(staged=staged):
+                self.base = make_instance(self.tmp.path / f"kb-stamp-{staged}")
+                stamp = self.base / kt.STAMP
+                stamp.write_text(json.dumps(json.loads(stamp.read_text(encoding="utf-8")),
+                                            indent=4), encoding="utf-8")  # same data, edited
+                if staged:
+                    fx.git(self.base, "add", kt.STAMP)
+                code, out, err = self.plan(self.source(changes={".claude/hooks/hook.py": "v2\n"}))
+                self.assertEqual(code, 0, err)
+                self.assertIn("uncommitted changes in planned paths", out)
+                before = snapshot(self.base)
+                code, out, err = self.apply()
+                self.assertEqual(code, 1)
+                self.assertIn(kt.STAMP, err)
+                self.assertEqual(snapshot(self.base), before)
+
+    NEW_KEY = {"AGENTS.template.md": "# {{KB_NAME}}\n\n{{NEW_KEY}}\n"}
+
+    def test_uncommitted_render_inputs_are_not_overwritten(self):
+        for staged in (False, True):
+            with self.subTest(staged=staged):
+                self.base = make_instance(self.tmp.path / f"kb-values-{staged}")
+                values = self.base / kt.ONBOARD_VALUES
+                data = json.loads(values.read_text(encoding="utf-8"))
+                data["KB_OWNER"] = "edited, not committed"
+                values.write_text(json.dumps(data), encoding="utf-8")
+                if staged:
+                    fx.git(self.base, "add", kt.ONBOARD_VALUES)
+                code, out, err = self.plan(self.source(changes=self.NEW_KEY), "--rerender")
+                self.assertEqual(code, 0, err)
+                before = snapshot(self.base)
+                code, out, err = self.apply({"values": {"NEW_KEY": "answer"}})
+                self.assertEqual(code, 1)
+                self.assertIn(kt.ONBOARD_VALUES, err)
+                self.assertEqual(snapshot(self.base), before)
+
+    def test_untracked_render_inputs_of_an_old_base_are_fine(self):
+        fx.git(self.base, "rm", "-q", "--cached", kt.ONBOARD_VALUES)
+        fx.git(self.base, "commit", "-q", "-m", "as bases before 0.2.0 had it")
+        code, out, err = self.plan(self.source(changes=self.NEW_KEY), "--rerender")
+        self.assertEqual(code, 0, err)
+        code, out, err = self.apply({"values": {"NEW_KEY": "answer"}})
+        self.assertEqual(code, 0, err)
+        self.assertEqual(json.loads((self.base / kt.ONBOARD_VALUES).read_text(
+            encoding="utf-8"))["NEW_KEY"], "answer")
 
 
 class RollbackTest(SafetyCase):

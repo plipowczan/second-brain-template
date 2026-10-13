@@ -78,8 +78,10 @@ def tracked(instance: Path, path: str) -> bool:
     return kt.git(instance, "ls-files", "--error-unmatch", "--", path, check=False).returncode == 0
 
 
-def dirty_paths(instance: Path, paths: list[str]) -> list[str]:
-    """Planned paths with uncommitted work (modified, staged or untracked)."""
+def dirty_paths(instance: Path, paths: list[str], allow_untracked=(kt.ONBOARD_VALUES,)) -> list[str]:
+    """Planned paths with uncommitted work (modified, staged or untracked). An untracked
+    .kb-onboard.json is expected in bases from before 0.2.0: apply only adds keys to it
+    and the commit adds the file, so it does not count."""
     if not paths:
         return []
     out = kt.git(instance, "status", "--porcelain", "-z", "--untracked-files=all", "--",
@@ -87,8 +89,23 @@ def dirty_paths(instance: Path, paths: list[str]) -> list[str]:
     found = []
     for rec in out.split("\0"):
         if len(rec) > 3 and rec[2] == " ":
+            if rec[:2] == "??" and rec[3:] in allow_untracked:
+                continue
             found.append(rec[3:])
     return sorted(set(found) & set(paths))
+
+
+def check_links(plan: dict, instance: Path) -> None:
+    """The dry run already stops when a path it would write or delete is reached through
+    a symbolic link or a junction: its hash was read through the link, and a write would
+    land wherever the link points, possibly in the owner's notes."""
+    for path in write_paths(plan) + [kt.STAMP, kt.ONBOARD_VALUES]:
+        link = kt.link_in_path(instance, path)
+        if link:
+            raise kt.TemplateError(
+                f"{path} is reached through a link or junction ({link}). brain-upgrade does "
+                "not write through links, so this plan stops here. Nothing was changed. "
+                "Replace the link with the real file or folder, then plan again.")
 
 
 def action(path, kind, *, B=None, S=None, L=None, selected=None, note="", warning=""):
@@ -252,13 +269,14 @@ def check_invariants(plan: dict) -> None:
 def finish(plan: dict, instance: Path, payload: dict) -> dict:
     """Common warnings: untracked render inputs, uncommitted planned paths."""
     check_invariants(plan)
+    check_links(plan, instance)
     if plan["git"]:
         if (instance / kt.ONBOARD_VALUES).is_file() and not tracked(instance, kt.ONBOARD_VALUES):
             plan["track_onboard"] = True
             plan["warnings"].append(
                 f"{kt.ONBOARD_VALUES} is not tracked by git; the commit will add it so "
                 "the render inputs travel with the base")
-        dirty = dirty_paths(instance, write_paths(plan))
+        dirty = dirty_paths(instance, write_paths(plan) + [kt.STAMP])
         if dirty:
             plan["warnings"].append(
                 "uncommitted changes in planned paths (apply refuses until they are "
