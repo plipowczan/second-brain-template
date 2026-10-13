@@ -8,7 +8,13 @@ description: Use when starting a fresh knowledge base from this template, or whe
 ## When to use
 
 A fresh clone of the KB template. Detect by the presence of `CLAUDE.template.md`
-in the repo root. If `CLAUDE.template.md` is absent, the vault is already
+in the repo root.
+
+**Stop first if `CLAUDE.local.md` exists in the repo root.** Only the template's own
+source checkout has that file, and onboarding would turn the source into a knowledge
+base (it deletes the templates and the template-development files). Change nothing, and
+tell the user this checkout looks like the template source: to try onboarding, clone it
+to a scratch folder first (`git clone . ../kb-onboard-test`) and run `/b:onboard` there. If `CLAUDE.template.md` is absent, the vault is already
 initialized — report "already initialized" and offer to **reconfigure** by
 re-running the interview from the saved `.kb-onboard.json` (Phase 4), rather than
 clobbering existing files.
@@ -65,20 +71,35 @@ Warn on missing; do not abort.
    interview answer wasn't captured) — fix the values and re-render. Do not delete
    the templates until all three renders succeed.
 
-3. **Delete the templates** once all renders succeed:
-   `CLAUDE.template.md`, `AGENTS.template.md`, `content/WRITING_STYLE.template.md`.
+3. **Write the template stamp** once all renders succeed, while the templates still
+   exist (the stamp records their hashes):
+   ```bash
+   python .claude/skills/brain-upgrade/scripts/upgrade.py stamp
+   ```
+   It writes `.kb-template.json`: the template version from `.kb-manifest.json`, the
+   hashes of the template files as shipped, and the commit only when this clone sits on
+   the release tag. `/b:upgrade` needs it later to tell template files from the
+   owner's edits.
 
-4. **Create the topic folders** from the answers under `content/` (e.g.
+4. **Delete the templates and the template-development files:**
+   `CLAUDE.template.md`, `AGENTS.template.md`, `content/WRITING_STYLE.template.md`, then
+   every author-class file listed in `.kb-manifest.json` (`openspec/`, `dev/`,
+   `CONTRIBUTING.md`):
+   ```bash
+   python .claude/skills/brain-upgrade/scripts/upgrade.py prune-author
+   ```
+
+5. **Create the topic folders** from the answers under `content/` (e.g.
    `content/AI/`, `content/BUSINESS/`), each with a `.gitkeep` so it is tracked.
 
-5. **Offer to delete the example** `content/REFERENCE/` folder and the sample
+6. **Offer to delete the example** `content/REFERENCE/` folder and the sample
    `content/_raw/inbox/sample-source.md` (ask: keep as a tutorial, or remove). Act
    on the answer.
 
-6. **Prune note templates** in `content/templates/` to the chosen note types
+7. **Prune note templates** in `content/templates/` to the chosen note types
    (e.g. remove `book.md` if `book-note` was dropped).
 
-7. **Rebuild the indexes** so they match the new structure (run from the repo
+8. **Rebuild the indexes** so they match the new structure (run from the repo
    root — the script resolves `content/` relative to the current directory):
    `python .claude/skills/brain-reindex/scripts/build_indexes.py`.
 
@@ -88,7 +109,9 @@ Print a short "what now":
 - Drop a file in `content/_raw/inbox/` then run `/b:ingest`.
 - Ask a question with `/b:qa`.
 - Run `/b:lint` for a health check.
-Summarize the created topic folders and the personalized files.
+- Run `/b:upgrade` later to pull new template releases (it reads `.kb-template.json`).
+Summarize the created topic folders and the personalized files. Commit
+`.kb-onboard.json` and `.kb-template.json` with the rest: they travel with the base.
 
 ## Idempotence
 

@@ -8,17 +8,41 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
 ## [Unreleased]
 
 ### Added
-- **`brain-upgrade`: the engine that pulls template updates into your base.** Its scripts
-  (`.claude/skills/brain-upgrade/scripts/`, Python standard library only) read the
-  template version you install from a local clone, an unpacked release, a release `.zip`
-  or a download from GitHub, and record what the template shipped in a new stamp,
-  `.kb-template.json`. `upgrade.py plan` is a dry run that writes nothing to your base;
-  `apply` writes only the plan you approved, after checking that no planned file changed
-  since; `commit` makes one git commit with exactly those files, or, without git, the
-  backup in `.kb-upgrade-backup/` is your way back. `plan --adopt` brings a base that
-  has no stamp yet under the mechanism: it recognises unmodified files from any earlier
-  template state through a history index shipped with each release
-  (`.claude/skills/brain-upgrade/known-hashes.json`). The skill and `/b:upgrade` follow.
+- **`/b:upgrade` pulls new template releases into your base.** Until now every update
+  meant reading this file and re-copying files by hand. The new `brain-upgrade` skill
+  downloads a release from GitHub (or takes a release `.zip` or a local clone, so it
+  also works offline and without git), shows a **dry run** (the entries of this file
+  since your version, **BREAKING** first, and a plan per file), and changes nothing until
+  you approve the plan in one table. Template files you never touched are updated;
+  files you edited are kept, and you are asked only when the template changed the same
+  file (keep, overwrite, or merge together with the agent). Files the template removed
+  are proposed for deletion, checked only when you never edited them. `CLAUDE.md`,
+  `AGENTS.md` and `content/WRITING_STYLE.md` are re-rendered from the new templates only
+  when you ask and only while you have not edited them by hand. Your notes in `content/`
+  and your `README.md` are never written. With git the update is one commit
+  (`chore(template): upgrade to …`); without git every replaced file is copied to
+  `.kb-upgrade-backup/` first. The base records its template version and what the
+  template shipped in a new stamp, `.kb-template.json`. The scripts
+  (`.claude/skills/brain-upgrade/scripts/`) need only the Python standard library.
+
+  Existing bases: your base has neither `/b:upgrade` nor a stamp yet, so the first
+  update runs the engine of the `0.2.0` release (or newer) and starts with an adoption
+  (next entry). Download the release `.zip` (or use a clone of the template), unpack it
+  outside your base, and ask your agent to follow its
+  `.claude/skills/brain-upgrade/SKILL.md`, or run it yourself from your base:
+  `python <release>/.claude/skills/brain-upgrade/scripts/upgrade.py plan --instance . --adopt --source <release.zip>`.
+  Review and apply the adoption and commit it; then run the same `plan` without
+  `--adopt` for the upgrade, its own commit. From then on, `/b:upgrade` is enough.
+- **Adoption (`/b:upgrade --adopt`) brings bases without a stamp under updates,** of any
+  generation, including those older than `0.1.0` that still have the pre-rename skill
+  folders. Each release ships an index of every hash the template's files have had
+  (`.claude/skills/brain-upgrade/known-hashes.json`), so adoption recognises unmodified
+  template files from your generation and finds the nearest release. It moves those
+  files forward to that release only (never back), adds the files the release has and
+  your base lacks (you can deselect them), and writes the stamp, in its own commit. Your
+  edits stay as they are and remain visible as edits at the next upgrade. The upgrade to
+  the newest version follows as a second commit, so a large first update comes in two
+  reviewable, separately revertible parts.
 - **`.kb-manifest.json` holds the template version and sorts every file into a class.**
   The version (`0.1.0` until the next release) now lives only there, and `package.json`
   no longer has a `version` field. The four classes say what an update may touch:
@@ -122,6 +146,21 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
   Existing bases: re-pull `.claude/skills/research/validate_json.py`.
 
 ### Changed
+- **`/b:onboard` writes the template stamp and removes template-development files.**
+  After rendering your instruction files it records `.kb-template.json` (the template
+  version and what the template shipped), so `/b:upgrade` can later tell template files
+  from your edits. It also deletes `openspec/`, `dev/` and `CONTRIBUTING.md`, which are
+  only for developing the template, and it refuses to run in a checkout that has
+  `CLAUDE.local.md` (the template's own source). Commit `.kb-template.json` and
+  `.kb-onboard.json` with the rest of your base.
+
+  Existing bases: nothing to do; the adoption above writes your stamp.
+- **`README.md` belongs to your base.** Like the starter `content/`, it is copied once
+  and then it is yours: upgrades never write it and never ask about it, and they list a
+  changed template README as information only. The template's README describes the
+  template; yours can describe your knowledge.
+
+  Existing bases: nothing to do.
 - **`.kb-onboard.json` is no longer git-ignored.** It holds your onboarding answers, which
   are the input for re-rendering `CLAUDE.md`, `AGENTS.md` and `content/WRITING_STYLE.md`.
   Every base checked kept it only on disk, so any other clone of the base lost it. Its

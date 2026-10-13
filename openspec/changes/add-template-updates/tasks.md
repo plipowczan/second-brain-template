@@ -147,14 +147,14 @@ changes skill scripts also runs that skill's own `python -m unittest`.
 
 ## 6. Skill, command, onboarding and docs
 
-- [ ] 6.1 Write `.claude/skills/brain-upgrade/SKILL.md` as the thin launcher from design
+- [x] 6.1 Write `.claude/skills/brain-upgrade/SKILL.md` as the thin launcher from design
   D3 and D8: resolve the source, run the source's engine, then plan, one review table,
   apply, merges with the owner, and commit. For an unstamped base, run that cycle for the
   adoption first, then offer the upgrade as a second cycle. Include the bootstrap path
   for bases without the skill. Add `.claude/commands/b/upgrade.md`. Verify that the frontmatter `name`
   matches the directory, and that following the skill in a scratch instance produces a
   dry run without writes.
-- [ ] 6.2 Change `.claude/skills/brain-onboard/SKILL.md`:
+- [x] 6.2 Change `.claude/skills/brain-onboard/SKILL.md`:
   - refuse when `CLAUDE.local.md` exists;
   - after the renders succeed, delete the `*.template.md` files and every author-class
     file listed in the manifest;
@@ -165,7 +165,7 @@ changes skill scripts also runs that skill's own `python -m unittest`.
   Verify also that it refuses in a copy that has `CLAUDE.local.md`.
 - [x] 6.3 Add the brain-upgrade unit suite to `tests/run_tests.py`, next to the curate
   suite. Verify `ALL PASS`.
-- [ ] 6.4 Document updating:
+- [x] 6.4 Document updating:
   - an "Updating your base" section in `README.md`, covering git, no git and offline, and
     the first `--adopt`;
   - a `/b:upgrade` row in the README skills table;
@@ -174,7 +174,7 @@ changes skill scripts also runs that skill's own `python -m unittest`.
 
   Verify that `render.py` still renders `AGENTS.template.md` with a sample values file,
   and that `brain-onboard`'s `test_render.py` passes.
-- [ ] 6.5 Add the `CHANGELOG.md` entries for brain-upgrade, `--adopt`, the onboarding
+- [x] 6.5 Add the `CHANGELOG.md` entries for brain-upgrade, `--adopt`, the onboarding
   changes and `README.md` becoming seeded. Include "Existing bases" bootstrap steps: run
   the `0.2.0` release's engine with `--adopt`, commit, then upgrade. Verify that `dev/check_manifest.py` passes.
 - [ ] 6.6 Add a "Releasing" checklist and the `dev/` tools to `CONTRIBUTING.md`. Verify
