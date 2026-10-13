@@ -168,8 +168,16 @@ class IndexTest(unittest.TestCase):
                                   "CHANGELOG.md": fx.changelog("0.2.0", "0.1.0").encode()})
         fx.git(self.repo, "add", "-A")
         idx = kt.HistoryIndex(self.build(release_tree=True))
-        self.assertEqual(idx.states[-1], {"commit": None, "date": "2026-01-01", "release": "0.2.0"})
+        self.assertEqual(idx.states[-1], {"commit": None, "date": "2026-01-01",
+                                          "release": "0.2.0", "in": ["0.2.0"]})
         self.assertIn("0.2.0", idx.releases())
+        self.assertEqual(idx.states[0]["in"], ["0.1.0", "0.2.0"])
+
+    def test_release_history(self):
+        idx = kt.HistoryIndex(self.build())
+        self.assertTrue(idx.in_release(0, "0.1.0"))
+        self.assertTrue(idx.in_release(1, "0.1.0"))
+        self.assertFalse(idx.in_release(2, "0.1.0"))
 
 
 if __name__ == "__main__":

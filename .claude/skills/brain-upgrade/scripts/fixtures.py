@@ -178,3 +178,62 @@ class TempDir:
 
     def cleanup(self):
         self._tmp.cleanup()
+
+
+# --- a template history for adoption -------------------------------------------------
+# P0  before 0.1.0: old skill paths, no CHANGELOG/LICENSE/.github
+# P1  v0.1.0 (tag): still the old paths
+# P2  between releases: skills renamed to brain-*
+# P3  v0.2.0 (tag): manifest, index built in release mode
+
+TPL = {
+    "AGENTS.template.md": "# {{KB_NAME}}\n\nOwner: {{KB_OWNER}}\n",
+    "CLAUDE.template.md": "@AGENTS.md\n",
+    "content/WRITING_STYLE.template.md": "Language: {{PRIMARY_LANGUAGE}}\n",
+    "content/REFERENCE/Example.md": "# Example\n",
+    "README.md": "# Template README\n",
+    "schema.yml": "types: [note]\n",
+}
+P0 = {**TPL,
+      ".claude/skills/ingest/SKILL.md": "ingest v0\n",
+      ".claude/skills/onboard/scripts/render.py": RENDER_PY.decode(),
+      ".claude/hooks/hook.py": "hook v0\n",
+      ".gitignore": "__pycache__/\n.kb-onboard.json\n"}
+P1 = {**P0,
+      ".claude/skills/ingest/SKILL.md": "ingest v1\n",
+      ".claude/hooks/hook.py": "hook v1\n",
+      "LICENSE": "MIT\n",
+      "CHANGELOG.md": changelog("0.1.0"),
+      ".github/workflows/kb.yml": "on: push\n"}
+P2 = {k: v for k, v in P1.items() if not k.startswith((".claude/skills/ingest/", ".claude/skills/onboard/"))}
+P2.update({".claude/skills/brain-ingest/SKILL.md": "ingest v1\n",
+           ".claude/skills/brain-onboard/scripts/render.py": RENDER_PY.decode(),
+           ".claude/hooks/hook.py": "hook v2\n",
+           "CONTRIBUTING.md": "# Contributing to the template\n",
+           ".gitignore": "__pycache__/\n"})
+P3 = {**P2,
+      ".kb-manifest.json": manifest("0.2.0"),
+      "CHANGELOG.md": changelog("0.2.0", "0.1.0"),
+      ".claude/skills/brain-upgrade/SKILL.md": "upgrade\n"}
+
+
+def enc(files):
+    return {p: v.encode() if isinstance(v, str) else v for p, v in files.items()}
+
+
+def build_history(repo: Path) -> dict:
+    git_init(repo)
+    shas = {"P0": commit_tree(repo, enc(P0), "pre-release state")}
+    shas["P1"] = commit_tree(repo, enc(P1), "release 0.1.0", tag="v0.1.0")
+    shas["P2"] = commit_tree(repo, enc(P2), "rename skills")
+    # The release commit: stage, index the staged tree as 0.2.0, commit, tag.
+    commit_tree(repo, enc(P3), "release 0.2.0 (without index yet)")
+    git(repo, "reset", "-q", "--soft", "HEAD~1")
+    index = kt.build_index(repo, kt.Manifest.from_bytes(manifest("0.2.0").encode()),
+                           release_tree=True)
+    write_tree(repo, {kt.INDEX: kt.dump_index(index)})
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "release 0.2.0")
+    git(repo, "tag", "-a", "v0.2.0", "-m", "v0.2.0")
+    shas["P3"] = git(repo, "rev-parse", "HEAD")
+    return shas

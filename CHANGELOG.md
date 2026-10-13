@@ -15,7 +15,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
   `.kb-template.json`. `upgrade.py plan` is a dry run that writes nothing to your base;
   `apply` writes only the plan you approved, after checking that no planned file changed
   since; `commit` makes one git commit with exactly those files, or, without git, the
-  backup in `.kb-upgrade-backup/` is your way back. The skill and `/b:upgrade` follow.
+  backup in `.kb-upgrade-backup/` is your way back. `plan --adopt` brings a base that
+  has no stamp yet under the mechanism: it recognises unmodified files from any earlier
+  template state through a history index shipped with each release
+  (`.claude/skills/brain-upgrade/known-hashes.json`). The skill and `/b:upgrade` follow.
 - **`.kb-manifest.json` holds the template version and sorts every file into a class.**
   The version (`0.1.0` until the next release) now lives only there, and `package.json`
   no longer has a `version` field. The four classes say what an update may touch:

@@ -111,12 +111,12 @@ changes skill scripts also runs that skill's own `python -m unittest`.
 
 ## 5. Adoption
 
-- [ ] 5.1 Write `dev/build_known_hashes.py` to generate
+- [x] 5.1 Write `dev/build_known_hashes.py` to generate
   `.claude/skills/brain-upgrade/known-hashes.json` from every commit reachable from HEAD
   (design D9), and commit the first generated index. Verify that the index contains the
   `v0.1.0` hash of `.claude/skills/ingest/SKILL.md` and of `.claude/hooks/load_vault_map.py`,
   and that a second run produces a byte-identical file.
-- [ ] 5.2 Implement `--adopt` planning (design D9):
+- [x] 5.2 Implement `--adopt` planning (design D9):
   - a plain upgrade without a stamp stops and suggests `--adopt`; `--adopt` with a stamp
     is refused;
   - pristine detection by the index;
@@ -130,11 +130,11 @@ changes skill scripts also runs that skill's own `python -m unittest`.
   Verify with unit tests on a fixture index that simulates a pre-`0.1.0` instance, an
   instance between releases, and an instance with one file re-pulled from a newer state
   that must not be rewound.
-- [ ] 5.3 Obtain R's content: the source itself only when it is R's release, the tag
+- [x] 5.3 Obtain R's content: the source itself only when it is R's release, the tag
   `v<R>` of a git-clone source, a download, or `--base <zip|dir>`. Offline without any of
   these, stop and name the release. Verify with unit tests on a temp git repo with two
   tags, a stub download, and the offline stop (nothing written).
-- [ ] 5.4 Add an adoption case to `tests/run_tests.py`. It builds, in temp directories, a
+- [x] 5.4 Add an adoption case to `tests/run_tests.py`. It builds, in temp directories, a
   synthetic old generation (pre-rename skill paths, no `CHANGELOG.md`), a synthetic
   older release R and a newer source. It runs adoption (`plan --adopt`, `apply`,
   `commit`) and then an upgrade (`plan`, `apply`, `commit`), and asserts:
@@ -163,7 +163,7 @@ changes skill scripts also runs that skill's own `python -m unittest`.
   Verify in a scratch clone (`git clone . ../kb-onboard-test`) that onboarding leaves no
   `openspec/`, `dev/` or `CONTRIBUTING.md`, and writes a stamp holding version `0.1.0`.
   Verify also that it refuses in a copy that has `CLAUDE.local.md`.
-- [ ] 6.3 Add the brain-upgrade unit suite to `tests/run_tests.py`, next to the curate
+- [x] 6.3 Add the brain-upgrade unit suite to `tests/run_tests.py`, next to the curate
   suite. Verify `ALL PASS`.
 - [ ] 6.4 Document updating:
   - an "Updating your base" section in `README.md`, covering git, no git and offline, and

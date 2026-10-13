@@ -400,7 +400,7 @@ def plan_adopt(instance: Path, source: sources.Source, *, base: str | None = Non
             f"{instance} already has {kt.STAMP}; it is adopted. Run a plain upgrade "
             "(without --adopt). Nothing was changed.")
     man, index = source.manifest, source.index
-    release, r_files, r_state = nearest_release(instance, source)
+    release, _, _ = nearest_release(instance, source)
     rtree = base_tree(source, release, base, opener)
     R = rtree.owned(man)
     plan = base_plan(instance, "adopt", source)
@@ -412,6 +412,15 @@ def plan_adopt(instance: Path, source: sources.Source, *, base: str | None = Non
 
     owned_index = {p for p in index.files if man.classify(p) == "owned"}
     baselines, payload = {}, {}
+    indexed_release = release in index.releases()
+
+    def older(state: int) -> bool:
+        return not indexed_release or index.in_release(state, release)
+
+    def last_in_release(path: str) -> str | None:
+        found = [(s, h) for h, sts in index.files.get(path, {}).items() for s in sts if older(s)]
+        return max(found)[1] if found else None
+
     for p in sorted(set(R) | owned_index):
         Rh, L = R.get(p), local(instance, p)
         if L is not None and L == Rh:
@@ -429,7 +438,9 @@ def plan_adopt(instance: Path, source: sources.Source, *, base: str | None = Non
             payload[f"src/{p}"] = rtree.files[p]
         states = index.states_of(p, L)
         if states:  # pristine: some template state shipped exactly this content
-            if any(s > r_state for s in states):
+            # Older means "in R's history"; a state after R or on a parallel branch is
+            # newer, and the file is never rewound to R.
+            if any(not older(s) for s in states):
                 plan["actions"].append(action(p, "keep", S=Rh, L=L,
                                               note=f"from a template state newer than {release}; not rewound"))
                 baselines[p] = L
@@ -442,7 +453,7 @@ def plan_adopt(instance: Path, source: sources.Source, *, base: str | None = Non
                                               note=f"older template file that {release} no longer ships"))
         else:
             plan["actions"].append(action(p, "keep", S=Rh, L=L, note="edited in this base"))
-            baselines[p] = Rh or index.latest_hash(p, r_state) or index.latest_hash(p)
+            baselines[p] = Rh or last_in_release(p) or index.latest_hash(p)
 
     leftovers, kept = author_leftovers(instance, source, index)
     plan["actions"] += leftovers

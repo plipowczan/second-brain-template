@@ -329,8 +329,9 @@ def tracked_files(root: Path) -> list[str]:
 class HistoryIndex:
     """`known-hashes.json`: every hash each owned/author path had in template history.
 
-    Layout: {"format": 1, "repository", "states": [{commit, date, release}],
-    "files": {path: {hash: [state, ...]}}}, states oldest first.
+    Layout: {"format": 1, "repository", "states": [{commit, date, release, in}],
+    "files": {path: {hash: [state, ...]}}}. States are in topological order (parents
+    first); `in` lists the releases whose history contains the state.
     """
 
     def __init__(self, data: dict | None = None):
@@ -364,13 +365,14 @@ class HistoryIndex:
                     out[path] = h
         return out
 
-    def latest_hash(self, path: str, upto: int | None = None) -> str | None:
-        best, best_state = None, -1
-        for h, states in self.files.get(path, {}).items():
-            for s in states:
-                if (upto is None or s <= upto) and s > best_state:
-                    best, best_state = h, s
-        return best
+    def in_release(self, state: int, version: str) -> bool:
+        """True when `state` is the release `version` or one of its ancestors."""
+        return version in self.states[state].get("in", [])
+
+    def latest_hash(self, path: str) -> str | None:
+        """The hash a path had in the newest state that shipped it."""
+        found = [(s, h) for h, states in self.files.get(path, {}).items() for s in states]
+        return max(found)[1] if found else None
 
 
 def build_index(repo: Path, manifest: Manifest, release_tree: bool = False) -> dict:
@@ -378,9 +380,10 @@ def build_index(repo: Path, manifest: Manifest, release_tree: bool = False) -> d
     hash of each owned- or author-class file (classified by `manifest`).
 
     A state is kept when its indexed files differ from the previous state's or when a
-    `v*` tag names it. With `release_tree`, the staged tree (`git write-tree`) is added
-    as the newest state and labelled with the manifest version: the release commit
-    itself, before it exists.
+    `v*` tag names it. Each state lists the releases whose history contains it, so
+    adoption can tell an older state from a newer or parallel one. With `release_tree`,
+    the staged tree (`git write-tree`) is added as the newest state and labelled with the
+    manifest version: the release commit itself, before it exists.
     """
     tags = {}
     refs = git(repo, "for-each-ref", "--format=%(refname:short) %(objectname) %(*objectname)",
@@ -395,6 +398,11 @@ def build_index(repo: Path, manifest: Manifest, release_tree: bool = False) -> d
 
     log = git(repo, "log", "--topo-order", "--reverse", "--format=%H %cs", "HEAD").stdout
     commits = [tuple(line.split(" ", 1)) for line in log.splitlines() if line.strip()]
+    history = {}  # release -> commits reachable from its tag
+    for sha, version in tags.items():
+        history[version] = set(git(repo, "rev-list", sha).stdout.split())
+    if release_tree:
+        history[manifest.version] = {sha for sha, _ in commits} | {None}
     trees: list[tuple[str | None, str, str | None, str]] = [
         (sha, date, tags.get(sha), sha) for sha, date in commits]
     if release_tree:
@@ -434,7 +442,9 @@ def build_index(repo: Path, manifest: Manifest, release_tree: bool = False) -> d
                 blob_hash[blob] = content_hash(body)
                 pos = header_end + 1 + size + 1
         state = len(states)
-        states.append({"commit": commit, "date": date, "release": release})
+        states.append({"commit": commit, "date": date, "release": release,
+                       "in": sorted((v for v, seen in history.items() if commit in seen),
+                                    key=parse_version)})
         for path, blob in snap.items():
             files.setdefault(path, {}).setdefault(blob_hash[blob], []).append(state)
     return {
