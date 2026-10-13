@@ -40,9 +40,11 @@ your own knowledge base, you don't need this file: run `/b:onboard` (see the
    suites. Here (where `dev/` exists) it also runs `dev/check_manifest.py` and the `dev/`
    tests. It takes a few minutes, mostly git in temporary repositories.
 3. If you changed a skill's scripts, also run that skill's own unit tests: `python -m
-   unittest` from `.claude/skills/<skill>/scripts/`. `tests/run_tests.py` runs only the
-   curate and brain-upgrade suites. The two `yt-dlp` integration tests in `brain-ingest`
-   need `yt-dlp` and a network connection.
+   unittest` from `.claude/skills/<skill>/scripts/`, or all of them at once with
+   `python tests/run_skill_tests.py`. `tests/run_tests.py` runs only the curate and
+   brain-upgrade suites. The two `yt-dlp` integration tests in `brain-ingest` need `yt-dlp`
+   and a network connection; `run_skill_tests.py` skips them, with the reason, when it is
+   missing.
 4. If you changed `.github/workflows/kb-maintain.yml`, or a script it calls
    (`build_indexes.py`, `lint_scan.py`), run what the workflow runs, from the repo root:
 
@@ -54,8 +56,11 @@ your own knowledge base, you don't need this file: run `/b:onboard` (see the
    Then `git diff content/_indexes` may show only `updated:` lines. Any other change means
    the workflow would open an index-refresh pull request.
 
-No CI runs these checks on push or pull request yet, so they are yours to run. Node is
-needed only for the optional `npm run format` (Prettier).
+`.github/workflows/tests.yml` runs `tests/run_tests.py` and `tests/run_skill_tests.py` (every
+skill's own unit tests) on Linux and Windows for every push to `main` and every pull request
+into it, and checks that `.githooks/pre-commit` blocks a note without frontmatter. Run the
+same checks locally before you push: CI tells you after the fact, and a red pull request is
+not merged. Node is needed only for the optional `npm run format` (Prettier).
 
 ## What ships, and in what form
 
