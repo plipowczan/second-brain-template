@@ -175,3 +175,36 @@ Test changes:
 Checks: `python tests/run_tests.py` — ALL PASS; brain-upgrade `python -m unittest` —
 156 passed; brain-onboard, brain-export, brain-gaps, brain-lint, brain-refactor suites —
 OK; `python dev/check_manifest.py` — ok
+
+R5-1, decided: decyzja Pawła 2026-10-13: pokazanie pochodzenia i zgoda przed uruchomieniem;
+podpisy odrzucone (the upgrade installs skills and hooks from the same repository, which
+then run in every session anyway). Done in d15fd75:
+
+- `upgrade.py fetch`, run with the base's own copy of the engine before anything from the
+  source runs, prints a `provenance` block: repository, version, tag (only when the source
+  proves it is that release), commit or "unknown", where it came from (download URL or
+  path), the base's repository from the stamp, and `same_repository`, with a warning when
+  they differ.
+- `SKILL.md` (Phase 1, step 5 and a new rule) shows that block in plain words, says
+  outright when the repository differs from the base's, and asks for an explicit yes;
+  without it nothing runs and nothing changes. The bootstrap path (a base without the
+  skill) reads the same facts from the release zip with a standard-library one-liner
+  before running the release's engine.
+- `upgrade.py plan` refuses a source from another repository than the stamp names unless
+  `--allow-repository <that repository>` is passed, which the skill does only after the
+  owner agreed to the switch.
+- The trust model (the template repository on GitHub over HTTPS; the tool is code from the
+  same source as the installed skills and hooks; no release signatures, decided
+  2026-10-13) is written in `SKILL.md` ("What you trust"), `README.md` ("Updating your
+  base") and `CONTRIBUTING.md` ("What instances trust"); the `CHANGELOG.md` entry for
+  `/b:upgrade` says it.
+
+New tests in `test_safety.py` (`ProvenanceTest`): `fetch` reports a tagged git release
+(tag, commit, same repository), a download (URL, tag, commit from the zip comment) and an
+unproven folder ("commit unknown", no tag); a source from another repository is flagged
+with a warning naming both; `plan` refuses it without consent, refuses a consent naming
+another repository, and plans it with `--allow-repository`.
+
+Checks: `python tests/run_tests.py` — ALL PASS; brain-upgrade `python -m unittest` —
+161 passed; brain-onboard, brain-export, brain-gaps, brain-lint, brain-refactor suites —
+OK; `python dev/check_manifest.py` — ok
