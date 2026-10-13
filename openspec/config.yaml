@@ -1,0 +1,42 @@
+schema: spec-driven
+
+context: |
+  Language: en
+  All artifacts must be written in en.
+  Keep OpenSpec structural headings and SHALL/MUST keywords in English.
+
+  Project: the source repository of a second-brain knowledge-base template
+  (public, plipowczan/second-brain-template). Every knowledge base created from it
+  is an instance; changes flow one way, template -> instances.
+  Stack: markdown vault under content/; Claude Code skills in
+  .claude/skills/<name>/SKILL.md with deterministic Python 3 scripts in scripts/
+  (stdlib plus PyYAML), each with unittest suites next to them; slash-command
+  wrappers in .claude/commands/b/. tests/run_tests.py is the integration suite.
+  Constraints: scripts run on Windows, macOS and Linux; instances may be used
+  without a terminal, without git and offline (README: "Download ZIP").
+  Contributor rules live in CONTRIBUTING.md: every change gets a CHANGELOG.md entry
+  under [Unreleased] (Keep a Changelog), tests pass before commit, no values from
+  one vault in skills or templates. This openspec/ directory belongs to the
+  template author and never ships to instances.
+
+# Per-artifact rules (optional)
+# Add custom rules for specific artifacts.
+# Example:
+#   rules:
+#     proposal:
+#       - Keep proposals under 500 words
+#       - Always include a "Non-goals" section
+#     tasks:
+#       - Break tasks into chunks of max 2 hours
+
+# Per-operation guidance (optional)
+# Add advisory guidance for how apply and archive work should be conducted.
+# This is separate from artifact rules above.
+# Example:
+#   operations:
+#     apply:
+#       guidance:
+#         - Keep test summaries concise
+#     archive:
+#       guidance:
+#         - Summarize the archive outcome before finishing
