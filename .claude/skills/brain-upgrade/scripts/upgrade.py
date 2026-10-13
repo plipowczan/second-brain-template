@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import shutil
 import sys
 from pathlib import Path
@@ -176,6 +177,94 @@ def stale_paths(plan: dict, instance: Path) -> list[str]:
     return sorted(set(stale))
 
 
+def target_of(instance: Path, rel: str, rerendered: set) -> Path:
+    """The file a planned path names, checked again right before it is touched: a safe
+    relative path, not one of the base's own files (the requested re-render of
+    content/WRITING_STYLE.md aside), and still inside the base once links resolve."""
+    kt.check_paths([rel], "apply")
+    if kt.protected(rel) and rel not in (kt.STAMP, kt.ONBOARD_VALUES) and not (
+            rel == kt.WRITING_STYLE and rel in rerendered):
+        raise kt.TemplateError(f"apply: refusing to touch {rel}, which belongs to the base. "
+                               "Nothing was written.")
+    root = instance.resolve()
+    target = (root / rel).resolve()
+    if root not in target.parents:
+        raise kt.TemplateError(f"apply: {rel} resolves outside the base ({target}). "
+                               "Nothing was written.")
+    return target
+
+
+def _write(path: Path, data: bytes) -> None:
+    """Replace a file in one step: write a sibling temp file, then rename it over."""
+    tmp = path.with_name(path.name + ".kb-upgrade-tmp")
+    try:
+        tmp.write_bytes(data)
+        os.replace(tmp, path)
+    finally:
+        if tmp.exists():
+            tmp.unlink()
+
+
+def _unlink(path: Path) -> None:
+    path.unlink()
+
+
+def transaction(instance: Path, mutations: list, rerendered: set = frozenset()) -> None:
+    """Apply (path, bytes | None for delete) in order, all or nothing.
+
+    Before the first change it journals each target's previous bytes (or that it did not
+    exist). On any failure it puts every touched target back, removes the files and the
+    folders it created, and raises: the base is then as it was before apply.
+    """
+    targets = [target_of(instance, rel, rerendered) for rel, _ in mutations]
+    kt.check_paths([rel for rel, _ in mutations], "apply")
+    journal = [(t, t.read_bytes() if t.is_file() else None) for t in targets]
+    created: list[Path] = []
+    step = -1
+    try:
+        for step, ((rel, data), (target, before)) in enumerate(zip(mutations, journal)):
+            if data is None:
+                if before is not None:
+                    _unlink(target)
+                continue
+            missing = []
+            d = target.parent
+            while not d.exists():
+                missing.append(d)
+                d = d.parent
+            for d in reversed(missing):
+                d.mkdir()
+                created.append(d)
+            _write(target, data)
+    except BaseException as e:
+        failed_rel = mutations[step][0] if step >= 0 else "?"
+        problems = []
+        for target, before in reversed(journal[:step + 1]):
+            try:
+                if before is None:
+                    if target.exists():
+                        _unlink(target)
+                elif not target.is_file() or target.read_bytes() != before:
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    _write(target, before)
+            except BaseException as err:  # keep going: restore as much as possible
+                problems.append(f"{target.relative_to(instance.resolve())} ({err})")
+        for d in reversed(created):
+            try:
+                d.rmdir()
+            except OSError:
+                pass
+        if problems:
+            raise kt.TemplateError(
+                f"apply failed at {failed_rel} ({e}), and these could not be put back: "
+                + "; ".join(problems) + ". Restore them from git (git status) or the backup "
+                "folder before anything else.") from e
+        raise kt.TemplateError(
+            f"apply failed at {failed_rel} ({e}). Every change was rolled back: the base "
+            "is as it was before apply. Fix the cause (a locked file, a full disk) and run "
+            "apply again.") from e
+
+
 def remove_empty_dirs(instance: Path, start: Path) -> None:
     d = start
     while d != instance and instance in d.parents:
@@ -284,29 +373,24 @@ def cmd_apply(args) -> int:
             dst.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(instance / p, dst)
 
-    for a in writes:
-        target = instance / a["path"]
-        target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_bytes(blobs[a["path"]])
-    for a in deletes:
-        target = instance / a["path"]
-        if target.is_file():
-            target.unlink()
-            remove_empty_dirs(instance, target.parent)
-    for e, out in renders:
-        (instance / e["path"]).write_bytes(out)
-    if new_values:
-        values = planner.read_values(instance) or {}
-        values.update(new_values)
-        (instance / kt.ONBOARD_VALUES).write_bytes(kt.dump_json(values))
-
     s = plan["stamp"]
     rendered = dict(s["rendered"])
     for e, out in renders:
         rendered[e["path"]] = {"template": e["template"], "template_hash": e["S_template"],
                                "output_hash": kt.content_hash(out)}
-    kt.write_stamp(instance, kt.make_stamp(s["repository"], s["version"], s["commit"],
-                                           s["files"], rendered, s.get("seeded")))
+    stamp = kt.make_stamp(s["repository"], s["version"], s["commit"], s["files"], rendered,
+                          s.get("seeded"))
+    mutations = [(a["path"], blobs[a["path"]]) for a in writes]
+    mutations += [(a["path"], None) for a in deletes]
+    mutations += [(e["path"], out) for e, out in renders]
+    if new_values:
+        values = planner.read_values(instance) or {}
+        values.update(new_values)
+        mutations.append((kt.ONBOARD_VALUES, kt.dump_json(values)))
+    mutations.append((kt.STAMP, kt.dump_json(stamp)))  # last: it names the new version
+    transaction(instance, mutations, rerendered={e["path"] for e, _ in renders})
+    for a in deletes:
+        remove_empty_dirs(instance, (instance / a["path"]).parent)
 
     plan["applied"] = {
         "time": kt.utc_now(),

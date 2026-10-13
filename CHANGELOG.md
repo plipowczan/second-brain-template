@@ -21,9 +21,15 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
   when you ask and only while you have not edited them by hand. Your notes in `content/`
   and your `README.md` are never written. With git the update is one commit
   (`chore(template): upgrade to …`); without git every replaced file is copied to
-  `.kb-upgrade-backup/` first. The base records its template version and what the
-  template shipped in a new stamp, `.kb-template.json`. The scripts
-  (`.claude/skills/brain-upgrade/scripts/`) need only the Python standard library.
+  `.kb-upgrade-backup/` first. Applying is all or nothing: if a write fails halfway (a
+  file locked by OneDrive or an antivirus, a full disk), every file is put back as it was
+  and the run says so. Whatever a downloaded manifest, a history index or your stamp
+  claims, it writes nothing outside your base, nothing under `content/` (except
+  `content/WRITING_STYLE.md` when you ask for its re-render) and never your `README.md`,
+  and it refuses paths that Windows or macOS would treat as one file. The base records
+  its template version and what the template shipped in a new stamp, `.kb-template.json`.
+  The scripts (`.claude/skills/brain-upgrade/scripts/`) need only the Python standard
+  library.
 
   Existing bases: your base has neither `/b:upgrade` nor a stamp yet, so the first
   update runs the engine of the `0.2.0` release (or newer) and starts with an adoption

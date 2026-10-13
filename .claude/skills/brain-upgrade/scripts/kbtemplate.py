@@ -37,6 +37,89 @@ class TemplateError(Exception):
     """A problem the owner has to act on; the message says what to do."""
 
 
+# --- path safety ---------------------------------------------------------------------
+# Every path brain-upgrade reads, writes or deletes comes from data it did not write
+# itself: archive member names, the source's manifest and history index, the base's
+# stamp. One rule for all of them: a relative POSIX path that names the same single
+# place inside the base on every OS.
+
+WRITING_STYLE = "content/WRITING_STYLE.md"
+_DRIVE = re.compile(r"^[A-Za-z]:")
+
+
+def path_problem(path) -> str | None:
+    """Why `path` is not a safe relative path, or None when it is."""
+    if not isinstance(path, str) or not path:
+        return "empty"
+    if "\\" in path:
+        return "backslash"
+    if path.startswith("/"):
+        return "absolute or UNC"
+    if _DRIVE.match(path):
+        return "drive letter"
+    if ":" in path:
+        return "':' (a Windows stream name)"
+    if "\0" in path:
+        return "NUL byte"
+    for seg in path.split("/"):
+        if seg in ("", ".", ".."):
+            return "empty, '.' or '..' segment"
+        if seg != seg.rstrip(". "):
+            return "a segment ends with a dot or a space"
+        if seg.casefold() == ".git":
+            return "inside .git"
+    return None
+
+
+def case_collisions(paths) -> list[tuple[str, str]]:
+    """Pairs of paths that would be one file (or a file and a folder) on a
+    case-insensitive filesystem such as Windows or macOS."""
+    seen: dict[str, str] = {}
+    out = []
+    for p in sorted(paths):
+        key = p.casefold()
+        if key in seen and seen[key] != p:
+            out.append((seen[key], p))
+        seen.setdefault(key, p)
+    for p in sorted(paths):
+        parts = p.casefold().split("/")
+        for i in range(1, len(parts)):
+            prefix = "/".join(parts[:i])
+            if prefix in seen:
+                out.append((seen[prefix], p))
+    return out
+
+
+def check_paths(paths, where: str) -> None:
+    """Raise TemplateError naming the first unsafe or colliding path."""
+    paths = list(paths)
+    for p in paths:
+        why = path_problem(p)
+        if why:
+            raise TemplateError(f"{where}: unsafe path {p!r} ({why}). Nothing was changed.")
+    clash = case_collisions(paths)
+    if clash:
+        a, b = clash[0]
+        raise TemplateError(f"{where}: {a!r} and {b!r} would be the same file on Windows "
+                            "or macOS. Nothing was changed.")
+
+
+def protected(path: str) -> bool:
+    """Paths an upgrade never writes or deletes as a file action, whatever a manifest
+    says: the owner's notes and README.md, and brain-upgrade's own bookkeeping. The one
+    exception, content/WRITING_STYLE.md on a requested re-render, is handled by callers."""
+    p = path.casefold()
+    return (p == "readme.md" or p.startswith("content/") or p in (STAMP, ONBOARD_VALUES)
+            or p.startswith(BACKUP_DIR + "/"))
+
+
+def check_pattern(pattern, where: str) -> None:
+    if (not isinstance(pattern, str) or not pattern or "\\" in pattern
+            or pattern.startswith("/") or _DRIVE.match(pattern)
+            or any(seg in (".", "..") for seg in pattern.split("/"))):
+        raise TemplateError(f"{where}: unsafe pattern {pattern!r}. Nothing was changed.")
+
+
 # --- hashing -------------------------------------------------------------------------
 
 def content_hash(data: bytes) -> str:
@@ -111,6 +194,14 @@ class Manifest:
         self.seeded = list(classes.get("seeded", []))
         self.exclude = list(data.get("exclude", []))
         self.render_sources = {src: out for out, src in self.rendered.items()}
+        for p in self.author + self.owned + self.seeded + self.exclude:
+            check_pattern(p, MANIFEST)
+        check_paths(list(self.rendered) + list(self.render_sources), f"{MANIFEST} rendered")
+        for out in self.rendered:
+            if protected(out) and out != WRITING_STYLE:
+                raise TemplateError(f"{MANIFEST}: rendered output {out!r} belongs to the base; "
+                                    "only CLAUDE.md-style files and content/WRITING_STYLE.md "
+                                    "may be rendered. Nothing was changed.")
 
     @classmethod
     def from_bytes(cls, data: bytes) -> "Manifest":
@@ -253,6 +344,15 @@ def read_stamp(root: Path) -> dict | None:
         raise TemplateError(f"{STAMP}: unsupported format {stamp.get('format')!r}")
     stamp.setdefault("files", {})
     stamp.setdefault("rendered", {})
+    check_paths(stamp["files"], f"{STAMP} files")
+    for p in stamp["files"]:
+        if protected(p):
+            raise TemplateError(f"{STAMP}: {p!r} cannot be a template file; notes, README.md "
+                                "and brain-upgrade's own files belong to the base. Nothing "
+                                "was changed.")
+    check_paths(list(stamp["rendered"]) + [e.get("template") for e in stamp["rendered"].values()
+                                            if isinstance(e, dict)], f"{STAMP} rendered")
+    check_paths(stamp.get("seeded") or {}, f"{STAMP} seeded")
     return stamp
 
 
@@ -341,6 +441,11 @@ class HistoryIndex:
         self.data = data
         self.states = data.get("states", [])
         self.files = data.get("files", {})
+        check_paths(self.files, "known-hashes.json")
+        for p in self.files:
+            if protected(p):
+                raise TemplateError(f"known-hashes.json: {p!r} cannot be a template file. "
+                                    "Nothing was changed.")
 
     @classmethod
     def from_bytes(cls, data: bytes | None) -> "HistoryIndex":

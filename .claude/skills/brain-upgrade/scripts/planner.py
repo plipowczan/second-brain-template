@@ -232,8 +232,26 @@ def base_plan(instance: Path, mode: str, source: sources.Source) -> dict:
     }
 
 
+def check_invariants(plan: dict) -> None:
+    """Whatever the manifest, stamp or index say: no write or delete under content/ or of
+    README.md (the requested re-render of content/WRITING_STYLE.md aside), and no two
+    planned paths that are one file on a case-insensitive filesystem."""
+    for a in plan["actions"]:
+        if a["kind"] != "keep" and kt.protected(a["path"]):
+            raise kt.TemplateError(
+                f"refusing to plan {a['path']} ({a['kind']}): notes, README.md and "
+                "brain-upgrade's own files belong to the base. Nothing was changed.")
+    for e in plan["rendered"]:
+        if kt.protected(e["path"]) and e["path"] != kt.WRITING_STYLE:
+            raise kt.TemplateError(f"refusing to plan a re-render of {e['path']}. "
+                                   "Nothing was changed.")
+    kt.check_paths([a["path"] for a in plan["actions"]] + [e["path"] for e in plan["rendered"]],
+                   "the plan")
+
+
 def finish(plan: dict, instance: Path, payload: dict) -> dict:
     """Common warnings: untracked render inputs, uncommitted planned paths."""
+    check_invariants(plan)
     if plan["git"]:
         if (instance / kt.ONBOARD_VALUES).is_file() and not tracked(instance, kt.ONBOARD_VALUES):
             plan["track_onboard"] = True

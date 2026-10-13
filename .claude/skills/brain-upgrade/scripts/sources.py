@@ -42,10 +42,6 @@ def private_dir() -> Path:
     return Path(tempfile.mkdtemp(prefix="kb-upgrade-"))
 
 
-def _safe(path: str) -> bool:
-    parts = path.split("/")
-    return not (path.startswith("/") or "\\" in path or re.match(r"^[A-Za-z]:", path)
-                or any(p in ("", ".", "..") for p in parts))
 
 
 class Source:
@@ -55,6 +51,7 @@ class Source:
                  commit: str | None = None, ref: str | None = None,
                  release: bool | None = None, warnings: list[str] | None = None,
                  archive: str | None = None, require_manifest: bool = True):
+        kt.check_paths(files, location)
         self.kind, self.location, self.files = kind, location, files
         self.commit, self.ref, self.release = commit, ref, release
         self.warnings = list(warnings or [])
@@ -86,7 +83,14 @@ class Source:
         return out
 
     def owned(self, manifest: kt.Manifest | None = None) -> dict[str, str]:
-        return {p: self.hash(p) for p in self.by_class(manifest)["owned"]}
+        paths = self.by_class(manifest)["owned"]
+        for p in paths:
+            if kt.protected(p):
+                raise kt.TemplateError(
+                    f"{self.location}: its manifest makes {p!r} a template file, but notes, "
+                    "README.md and brain-upgrade's own files always belong to the base. "
+                    "Nothing was changed.")
+        return {p: self.hash(p) for p in paths}
 
     def indexed(self, manifest: kt.Manifest | None = None) -> dict[str, str]:
         """Owned files as the history index sees them: without the index itself."""
@@ -129,12 +133,14 @@ class Source:
 # --- readers -------------------------------------------------------------------------
 
 def read_dir_paths(root: Path) -> list[str]:
-    """Every file under `root` as a POSIX relative path, skipping `.git/`."""
+    """Every file under `root` as a POSIX relative path, skipping `.git` (a folder, or the
+    file a submodule or worktree has in its place)."""
     out = []
     for dirpath, dirnames, filenames in os.walk(root):
         dirnames[:] = [d for d in dirnames if d != ".git"]
         for name in filenames:
-            out.append((Path(dirpath) / name).relative_to(root).as_posix())
+            if name != ".git":
+                out.append((Path(dirpath) / name).relative_to(root).as_posix())
     return sorted(out)
 
 
@@ -152,9 +158,7 @@ def read_zip(data: bytes, where: str) -> tuple[dict[str, bytes], str | None]:
     commit = comment if _SHA.match(comment) else None
     members = [i for i in zf.infolist() if not i.is_dir()]
     names = [m.filename for m in members]
-    for n in names:
-        if not _safe(n):
-            raise kt.TemplateError(f"{where}: unsafe path in archive: {n}")
+    kt.check_paths(names, where)
     tops = {n.split("/", 1)[0] for n in names}
     strip = len(tops) == 1 and all("/" in n for n in names)
     files = {}
@@ -170,7 +174,7 @@ def read_git(root: Path, ref: str) -> dict[str, bytes]:
     files = {}
     with tarfile.open(fileobj=io.BytesIO(data)) as tf:
         for m in tf.getmembers():
-            if m.isfile() and _safe(m.name):
+            if m.isfile():
                 files[m.name] = tf.extractfile(m).read()
     return files
 
