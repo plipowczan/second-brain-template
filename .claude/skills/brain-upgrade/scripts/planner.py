@@ -317,6 +317,7 @@ def plan_upgrade(instance: Path, source: sources.Source, *, rerender: bool = Fal
                                                  stamp["rendered"], rerender)
     payload.update(rpayload)
     plan["rendered"], plan["questions"] = entries, questions
+    plan["render_py"] = kt.content_hash(rpayload["render.py"]) if "render.py" in rpayload else None
 
     plan["stamp"] = {
         "repository": source.manifest.repository,
@@ -451,6 +452,7 @@ def plan_adopt(instance: Path, source: sources.Source, *, base: str | None = Non
                                                  adopt_files=rtree.files)
     payload.update(rpayload)
     plan["rendered"], plan["questions"] = entries, []
+    plan["render_py"] = kt.content_hash(rpayload["render.py"]) if "render.py" in rpayload else None
     plan["stamp"] = {
         "repository": man.repository,
         "version": release,

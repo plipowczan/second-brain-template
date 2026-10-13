@@ -58,7 +58,7 @@ def write_plan(plan: dict, out: Path | None, instance: Path) -> Path:
     payload = plan.pop("_payload", {})
     if out is None:
         stamp = kt.utc_now().replace(":", "").replace("-", "")
-        out = sources.download_dir() / f"plan-{instance.name}-{plan['mode']}-{stamp}.json"
+        out = sources.private_dir() / f"plan-{instance.name}-{plan['mode']}-{stamp}.json"
     out = out.resolve()
     pdir = out.with_suffix(".files")
     if pdir.exists():
@@ -76,6 +76,17 @@ def write_plan(plan: dict, out: Path | None, instance: Path) -> Path:
 def payload_bytes(plan: dict, key: str) -> bytes | None:
     p = Path(plan["payload"]) / key
     return p.read_bytes() if p.is_file() else None
+
+
+def verified(plan: dict, key: str, want: str | None) -> bytes:
+    """Payload bytes whose hash equals the one the plan recorded; anything else (a
+    missing or replaced file in the temp directory) stops apply before any write."""
+    data = payload_bytes(plan, key)
+    if data is None or want is None or kt.content_hash(data) != want:
+        raise kt.TemplateError(
+            f"the plan's copy of {key} is missing or does not match the plan. Nothing was "
+            "written. Run plan again.")
+    return data
 
 
 def print_diffs(plan: dict, instance: Path, which: str) -> None:
@@ -243,14 +254,16 @@ def cmd_apply(args) -> int:
             proposals.append(e["path"])
             continue
         values.update(new_values)
-        tpl = payload_bytes(plan, f"template/{e['template']}")
-        out, missing, err = planner.render(payload_bytes(plan, "render.py"), tpl, values)
+        tpl = verified(plan, f"template/{e['template']}", e["S_template"])
+        code = verified(plan, "render.py", plan.get("render_py"))
+        out, missing, err = planner.render(code, tpl, values)
         if missing or err:
             raise kt.TemplateError(
                 f"cannot re-render {e['path']}: " + (err or "missing values for " + ", ".join(missing)) +
                 ". Add them under \"values\" in the decisions. Nothing was written.")
         renders.append((e, out))
 
+    blobs = {a["path"]: verified(plan, f"src/{a['path']}", a["S"]) for a in writes}
     targets = [a["path"] for a in writes + deletes + merges] + [e["path"] for e, _ in renders]
     if plan["git"]:
         dirty = planner.dirty_paths(instance, targets)
@@ -274,7 +287,7 @@ def cmd_apply(args) -> int:
     for a in writes:
         target = instance / a["path"]
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_bytes(payload_bytes(plan, f"src/{a['path']}"))
+        target.write_bytes(blobs[a["path"]])
     for a in deletes:
         target = instance / a["path"]
         if target.is_file():
@@ -425,9 +438,7 @@ def cmd_fetch(args, opener) -> int:
     if src.kind in ("zip", "download"):
         name = (src.manifest.repository if src.manifest else args.repo or kt.DEFAULT_REPOSITORY)
         tag = (src.commit or "unknown")[:12]
-        root = sources.download_dir() / f"{name.split('/')[-1]}-{src.version}-{tag}"
-        if root.exists():
-            shutil.rmtree(root)
+        root = sources.private_dir() / f"{name.split('/')[-1]}-{src.version}-{tag}"
         src.materialize(root)
     else:
         root = Path(src.location).resolve()

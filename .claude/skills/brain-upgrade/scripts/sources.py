@@ -36,10 +36,10 @@ class OfflineError(kt.TemplateError):
     """The network was needed and could not be reached."""
 
 
-def download_dir() -> Path:
-    d = Path(tempfile.gettempdir()) / "kb-upgrade"
-    d.mkdir(parents=True, exist_ok=True)
-    return d
+def private_dir() -> Path:
+    """A new directory under the OS temp dir that only this user can read or write
+    (`mkdtemp`: unpredictable name, mode 0700), for archives, plans and unpacked trees."""
+    return Path(tempfile.mkdtemp(prefix="kb-upgrade-"))
 
 
 def _safe(path: str) -> bool:
@@ -257,7 +257,7 @@ def download(repository: str, version: str | None = None, opener=default_open,
         raise kt.TemplateError(f"{url}: HTTP {e.code}; is v{version} a published release?") from e
     except (urllib.error.URLError, OSError) as e:
         raise OfflineError(offline_message(repository, version)) from e
-    dest = dest or download_dir()
+    dest = dest or private_dir()
     path = dest / f"{repository.split('/')[-1]}-v{version}.zip"
     path.write_bytes(data)
     files, commit = read_zip(data, url)

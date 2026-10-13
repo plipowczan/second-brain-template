@@ -40,7 +40,7 @@ changes skill scripts also runs that skill's own `python -m unittest`.
 
 ## 2. Engine core: hashing, manifest, sources, stamp
 
-- [ ] 2.1 Create `.claude/skills/brain-upgrade/scripts/` with a stdlib-only helper module.
+- [x] 2.1 Create `.claude/skills/brain-upgrade/scripts/` with a stdlib-only helper module.
   It covers manifest loading, classification by first match, concrete-path ownership, and
   the hash from design D5. Verify with unit tests for CRLF/LF equality, binary files, the
   class order, `exclude`, and an instance-only skill that is never claimed.
@@ -64,23 +64,23 @@ changes skill scripts also runs that skill's own `python -m unittest`.
 
 ## 3. Planning (the dry run)
 
-- [ ] 3.1 Implement the three-way planner for owned files (design D6), including
+- [x] 3.1 Implement the three-way planner for owned files (design D6), including
   additions, collisions, local deletions and deletion proposals that are selected or
   unselected. Verify with one unit test per scenario of the "Owned files follow a
   three-way decision" and "Files removed from the template" requirements.
-- [ ] 3.2 Implement rendered-file planning with the source's `render.py` (design D7):
+- [x] 3.2 Implement rendered-file planning with the source's `render.py` (design D7):
   re-render only on request and only when untouched, a diff proposal otherwise, a
   missing placeholder reported as a question, and proposals only when `.kb-onboard.json`
   is missing. Verify with unit tests for each rendered-file scenario.
-- [ ] 3.3 Implement seeded and author handling. Seeded changes are information only. An
+- [x] 3.3 Implement seeded and author handling. Seeded changes are information only. An
   author-class leftover is proposed for deletion only when it is pristine. Verify with
   unit tests that no seeded path, `README.md` included, ever appears among the write
   actions or the questions.
-- [ ] 3.4 Implement the `CHANGELOG.md` extraction, with **BREAKING** entries marked: the
+- [x] 3.4 Implement the `CHANGELOG.md` extraction, with **BREAKING** entries marked: the
   range between two versions for an upgrade, and a single version's section for an
   adoption. Verify with unit tests that the range starts after the stamp version and
   that a single-version request returns only that section.
-- [ ] 3.5 Implement `upgrade.py plan`, covering:
+- [x] 3.5 Implement `upgrade.py plan`, covering:
   - the JSON plan written to the temp directory;
   - the summary, and `--diff <path|all>`;
   - warnings for a non-release source, an untracked `.kb-onboard.json` and uncommitted
@@ -92,7 +92,7 @@ changes skill scripts also runs that skill's own `python -m unittest`.
 
 ## 4. Apply and commit
 
-- [ ] 4.1 Implement `upgrade.py apply --plan --decisions` (design D8):
+- [x] 4.1 Implement `upgrade.py apply --plan --decisions` (design D8):
   - check every planned path before the first write;
   - refuse when a planned path is dirty in git;
   - write the selected actions and requested re-renders;
@@ -103,7 +103,7 @@ changes skill scripts also runs that skill's own `python -m unittest`.
   Verify with unit tests for a stale plan (nothing written), a dirty path (refused),
   the no-git backup contents, a stamp that records S for a kept local file, and
   `content/` byte-identical after apply.
-- [ ] 4.2 Implement `upgrade.py commit --plan`: stage only the planned paths, the stamp
+- [x] 4.2 Implement `upgrade.py commit --plan`: stage only the planned paths, the stamp
   and a newly tracked `.kb-onboard.json`, then make one commit, `chore(template): adopt
   <repo> <R>` for an adoption plan and `chore(template): upgrade to <repo> <version>`
   otherwise. Without git, it reports and exits 0. Verify in a temp git repo that has an unrelated dirty note: exactly one new

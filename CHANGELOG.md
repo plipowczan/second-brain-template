@@ -12,7 +12,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
   (`.claude/skills/brain-upgrade/scripts/`, Python standard library only) read the
   template version you install from a local clone, an unpacked release, a release `.zip`
   or a download from GitHub, and record what the template shipped in a new stamp,
-  `.kb-template.json`. The skill and `/b:upgrade` follow below.
+  `.kb-template.json`. `upgrade.py plan` is a dry run that writes nothing to your base;
+  `apply` writes only the plan you approved, after checking that no planned file changed
+  since; `commit` makes one git commit with exactly those files, or, without git, the
+  backup in `.kb-upgrade-backup/` is your way back. The skill and `/b:upgrade` follow.
 - **`.kb-manifest.json` holds the template version and sorts every file into a class.**
   The version (`0.1.0` until the next release) now lives only there, and `package.json`
   no longer has a `version` field. The four classes say what an update may touch:
