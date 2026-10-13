@@ -146,8 +146,9 @@ def plan_rendered(instance: Path, manifest: kt.Manifest, new_files: dict[str, by
                 payload[f"render/{out}"] = out_bytes
                 if L == e["rendered"]:
                     e["status"] = "current"
-                    e["entry"] = {"template": template, "template_hash": e["S_template"],
-                                  "output_hash": L}
+                    if adopt_files is None:  # an adoption records R's rendering only
+                        e["entry"] = {"template": template, "template_hash": e["S_template"],
+                                      "output_hash": L}
                 elif prev and prev.get("output_hash") and prev["output_hash"] == L:
                     e["status"] = "writable"
                 else:
@@ -347,7 +348,7 @@ def nearest_release(instance: Path, source: sources.Source) -> tuple[str, dict[s
                      if man.classify(p) == "owned"}
             candidates.append((version, files, state))
     if source.version not in index.releases():
-        candidates.append((source.version, source.owned(), len(index.states)))
+        candidates.append((source.version, source.indexed(), len(index.states)))
     if not candidates:
         raise kt.TemplateError("the source knows no release to adopt")
     cache: dict[str, str | None] = {}
@@ -378,7 +379,7 @@ def base_tree(source: sources.Source, release: str, base: str | None, opener) ->
         if b.version not in (None, release) or not (
                 b.version == release and b.release
                 or b.proven_release(release, index, man)
-                or (release == source.version and b.owned(man) == source.owned(man))):
+                or (release == source.version and b.indexed(man) == source.indexed(man))):
             raise kt.TemplateError(
                 f"--base {base} is not the release v{release} this adoption needs")
         return b
@@ -436,6 +437,11 @@ def plan_adopt(instance: Path, source: sources.Source, *, base: str | None = Non
             continue
         if Rh is not None:
             payload[f"src/{p}"] = rtree.files[p]
+        if p == kt.INDEX and Rh is not None:  # generated at release time, follows R
+            plan["actions"].append(action(p, "update", S=Rh, L=L, selected=True,
+                                          note=f"history index of {release}"))
+            baselines[p] = Rh
+            continue
         states = index.states_of(p, L)
         if states:  # pristine: some template state shipped exactly this content
             # Older means "in R's history"; a state after R or on a parallel branch is

@@ -177,7 +177,7 @@ changes skill scripts also runs that skill's own `python -m unittest`.
 - [x] 6.5 Add the `CHANGELOG.md` entries for brain-upgrade, `--adopt`, the onboarding
   changes and `README.md` becoming seeded. Include "Existing bases" bootstrap steps: run
   the `0.2.0` release's engine with `--adopt`, commit, then upgrade. Verify that `dev/check_manifest.py` passes.
-- [ ] 6.6 Add a "Releasing" checklist and the `dev/` tools to `CONTRIBUTING.md`. Verify
+- [x] 6.6 Add a "Releasing" checklist and the `dev/` tools to `CONTRIBUTING.md`. Verify
   that each command in the checklist runs as written on a scratch branch, stopping before
   the tag.
 

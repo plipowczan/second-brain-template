@@ -2,6 +2,7 @@
 """Unit tests for planner.py: the dry run of a stamped upgrade. One test per scenario of
 the template-upgrade spec. Run: python -m unittest -v"""
 
+import atexit
 import json
 import shutil
 import tempfile
@@ -16,13 +17,27 @@ import sources
 V2 = fx.template("0.2.0")
 
 
+_BUILT: dict = {}
+_CACHE = fx.TempDir()
+atexit.register(_CACHE.cleanup)
+
+
 def make_instance(root: Path, files=None, git=True, values=None) -> Path:
-    fx.write_tree(root, files or V2)
-    if git:
-        fx.git_init(root)
-        fx.git(root, "add", "-A")
-        fx.git(root, "commit", "-q", "-m", "clone")
-    fx.onboard(root, values, git_repo=git)
+    """An onboarded base at `root`. Each distinct base is built once (git is slow on
+    Windows) and copied, .git included, for every test that asks for it."""
+    files = files or V2
+    key = (json.dumps({p: kt.content_hash(b) for p, b in files.items()}, sort_keys=True),
+           git, json.dumps(values, sort_keys=True))
+    if key not in _BUILT:
+        built = _CACHE.path / f"base{len(_BUILT)}"
+        fx.write_tree(built, files)
+        if git:
+            fx.git_init(built)
+            fx.git(built, "add", "-A")
+            fx.git(built, "commit", "-q", "-m", "clone")
+        fx.onboard(built, values, git_repo=git)
+        _BUILT[key] = built
+    shutil.copytree(_BUILT[key], root)
     return root
 
 
@@ -100,6 +115,17 @@ class ThreeWayTest(PlannerCase):
         hook = self.base / ".claude/hooks/hook.py"
         hook.write_bytes(hook.read_bytes().replace(b"\n", b"\r\n"))
         self.assertNotIn(".claude/hooks/hook.py", self.by_path(self.plan()))
+
+    def test_history_index_is_shipped_like_any_owned_file(self):
+        index = kt.INDEX
+        old = kt.dump_index(kt.HistoryIndex().data)
+        new = old.replace(b'"states": []', b'"states": [{"commit": null, "date": "x", "release": "0.3.0", "in": []}]')
+        base = make_instance(self.tmp.path / "kb2", fx.template("0.2.0", {index: old}))
+        src = fx.write_tree(self.tmp.path / "s-index", fx.template("0.3.0", {index: new}))
+        p = planner.plan_upgrade(base, sources.resolve(str(src)))
+        a = self.by_path(p)[index]
+        self.assertEqual((a["kind"], a["selected"]), ("update", True))
+        self.assertEqual(p["stamp"]["files"][index], kt.content_hash(new))
 
     def test_instance_only_skill_is_never_claimed(self):
         self.edit(".claude/skills/my-skill/SKILL.md", "mine\n")

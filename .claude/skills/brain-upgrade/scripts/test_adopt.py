@@ -121,6 +121,14 @@ class AdoptTest(AdoptCase):
         self.assertEqual(code, 0, err)
         self.assertTrue(plan["up_to_date"], out)
 
+    def test_history_index_follows_the_release(self):
+        old = kt.dump_index(kt.HistoryIndex().data)
+        base = self.instance(fx.P3, edits={kt.INDEX: old})
+        code, out, err, plan = self.plan(base, None, "--adopt")
+        self.assertEqual(code, 0, err)
+        self.assertEqual(plan["to_version"], "0.2.0")
+        self.assertEqual(self.acts(plan)[kt.INDEX], ("update", True))
+
     def test_rendered_files(self):
         base = self.instance(P1, edits={"CLAUDE.md": "@AGENTS.md\n\nmy own line\n"})
         code, out, err, plan = self.plan(base, None, "--adopt")

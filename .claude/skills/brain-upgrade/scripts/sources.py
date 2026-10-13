@@ -86,13 +86,17 @@ class Source:
         return out
 
     def owned(self, manifest: kt.Manifest | None = None) -> dict[str, str]:
-        return {p: self.hash(p) for p in self.by_class(manifest)["owned"] if p != kt.INDEX}
+        return {p: self.hash(p) for p in self.by_class(manifest)["owned"]}
+
+    def indexed(self, manifest: kt.Manifest | None = None) -> dict[str, str]:
+        """Owned files as the history index sees them: without the index itself."""
+        return {p: h for p, h in self.owned(manifest).items() if p != kt.INDEX}
 
     def matches_state(self, index: kt.HistoryIndex, state: int, manifest: kt.Manifest) -> bool:
         """True when this tree's owned files are exactly those of an indexed state."""
         want = {p: h for p, h in index.release_files(state).items()
                 if manifest.classify(p) == "owned"}
-        return want == self.owned(manifest)
+        return want == self.indexed(manifest)
 
     def proven_release(self, version: str, index: kt.HistoryIndex | None = None,
                        manifest: kt.Manifest | None = None) -> bool:
