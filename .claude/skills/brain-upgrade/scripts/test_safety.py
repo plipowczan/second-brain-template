@@ -691,6 +691,70 @@ class CommitGuardTest(SafetyCase):
         self.assertEqual(fx.git(self.base, "status", "--porcelain"), "")
 
 
+class RepositoryNameTest(SafetyCase):
+    """R7-1: a repository is a plain GitHub owner/name, wherever it comes from, and a
+    clone's origin remote never verifies anything, whatever form the URL takes."""
+    BAD = ["git.example/mirror/github.com/plipowczan/second-brain-template",
+           "github.com.evil.example/repo", "evil-github.com/repo", "owner/repo:22",
+           "user@owner/repo", "owner/repo?x=1", "owner/repo#frag", "owner/repo/extra",
+           "../repo", "owner/..", "owner/.", "-owner/repo", "owner", "", "own er/repo",
+           "https://github.com/owner/repo"]
+    GOOD = ["plipowczan/second-brain-template", "example/kb-template", "a-b/c.d_e"]
+    ORIGINS = ["https://git.example/mirror/github.com/plipowczan/second-brain-template",
+               "https://github.com.evil.example/plipowczan/second-brain-template",
+               "https://evil-github.com/plipowczan/second-brain-template",
+               "https://github.com:8443/plipowczan/second-brain-template",
+               "https://user@github.com/plipowczan/second-brain-template",
+               "https://github.com/plipowczan/second-brain-template?x=1",
+               "https://github.com/plipowczan/second-brain-template#x",
+               "https://github.com/plipowczan/second-brain-template/extra",
+               # the forms a GitHub clone really has are not proof either
+               "https://github.com/plipowczan/second-brain-template.git",
+               "git@github.com:plipowczan/second-brain-template.git",
+               "ssh://git@github.com/plipowczan/second-brain-template.git"]
+
+    def test_names(self):
+        for name in self.BAD:
+            self.assertIsNotNone(kt.repository_problem(name), name)
+        for name in self.GOOD:
+            self.assertIsNone(kt.repository_problem(name), name)
+
+    def test_bad_repo_option_stops_before_any_download(self):
+        calls = []
+        for name in ("git.example/mirror/github.com/plipowczan/second-brain-template",
+                     "owner/repo/extra", "user@owner/repo"):
+            for flag in ("--repo", "--allow-repository"):
+                with self.subTest(flag=flag, name=name):
+                    code, out, err = fx.run("fetch", "--instance", str(self.base), flag, name,
+                                            "--to", "0.3.0", opener=calls.append)
+                    self.assertEqual(code, 1, out)
+                    self.assertIn("not a GitHub owner/name", err)
+        self.assertEqual(calls, [])
+
+    def test_bad_repository_in_stamp_or_manifest(self):
+        manifest = json.loads(fx.manifest("0.3.0"))
+        manifest["repository"] = "git.example/mirror/github.com/plipowczan/second-brain-template"
+        code, out, err = self.plan(self.source(manifest=manifest))
+        self.assertEqual(code, 1)
+        self.assertIn("not a GitHub owner/name", err)
+        self.edit_stamp(lambda s: s.__setitem__("repository", "evil-github.com/x"))
+        code, out, err = self.plan(self.source())
+        self.assertEqual(code, 1)
+        self.assertIn("not a GitHub owner/name", err)
+
+    def test_no_origin_form_verifies_a_clone(self):
+        files = fx.template("0.3.0")
+        for i, origin in enumerate(self.ORIGINS):
+            with self.subTest(origin=origin):
+                repo = self.tmp.path / f"clone{i}"
+                fx.git_init(repo)
+                fx.commit_tree(repo, files, "release", tag="v0.3.0")
+                fx.git(repo, "remote", "add", "origin", origin)
+                code, out, err = fx.run("fetch", "--instance", str(self.base), "--source", str(repo))
+                self.assertEqual(code, 1, out)
+                self.assertIn("cannot show where it comes from", err)
+
+
 class RollbackTest(SafetyCase):
     CHANGES = {".claude/hooks/hook.py": "print('hook v2')\n",                 # update
                ".claude/skills/new/deep/SKILL.md": "new\n",                    # add, new folders

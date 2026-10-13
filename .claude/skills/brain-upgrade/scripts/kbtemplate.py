@@ -151,6 +151,28 @@ def protected(path: str) -> bool:
             or p.startswith(BACKUP_DIR + "/"))
 
 
+_REPOSITORY = re.compile(r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})/[A-Za-z0-9._-]{1,100}\Z")
+
+
+def repository_problem(name) -> str | None:
+    """Why `name` is not a plain GitHub `owner/name`, or None. The name goes into the
+    https://github.com/<owner>/<name>/... download URL and into every repository
+    comparison, so nothing but those two segments may get through: no host, port,
+    user, query, fragment, extra segment or dot segment."""
+    if not isinstance(name, str) or not _REPOSITORY.match(name):
+        return "not a GitHub owner/name"
+    if name.split("/")[1] in (".", ".."):
+        return "not a GitHub owner/name"
+    return None
+
+
+def check_repository_name(name, where: str) -> str:
+    why = repository_problem(name)
+    if why:
+        raise TemplateError(f"{where}: repository {name!r} is {why}. Nothing was changed.")
+    return name
+
+
 def check_pattern(pattern, where: str) -> None:
     if (not isinstance(pattern, str) or not pattern or "\\" in pattern
             or pattern.startswith("/") or _DRIVE.match(pattern)
@@ -225,7 +247,8 @@ class Manifest:
         self.data = data
         self.version = str(data.get("version", ""))
         parse_version(self.version)
-        self.repository = data.get("repository") or DEFAULT_REPOSITORY
+        self.repository = check_repository_name(data.get("repository") or DEFAULT_REPOSITORY,
+                                                MANIFEST)
         self.author = list(classes.get("author", []))
         self.rendered = dict(classes.get("rendered", {}))
         self.owned = list(classes.get("owned", []))
@@ -382,6 +405,8 @@ def read_stamp(root: Path) -> dict | None:
         raise TemplateError(f"{STAMP}: unsupported format {stamp.get('format')!r}")
     stamp.setdefault("files", {})
     stamp.setdefault("rendered", {})
+    if stamp.get("repository") is not None:
+        check_repository_name(stamp["repository"], STAMP)
     check_paths(stamp["files"], f"{STAMP} files")
     for p in stamp["files"]:
         if protected(p):

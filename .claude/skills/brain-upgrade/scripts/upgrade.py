@@ -113,6 +113,7 @@ def print_diffs(plan: dict, instance: Path, which: str) -> None:
 
 
 def cmd_plan(args, opener) -> int:
+    check_repository_args(args)
     instance = Path(args.instance).resolve()
     if not instance.is_dir():
         raise kt.TemplateError(f"--instance {instance}: no such directory")
@@ -780,9 +781,17 @@ def check_verified(prov: dict, allowed: str | None) -> None:
             f"trusts it, run again with --allow-repository {prov['claimed_repository']}.")
 
 
+def check_repository_args(args) -> None:
+    for flag, value in (("--repo", getattr(args, "repo", None)),
+                        ("--allow-repository", getattr(args, "allow_repository", None))):
+        if value is not None:
+            kt.check_repository_name(value, flag)
+
+
 def cmd_fetch(args, opener) -> int:
     """Resolve a source with the base's own engine and say where it comes from, so the
     owner can agree before any code from it runs (the trust step of SKILL.md)."""
+    check_repository_args(args)
     instance = Path(args.instance).resolve()
     stamp = kt.read_stamp(instance) if instance.is_dir() else None
     repo = args.repo or (stamp or {}).get("repository") or kt.DEFAULT_REPOSITORY

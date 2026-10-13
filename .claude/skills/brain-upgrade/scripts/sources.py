@@ -238,6 +238,7 @@ def default_open(url: str) -> bytes:
 
 
 def latest_version(repository: str, opener=default_open) -> str:
+    kt.check_repository_name(repository, "download")
     url = API.format(repo=repository)
     try:
         data = json.loads(opener(url).decode("utf-8"))
@@ -262,6 +263,7 @@ def offline_message(repository: str, version: str | None = None) -> str:
 def download(repository: str, version: str | None = None, opener=default_open,
              dest: Path | None = None) -> Source:
     """Download a release archive (the latest when `version` is None)."""
+    kt.check_repository_name(repository, "download")
     version = version or latest_version(repository, opener)
     url = ARCHIVE.format(repo=repository, version=version)
     try:
