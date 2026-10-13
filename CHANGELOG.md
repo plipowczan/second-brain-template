@@ -5,7 +5,7 @@ who have cloned the template and want to pull improvements into their own base.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are ISO (UTC).
 
-## [Unreleased]
+## [0.2.0] - 2026-10-13
 
 ### Added
 - **`/b:upgrade` pulls new template releases into your base.** Until now every update
