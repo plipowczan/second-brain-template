@@ -27,7 +27,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
   folder or zip you point to) runs at all, `/b:upgrade` shows you its repository,
   version, tag, commit and where it came from, and asks for your yes; a release from a
   different repository than your base follows is called out, and the tool refuses it
-  without your explicit consent. Releases are not signed: the tool comes from the same
+  without your explicit consent. A download is judged by the repository it was fetched
+  from, not by what the archive says about itself; a folder or zip you point to cannot
+  prove where it comes from, so you confirm it explicitly too. Releases are not signed: the tool comes from the same
   repository as the skills and hooks it installs. Applying is all or nothing: if a write fails halfway (a
   file locked by OneDrive or an antivirus, a full disk), every file is put back as it was
   and the run says so; the same happens when a planned file changes, or a link appears,

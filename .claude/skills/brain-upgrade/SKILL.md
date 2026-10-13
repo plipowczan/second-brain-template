@@ -47,15 +47,19 @@ it reports where the source comes from before any code from the source runs.
      the source cannot prove which commit it is);
    - where it came from (`from`: the download URL or the path they gave), and `verified`:
      what this base's engine itself established (an HTTPS download of that repository's
-     tag, or a local git clone). When `verified` is null, say so: a folder or a zip the
-     owner gave only claims its repository and commit, and nothing proves them;
+     tag, or a git clone whose origin remote is that GitHub repository);
    - every line of `warnings`, in plain words.
 
-   `fetch` itself refuses a source from another repository than the base's stamp names,
-   and says which. Tell the owner outright: this base follows that repository, the source
-   is another one, and upgrading from it replaces the template files with that
-   repository's. Only if they agree to the switch, run `fetch` again with
-   `--allow-repository <repository>`, and pass the same option to `plan` in Phase 3.
+   `fetch` itself stops in two cases, says why, and unpacks nothing:
+   - **another repository** than the base's stamp names: tell the owner outright that
+     this base follows that repository, the source is another one, and upgrading from it
+     replaces the template files with that repository's;
+   - **an unverified source** (`verified` is null: a folder, a zip, or a clone without a
+     GitHub origin): it only claims its repository (`claimed_repository`) and commit, and
+     nothing proves them; say exactly that.
+
+   Only if the owner accepts it, run `fetch` again with `--allow-repository <the
+   repository it names>`, and pass the same option to `plan` in Phase 3.
 
    Ask: *"Run the upgrade tool from this source?"* Only an explicit yes goes on; anything
    else ends here, with nothing run and nothing changed.

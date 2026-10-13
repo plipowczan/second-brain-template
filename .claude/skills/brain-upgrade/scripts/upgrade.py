@@ -34,6 +34,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -129,8 +130,12 @@ def cmd_plan(args, opener) -> int:
     repo = (stamp or {}).get("repository") or kt.DEFAULT_REPOSITORY
     src = sources.resolve(args.source, ref=args.ref, to=args.to, repository=repo, opener=opener)
     # A second line of defence: the real gate is the base's own `fetch`, before this
-    # engine ever ran.
-    check_repository(provenance(src, stamp), args.allow_repository)
+    # engine ever ran. Here an unverified source is held to what it claims.
+    prov = provenance(src, stamp)
+    if prov["repository"] is None and prov["base_repository"] and prov["claimed_repository"]:
+        prov = {**prov, "repository": prov["claimed_repository"],
+                "same_repository": prov["claimed_repository"] == prov["base_repository"]}
+    check_repository(prov, args.allow_repository)
     if src.kind == "download":
         say(f"Downloaded {src.location}\n  to {src.archive}\n  (reuse it offline with "
             f"--source {src.archive})")
@@ -709,12 +714,13 @@ def provenance(src: sources.Source, stamp: dict | None) -> dict:
     if src.kind == "download":
         repo, tag = src.origin_repository, f"v{src.version}"
         verified = f"downloaded over HTTPS from github.com/{repo}, tag v{src.version}"
-    elif src.kind == "git":
-        repo, tag = claimed, (f"v{src.version}" if src.release else None)
-        verified = "read with git from a local clone" + (
-            f" (its origin remote: {src.origin_url})" if src.origin_url else "")
+    elif src.kind == "git" and github_repository(src.origin_url):
+        repo = github_repository(src.origin_url)
+        tag = f"v{src.version}" if src.release else None
+        verified = f"a local git clone of github.com/{repo} (its origin remote), read with git"
     else:
-        repo, tag, verified = claimed, None, None
+        # A folder, a zip, or a clone with no GitHub origin: only its own claims.
+        repo, tag, verified = None, None, None
     base_repo = (stamp or {}).get("repository")
     return {
         "repository": repo,
@@ -729,28 +735,48 @@ def provenance(src: sources.Source, stamp: dict | None) -> dict:
     }
 
 
+_GITHUB = re.compile(r"github\.com[:/]([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+?)(?:\.git)?/?$")
+
+
+def github_repository(url: str | None) -> str | None:
+    """owner/name of a GitHub remote URL (https or ssh), else None."""
+    m = _GITHUB.search(url or "")
+    return f"{m.group(1)}/{m.group(2)}" if m else None
+
+
 def provenance_warnings(prov: dict) -> list[str]:
     out = []
     if prov["same_repository"] is False:
         out.append(f"this source is {prov['repository']}, but this base follows "
                    f"{prov['base_repository']}: an upgrade from it replaces the template "
                    "files with that repository's. Go on only if you mean to switch.")
-    if prov["claimed_repository"] and prov["claimed_repository"] != prov["repository"]:
-        out.append(f"the archive downloaded from {prov['repository']} says it is "
+    if (prov["verified"] and prov["claimed_repository"]
+            and prov["claimed_repository"] != prov["repository"]):
+        out.append(f"the source from {prov['repository']} says it is "
                    f"{prov['claimed_repository']}; it came from {prov['repository']}.")
     if prov["verified"] is None:
-        out.append("this is a folder or an archive you gave: its repository and commit are "
-                   "what it says about itself, and nothing here proves them.")
+        out.append(f"this source cannot show where it comes from: it says it is "
+                   f"{prov['claimed_repository']}, at commit {prov['commit']}, and nothing "
+                   "here proves either.")
     return out
 
 
 def check_repository(prov: dict, allowed: str | None) -> None:
-    """Refuse a source from another repository than the stamp names, unless the owner
-    agreed to exactly that repository."""
+    """Refuse a source from another repository than the stamp names, and a source whose
+    origin cannot be verified, unless the owner agreed to exactly that repository."""
     if prov["same_repository"] is False and allowed != prov["repository"]:
         raise kt.TemplateError(
             provenance_warnings(prov)[0] + " Nothing was run or changed. If the owner "
             f"agrees, run again with --allow-repository {prov['repository']}.")
+
+
+def check_verified(prov: dict, allowed: str | None) -> None:
+    """The launcher's gate for a folder, a zip or a clone without a GitHub origin: its
+    claims are all there is, so the owner has to accept the repository it claims."""
+    if prov["verified"] is None and allowed != prov["claimed_repository"]:
+        raise kt.TemplateError(
+            provenance_warnings(prov)[-1] + " Nothing was run or changed. If the owner "
+            f"trusts it, run again with --allow-repository {prov['claimed_repository']}.")
 
 
 def cmd_fetch(args, opener) -> int:
@@ -764,6 +790,7 @@ def cmd_fetch(args, opener) -> int:
     # The gate is here, in the base's own engine: the source's engine is not trusted yet,
     # so it is not even unpacked for a repository switch the owner has not agreed to.
     check_repository(prov, args.allow_repository)
+    check_verified(prov, args.allow_repository)
     if src.kind in ("zip", "download"):
         name = (src.manifest.repository if src.manifest else repo)
         tag = (src.commit or "unknown")[:12]

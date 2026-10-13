@@ -523,16 +523,45 @@ class ProvenanceTest(SafetyCase):
         manifest["repository"] = "someone/fork"
         return self.source(manifest=manifest)
 
-    def test_fetch_reports_a_git_release(self):
-        repo = self.tmp.path / "tpl"
+    def clone(self, origin: str | None, claims: str = fx.REPO):
+        repo = self.tmp.path / f"tpl{self.n}"
+        self.n += 1
         fx.git_init(repo)
-        sha = fx.commit_tree(repo, fx.template("0.3.0"), "release", tag="v0.3.0")
+        manifest = json.loads(fx.manifest("0.3.0"))
+        manifest["repository"] = claims
+        sha = fx.commit_tree(repo, {**fx.template("0.3.0"),
+                                    ".kb-manifest.json": json.dumps(manifest).encode()},
+                             "release", tag="v0.3.0")
+        if origin:
+            fx.git(repo, "remote", "add", "origin", origin)
+        return repo, sha
+
+    def test_fetch_reports_a_git_release(self):
+        repo, sha = self.clone(f"https://github.com/{fx.REPO}.git")
         prov = self.fetch("--source", str(repo))["provenance"]
-        self.assertTrue(prov.pop("verified").startswith("read with git from a local clone"))
+        self.assertEqual(prov.pop("verified"),
+                         f"a local git clone of github.com/{fx.REPO} (its origin remote), read with git")
         self.assertEqual(prov, {"repository": fx.REPO, "claimed_repository": fx.REPO,
                                 "version": "0.3.0", "tag": "v0.3.0", "commit": sha,
                                 "from": str(repo), "base_repository": fx.REPO,
                                 "same_repository": True})
+
+    def test_clone_of_a_fork_claiming_ours_is_judged_by_its_origin(self):
+        repo, _ = self.clone("git@github.com:someone/fork.git", claims=fx.REPO)
+        err = self.fetch("--source", str(repo), ok=False)
+        self.assertIn("--allow-repository someone/fork", err)
+        out = self.fetch("--source", str(repo), "--allow-repository", "someone/fork")
+        self.assertEqual((out["provenance"]["repository"], out["provenance"]["same_repository"]),
+                         ("someone/fork", False))
+        self.assertTrue(any("says it is" in w for w in out["warnings"]))
+
+    def test_clone_without_a_github_origin_is_unverified(self):
+        repo, _ = self.clone(None)
+        err = self.fetch("--source", str(repo), ok=False)
+        self.assertIn("cannot show where it comes from", err)
+        out = self.fetch("--source", str(repo), "--allow-repository", fx.REPO)
+        self.assertEqual((out["provenance"]["verified"], out["provenance"]["same_repository"]),
+                         (None, None))
 
     def test_fetch_reports_a_download(self):
         archive = fx.zip_bytes(fx.template("0.3.0"), comment="c" * 40)
@@ -546,15 +575,21 @@ class ProvenanceTest(SafetyCase):
         self.assertTrue(out["engine"].endswith("upgrade.py"))
 
     def test_folder_or_zip_only_claims(self):
-        prov = self.fetch("--source", str(self.source()))["provenance"]
-        self.assertEqual((prov["commit"], prov["tag"], prov["verified"]), ("unknown", None, None))
+        folder = str(self.source())
+        # Claiming to be the base's own repository is not enough: nothing proves it.
+        err = self.fetch("--source", folder, ok=False)
+        self.assertIn(f"--allow-repository {fx.REPO}", err)
+        prov = self.fetch("--source", folder, "--allow-repository", fx.REPO)["provenance"]
+        self.assertEqual((prov["repository"], prov["claimed_repository"], prov["commit"],
+                          prov["tag"], prov["verified"], prov["same_repository"]),
+                         (None, fx.REPO, "unknown", None, None, None))
         z = self.tmp.path / "claims.zip"
         z.write_bytes(fx.zip_bytes(fx.template("0.3.0"), comment="d" * 40))
-        out = self.fetch("--source", str(z))
+        out = self.fetch("--source", str(z), "--allow-repository", fx.REPO)
         # A zip comment is the archive's own word: shown, but not verified, and no tag.
         self.assertEqual((out["provenance"]["commit"], out["provenance"]["tag"],
                           out["provenance"]["verified"]), ("d" * 40, None, None))
-        self.assertTrue(any("nothing here proves them" in w for w in out["warnings"]))
+        self.assertTrue(any("nothing here proves either" in w for w in out["warnings"]))
 
     def test_download_from_another_repository_is_judged_by_its_url(self):
         # The fork's archive claims to be ours; what counts is where it was downloaded from.
@@ -572,9 +607,10 @@ class ProvenanceTest(SafetyCase):
         src = self.other_repo_source()
         err = self.fetch("--source", str(src), ok=False)
         self.assertIn("Nothing was run or changed", err)
+        self.assertIn("--allow-repository someone/fork", err)
         out = self.fetch("--source", str(src), "--allow-repository", "someone/fork")
-        self.assertIs(out["provenance"]["same_repository"], False)
-        self.assertTrue(any("someone/fork" in w and fx.REPO in w for w in out["warnings"]))
+        self.assertEqual(out["provenance"]["claimed_repository"], "someone/fork")
+        self.assertTrue(any("someone/fork" in w for w in out["warnings"]))
 
     def test_plan_refuses_another_repository_without_consent(self):
         src = self.other_repo_source()
