@@ -34,6 +34,10 @@ CLASSES = {
 EXCLUDE = ["**/__pycache__/**", "**/*.pyc", ".claude/settings.local.json", "graft/**",
            ".kb-template.json", ".kb-onboard.json", ".kb-upgrade-backup/**"]
 REPO = "example/kb-template"
+# The owner's consent to a source that cannot prove its origin (a folder, a zip, a local
+# clone): plan and fetch refuse such a source without it. Explicit options given after
+# it in a call win, since argparse keeps the last one.
+CONSENT = ("--allow-repository", REPO)
 VALUES = {"KB_NAME": "Test KB", "KB_OWNER": "Owner", "PRIMARY_LANGUAGE": "English"}
 
 

@@ -62,7 +62,7 @@ class AdoptCase(unittest.TestCase):
     def plan(self, base, source=None, *extra, opener=no_network):
         code, out, err = fx.run("plan", "--instance", str(base), "--source",
                                 str(source or self.repo), "--out", str(self.planfile),
-                                *extra, opener=opener)
+                                *fx.CONSENT, *extra, opener=opener)
         plan = json.loads(self.planfile.read_text(encoding="utf-8")) if code == 0 else None
         return code, out, err, plan
 

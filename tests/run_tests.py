@@ -68,7 +68,10 @@ def adoption_case():
 
         def cycle(name, *extra):
             plan = str(Path(d) / f"{name}.json")
-            steps = [["plan", "--instance", str(base), "--source", str(repo), "--out", plan, *extra],
+            # A local clone cannot prove where it comes from: the owner's consent.
+            consent = ["--allow-repository", fx.REPO]
+            steps = [["plan", "--instance", str(base), "--source", str(repo), "--out", plan,
+                      *consent, *extra],
                      ["apply", "--plan", plan, "--decisions", str(decisions)],
                      ["commit", "--plan", plan]]
             for args in steps:

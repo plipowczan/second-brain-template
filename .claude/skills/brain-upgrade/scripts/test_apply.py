@@ -27,7 +27,7 @@ class ApplyCase(unittest.TestCase):
         src = fx.write_tree(self.tmp.path / f"src{len(list(self.tmp.path.iterdir()))}",
                             fx.template("0.3.0", changes))
         code, out, err = fx.run("plan", "--instance", str(self.base), "--source", str(src),
-                                "--out", str(self.planfile), *extra)
+                                "--out", str(self.planfile), *fx.CONSENT, *extra)
         self.assertEqual(code, 0, err)
         return json.loads(self.planfile.read_text(encoding="utf-8"))
 

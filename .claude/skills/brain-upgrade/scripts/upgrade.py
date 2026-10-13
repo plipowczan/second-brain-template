@@ -129,13 +129,15 @@ def cmd_plan(args, opener) -> int:
             "Nothing was changed.")
     repo = (stamp or {}).get("repository") or kt.DEFAULT_REPOSITORY
     src = sources.resolve(args.source, ref=args.ref, to=args.to, repository=repo, opener=opener)
-    # A second line of defence: the real gate is the base's own `fetch`, before this
-    # engine ever ran. Here an unverified source is held to what it claims.
+    # A second line of defence: the real gate is the base's own `fetch`, run before this
+    # engine (code from the source) ever ran. Here too, an unverified source needs the
+    # owner's consent, and is held to what it claims against the stamp.
     prov = provenance(src, stamp)
+    check_verified(prov, args.allow_repository, NOT_CHANGED)
     if prov["repository"] is None and prov["base_repository"] and prov["claimed_repository"]:
         prov = {**prov, "repository": prov["claimed_repository"],
                 "same_repository": same_repo(prov["claimed_repository"], prov["base_repository"])}
-    check_repository(prov, args.allow_repository)
+    check_repository(prov, args.allow_repository, NOT_CHANGED)
     if src.kind == "download":
         say(f"Downloaded {src.location}\n  to {src.archive}\n  (reuse it offline with "
             f"--source {src.archive})")
@@ -762,23 +764,26 @@ def allows(allowed: str | None, repo: str | None) -> bool:
     return bool(allowed and repo and same_repo(allowed, repo))
 
 
-def check_repository(prov: dict, allowed: str | None) -> None:
-    """Refuse a source from another repository than the stamp names, and a source whose
-    origin cannot be verified, unless the owner agreed to exactly that repository."""
+NOT_RUN = "Nothing was run or changed."
+NOT_CHANGED = "Nothing was changed."
+
+
+def check_repository(prov: dict, allowed: str | None, nothing: str = NOT_RUN) -> None:
+    """Refuse a source from another repository than the stamp names, unless the owner
+    agreed to exactly that repository."""
     if prov["same_repository"] is False and not allows(allowed, prov["repository"]):
         raise kt.TemplateError(
-            provenance_warnings(prov)[0] + " Nothing was run or changed. If the owner "
-            f"agrees, run again with --allow-repository {prov['repository']}.")
+            f"{provenance_warnings(prov)[0]} {nothing} If the owner agrees, run again with "
+            f"--allow-repository {prov['repository']}.")
 
 
-def check_verified(prov: dict, allowed: str | None) -> None:
-    """The launcher's gate for anything but a verified download (a folder, a zip, a local
-    clone): its claims are all there is, so the owner has to accept the repository it
-    claims."""
+def check_verified(prov: dict, allowed: str | None, nothing: str = NOT_RUN) -> None:
+    """The gate for anything but a verified download (a folder, a zip, a local clone):
+    its claims are all there is, so the owner has to accept the repository it claims."""
     if prov["verified"] is None and not allows(allowed, prov["claimed_repository"]):
         raise kt.TemplateError(
-            provenance_warnings(prov)[-1] + " Nothing was run or changed. If the owner "
-            f"trusts it, run again with --allow-repository {prov['claimed_repository']}.")
+            f"{provenance_warnings(prov)[-1]} {nothing} If the owner trusts it, run again "
+            f"with --allow-repository {prov['claimed_repository']}.")
 
 
 def check_repository_args(args) -> None:

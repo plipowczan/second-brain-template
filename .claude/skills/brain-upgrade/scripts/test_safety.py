@@ -51,9 +51,9 @@ class SafetyCase(unittest.TestCase):
             files[".kb-manifest.json"] = json.dumps(manifest).encode()
         return fx.write_tree(self.tmp.path / f"src{self.n}", files)
 
-    def plan(self, src, *extra):
+    def plan(self, src, *extra, consent=True):
         return fx.run("plan", "--instance", str(self.base), "--source", str(src),
-                      "--out", str(self.planfile), *extra)
+                      "--out", str(self.planfile), *(fx.CONSENT if consent else ()), *extra)
 
     def apply(self, decisions=None):
         d = self.tmp.path / "decisions.json"
@@ -689,6 +689,37 @@ class CommitGuardTest(SafetyCase):
         names = set(fx.git(self.base, "show", "--name-only", "--format=", "HEAD").splitlines())
         self.assertIn(self.TOOL, names)
         self.assertEqual(fx.git(self.base, "status", "--porcelain"), "")
+
+
+class PlanConsentTest(SafetyCase):
+    """R8-1: plan (the source's own code, so a second line behind fetch) also refuses an
+    unverified source that claims the base's repository, until the owner consents."""
+
+    def unverified_sources(self):
+        folder = self.source()
+        z = self.tmp.path / "release.zip"
+        z.write_bytes(fx.zip_bytes(fx.template("0.3.0"), comment="a" * 40))
+        clone = self.tmp.path / "clone"
+        fx.git_init(clone)
+        fx.commit_tree(clone, fx.template("0.3.0"), "release", tag="v0.3.0")
+        fx.git(clone, "remote", "add", "origin", f"https://github.com/{fx.REPO}.git")
+        return {"folder": folder, "zip": z, "clone": clone}
+
+    def test_plan_needs_consent_for_an_unverified_source(self):
+        for kind, src in self.unverified_sources().items():
+            with self.subTest(source=kind):
+                before = snapshot(self.base)
+                code, out, err = self.plan(src, consent=False)
+                self.assertEqual(code, 1, out)
+                self.assertIn("cannot show where it comes from", err)
+                self.assertIn(f"--allow-repository {fx.REPO}", err)
+                self.assertFalse(self.planfile.exists())
+                self.assertEqual(snapshot(self.base), before)
+                code, out, err = self.plan(src, "--allow-repository", "someone/else", consent=False)
+                self.assertEqual(code, 1, out)
+                code, out, err = self.plan(src, "--allow-repository", fx.REPO, consent=False)
+                self.assertEqual(code, 0, err)
+                self.planfile.unlink()
 
 
 class RepositoryNameTest(SafetyCase):

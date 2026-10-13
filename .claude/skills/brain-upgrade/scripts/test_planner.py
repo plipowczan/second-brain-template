@@ -234,7 +234,7 @@ class PlanCommandTest(PlannerCase):
         src = source or fx.write_tree(self.tmp.path / "srcdir", fx.template("0.3.0", {
             ".claude/hooks/hook.py": "print('hook v2')\n"}))
         return fx.run("plan", "--instance", str(self.base), "--source", str(src),
-                      "--out", str(self.tmp.path / "plan.json"), *extra)
+                      "--out", str(self.tmp.path / "plan.json"), *fx.CONSENT, *extra)
 
     def test_plan_changes_nothing(self):
         before = fx.tree_hashes(self.base)
@@ -255,7 +255,8 @@ class PlanCommandTest(PlannerCase):
 
     def test_default_plan_location_is_the_temp_dir(self):
         src = fx.write_tree(self.tmp.path / "s", fx.template("0.3.0"))
-        code, out, err = fx.run("plan", "--instance", str(self.base), "--source", str(src))
+        code, out, err = fx.run("plan", "--instance", str(self.base), "--source", str(src),
+                                *fx.CONSENT)
         path = Path(out.strip().splitlines()[-2].split("Plan: ", 1)[1])
         try:
             self.assertEqual(path.parent.parent, Path(tempfile.gettempdir()).resolve())
