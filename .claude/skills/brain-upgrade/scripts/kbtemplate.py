@@ -428,9 +428,11 @@ def git_available() -> bool:
 
 
 def git(root: Path, *args: str, check: bool = True, text: bool = True,
-        input=None) -> subprocess.CompletedProcess:
+        input=None, index: Path | None = None) -> subprocess.CompletedProcess:
+    """Run git in `root`; `index` points it at another index file (GIT_INDEX_FILE)."""
+    env = {**os.environ, "GIT_INDEX_FILE": str(index)} if index else None
     r = subprocess.run(["git", "-C", str(root), *args], capture_output=True, text=text,
-                       input=input, **({"encoding": "utf-8"} if text else {}))
+                       input=input, env=env, **({"encoding": "utf-8"} if text else {}))
     if check and r.returncode != 0:
         err = r.stderr if text else r.stderr.decode("utf-8", "replace")
         raise TemplateError(f"git {' '.join(args)} failed: {err.strip()}")

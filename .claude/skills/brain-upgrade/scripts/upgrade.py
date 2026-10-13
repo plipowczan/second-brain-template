@@ -501,6 +501,10 @@ def cmd_apply(args) -> int:
         "merge": sorted(a["path"] for a in merges),
         "onboard_values": bool(new_values),
         "backup": str(backup) if backup else None,
+        # What apply left at each path it wrote or deleted (None: absent), the stamp and
+        # .kb-onboard.json included. commit checks these before it commits anything.
+        "postimage": {rel: kt.content_hash(data) if data is not None else None
+                      for rel, _, data, _ in items},
     }
 
     def record_applied():
@@ -545,17 +549,16 @@ def cmd_commit(args) -> int:
         return 0
     if plan.get("committed"):
         raise kt.TemplateError(f"already committed as {plan['committed']}")
-    paths = applied["written"] + applied["deleted"] + applied["merge"] + [kt.STAMP]
-    onboard = applied["onboard_values"] or plan["track_onboard"]
-    present = [p for p in paths if (instance / p).exists() or planner.tracked(instance, p)]
-    if present:
-        kt.git(instance, "add", "-A", "--", *present)
-    if onboard and (instance / kt.ONBOARD_VALUES).is_file():
-        kt.git(instance, "add", "-f", "--", kt.ONBOARD_VALUES)
-        present.append(kt.ONBOARD_VALUES)
-    if kt.git(instance, "diff", "--cached", "--quiet", "--", *present, check=False).returncode == 0:
-        say("Nothing to commit.")
-        return 0
+    expected = dict(applied.get("postimage") or {})
+    if plan["track_onboard"] and kt.ONBOARD_VALUES not in expected:
+        expected[kt.ONBOARD_VALUES] = plan["onboard_before"]
+    merges = list(applied["merge"])
+    paths = sorted(set(expected) | set(merges))
+
+    # One read per path: it is checked against what apply left (merges are the owner's
+    # edits, so they are taken as they are) and it is exactly what gets committed.
+    contents = read_for_commit(instance, paths)
+    refuse_if_changed(expected, contents)
     repo, version = plan["repository"], plan["stamp"]["version"]
     subject = (f"chore(template): adopt {repo} {version}" if plan["mode"] == "adopt"
                else f"chore(template): upgrade to {repo} {version}")
@@ -563,13 +566,78 @@ def cmd_commit(args) -> int:
     body = (f"Source: {src['kind']} {src['location']}"
             + (f" ({src['commit']})" if src.get("commit") else "")
             + f"\n{len(applied['written'])} written, {len(applied['deleted'])} deleted"
-            + (f", merged by hand: {', '.join(applied['merge'])}" if applied["merge"] else ""))
-    kt.git(instance, "commit", "-q", "-m", subject, "-m", body, "--", *present)
+            + (f", merged by hand: {', '.join(merges)}" if merges else ""))
+
+    # The commit is built in a temporary index (HEAD plus exactly these contents), so the
+    # owner's own index is not touched unless the commit is made, and other staged work
+    # stays out of it.
+    index = sources.private_dir() / "index"
+    try:
+        if not build_commit_index(instance, index, contents):
+            say("Nothing to commit.")
+            return 0
+        refuse_if_changed(expected, read_for_commit(instance, list(expected)))
+        kt.git(instance, "commit", "-q", "-m", subject, "-m", body, index=index)
+    finally:
+        shutil.rmtree(index.parent, ignore_errors=True)
+    head = kt.git(instance, "ls-tree", "-r", "--name-only", "-z", "HEAD").stdout.split("\0")
+    staged = set(kt.git(instance, "ls-files", "-z").stdout.split("\0"))
+    sync = [p for p in paths if p in set(head) or p in staged]
+    if sync:  # the owner's index now agrees with the new commit for these paths
+        kt.git(instance, "reset", "-q", "HEAD", "--", *sync)
     sha = kt.head_commit(instance)
     plan["committed"] = sha
     save_plan(plan)
     say(f"Committed {sha[:12]}: {subject}")
     return 0
+
+
+def read_for_commit(instance: Path, paths: list[str]) -> dict:
+    root = instance.resolve()
+    out = {}
+    for rel in paths:
+        if kt.link_in_path(root, rel):
+            raise kt.TemplateError(f"commit: {rel} is now reached through a link or junction. "
+                                   "Nothing was staged or committed.")
+        target = root / rel
+        out[rel] = target.read_bytes() if target.is_file() else None
+    return out
+
+
+def refuse_if_changed(expected: dict, contents: dict) -> None:
+    changed = sorted(rel for rel, want in expected.items() if rel in contents and
+                     (kt.content_hash(contents[rel]) if contents[rel] is not None else None) != want)
+    if changed:
+        raise kt.TemplateError(
+            "changed after apply: " + ", ".join(changed) + ". Nothing was staged or "
+            "committed. Look at them (git diff); put back what apply wrote or keep the change "
+            "and commit it yourself, then run commit again.")
+
+
+def build_commit_index(instance: Path, index: Path, contents: dict) -> bool:
+    """Fill a temporary index with HEAD plus `contents` (bytes, or None to remove).
+    Returns False when that equals HEAD."""
+    has_head = kt.head_commit(instance) is not None
+    kt.git(instance, "read-tree", *(["HEAD"] if has_head else ["--empty"]), index=index)
+    modes = {}
+    if has_head:
+        listing = kt.git(instance, "ls-tree", "-z", "HEAD", "--", *contents).stdout
+        for rec in filter(None, listing.split("\0")):
+            meta, path = rec.split("\t", 1)
+            modes[path] = meta.split(" ")[0]
+    for rel, data in contents.items():
+        if data is None:
+            kt.git(instance, "update-index", "--force-remove", "--", rel, index=index)
+            continue
+        blob = kt.git(instance, "hash-object", "-w", "--stdin", "--path", rel, text=False,
+                      input=data).stdout.decode().strip()
+        kt.git(instance, "update-index", "--add", "--cacheinfo",
+               f"{modes.get(rel, '100644')},{blob},{rel}", index=index)
+    diff = kt.git(instance, "diff-index", "--cached", "--quiet",
+                  *(["HEAD"] if has_head else [kt.git(instance, "hash-object", "-t", "tree",
+                                                       "--stdin", input="").stdout.strip()]),
+                  check=False, index=index)
+    return diff.returncode != 0
 
 
 # --- stamp and onboarding helpers ----------------------------------------------------

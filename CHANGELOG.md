@@ -20,7 +20,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
   `AGENTS.md` and `content/WRITING_STYLE.md` are re-rendered from the new templates only
   when you ask and only while you have not edited them by hand. Your notes in `content/`
   and your `README.md` are never written. With git the update is one commit
-  (`chore(template): upgrade to …`); without git every replaced file is copied to
+  (`chore(template): upgrade to …`) holding exactly what the update wrote: if one of
+  those files changes before the commit (a sync client, an editor), it stops without
+  staging anything and names the file. Without git every replaced file is copied to
   `.kb-upgrade-backup/` first. Before the update tool from a downloaded release (or a
   folder or zip you point to) runs at all, `/b:upgrade` shows you its repository,
   version, tag, commit and where it came from, and asks for your yes; a release from a

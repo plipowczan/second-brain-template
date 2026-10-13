@@ -591,6 +591,72 @@ class ProvenanceTest(SafetyCase):
         self.assertIn("repository someone/fork", out)
 
 
+class CommitGuardTest(SafetyCase):
+    """R6-1: commit takes only what apply left, read once and committed as read."""
+    CHANGES = {".claude/hooks/hook.py": "print('hook v2')\n",
+               ".claude/skills/demo/scripts/tool.py": None}
+    HOOK, TOOL = ".claude/hooks/hook.py", ".claude/skills/demo/scripts/tool.py"
+
+    def setUp(self):
+        super().setUp()
+        code, out, err = self.plan(self.source(changes=self.CHANGES))
+        self.assertEqual(code, 0, err)
+        code, out, err = self.apply()
+        self.assertEqual(code, 0, err)
+
+    def git_state(self):
+        return (fx.git(self.base, "rev-parse", "HEAD"), fx.git(self.base, "write-tree"),
+                fx.git(self.base, "status", "--porcelain"))
+
+    def commit(self):
+        return fx.run("commit", "--plan", str(self.planfile))
+
+    def assert_refused(self, *paths):
+        before = self.git_state()
+        code, out, err = self.commit()
+        self.assertEqual(code, 1, out)
+        self.assertIn("changed after apply", err)
+        for p in paths:
+            self.assertIn(p, err)
+        self.assertEqual(self.git_state(), before)  # no commit, index untouched
+
+    def test_applied_write_edited_before_commit(self):
+        (self.base / self.HOOK).write_text("print('edited by a sync client')\n", encoding="utf-8")
+        self.assert_refused(self.HOOK)
+
+    def test_applied_delete_restored_before_commit(self):
+        (self.base / self.TOOL).parent.mkdir(parents=True, exist_ok=True)  # as a sync client would
+        (self.base / self.TOOL).write_text("print('tool v1')\n", encoding="utf-8")
+        self.assert_refused(self.TOOL)
+
+    def test_edited_stamp_before_commit(self):
+        stamp = self.base / kt.STAMP
+        stamp.write_text(stamp.read_text(encoding="utf-8") + " ", encoding="utf-8")
+        self.assert_refused(kt.STAMP)
+
+    def test_change_between_the_checks_and_the_commit(self):
+        real = upgrade.build_commit_index
+
+        def racing(instance, index, contents):
+            result = real(instance, index, contents)
+            (self.base / self.HOOK).write_text("print('late edit')\n", encoding="utf-8")
+            return result
+        before = self.git_state()
+        with mock.patch.object(upgrade, "build_commit_index", racing):
+            code, out, err = self.commit()
+        self.assertEqual(code, 1, out)
+        self.assertIn("changed after apply", err)
+        self.assertEqual(self.git_state()[:2], before[:2])
+
+    def test_commit_holds_exactly_what_apply_left(self):
+        code, out, err = self.commit()
+        self.assertEqual(code, 0, err)
+        self.assertEqual(fx.git(self.base, "show", f"HEAD:{self.HOOK}"), "print('hook v2')")
+        names = set(fx.git(self.base, "show", "--name-only", "--format=", "HEAD").splitlines())
+        self.assertIn(self.TOOL, names)
+        self.assertEqual(fx.git(self.base, "status", "--porcelain"), "")
+
+
 class RollbackTest(SafetyCase):
     CHANGES = {".claude/hooks/hook.py": "print('hook v2')\n",                 # update
                ".claude/skills/new/deep/SKILL.md": "new\n",                    # add, new folders
