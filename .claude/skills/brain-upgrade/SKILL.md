@@ -45,15 +45,20 @@ it reports where the source comes from before any code from the source runs.
 5. **Provenance and consent.** Show the owner the `provenance` block in plain words:
    - repository, version, tag (or "not a tagged release"), commit (or "commit unknown":
      the source cannot prove which commit it is);
-   - where it came from (`from`: the download URL or the path they gave);
-   - when `same_repository` is false, say it outright: this base follows
-     `base_repository`, the source is another repository, and upgrading from it replaces
-     the template files with that repository's.
+   - where it came from (`from`: the download URL or the path they gave), and `verified`:
+     what this base's engine itself established (an HTTPS download of that repository's
+     tag, or a local git clone). When `verified` is null, say so: a folder or a zip the
+     owner gave only claims its repository and commit, and nothing proves them;
+   - every line of `warnings`, in plain words.
+
+   `fetch` itself refuses a source from another repository than the base's stamp names,
+   and says which. Tell the owner outright: this base follows that repository, the source
+   is another one, and upgrading from it replaces the template files with that
+   repository's. Only if they agree to the switch, run `fetch` again with
+   `--allow-repository <repository>`, and pass the same option to `plan` in Phase 3.
 
    Ask: *"Run the upgrade tool from this source?"* Only an explicit yes goes on; anything
-   else ends here, with nothing run and nothing changed. For a different repository, the
-   yes must cover the switch too, and Phase 3 then passes
-   `--allow-repository <repository>` (the engine refuses a switch without it).
+   else ends here, with nothing run and nothing changed.
 
 A base that does not have this skill yet: see **Bootstrap** below.
 

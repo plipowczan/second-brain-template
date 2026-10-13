@@ -128,11 +128,9 @@ def cmd_plan(args, opener) -> int:
             "Nothing was changed.")
     repo = (stamp or {}).get("repository") or kt.DEFAULT_REPOSITORY
     src = sources.resolve(args.source, ref=args.ref, to=args.to, repository=repo, opener=opener)
-    prov = provenance(src, stamp)
-    if prov["same_repository"] is False and args.allow_repository != prov["repository"]:
-        raise kt.TemplateError(
-            other_repository_warning(prov) + " Nothing was changed. If the owner agrees, "
-            f"run again with --allow-repository {prov['repository']}.")
+    # A second line of defence: the real gate is the base's own `fetch`, before this
+    # engine ever ran.
+    check_repository(provenance(src, stamp), args.allow_repository)
     if src.kind == "download":
         say(f"Downloaded {src.location}\n  to {src.archive}\n  (reuse it offline with "
             f"--source {src.archive})")
@@ -631,25 +629,60 @@ def cmd_prune_author(args) -> int:
 
 
 def provenance(src: sources.Source, stamp: dict | None) -> dict:
-    """Where a source comes from, as the owner sees it before its engine runs."""
-    repo = src.manifest.repository if src.manifest else None
-    proven = bool(src.release) or (src.version is not None and src.proven_release(src.version))
+    """Where a source comes from, as the owner sees it before its engine runs.
+
+    Only what this (trusted) engine established itself counts as verified: a download is
+    the GitHub archive of the requested tag of the repository in the URL it fetched over
+    HTTPS; a git clone's tag and commit are read with git. A folder or a zip only claims
+    its repository, tag and commit, so `verified` is None and no tag is given; its own
+    history index is no proof either, because it ships with it.
+    """
+    claimed = src.manifest.repository if src.manifest else None
+    if src.kind == "download":
+        repo, tag = src.origin_repository, f"v{src.version}"
+        verified = f"downloaded over HTTPS from github.com/{repo}, tag v{src.version}"
+    elif src.kind == "git":
+        repo, tag = claimed, (f"v{src.version}" if src.release else None)
+        verified = "read with git from a local clone" + (
+            f" (its origin remote: {src.origin_url})" if src.origin_url else "")
+    else:
+        repo, tag, verified = claimed, None, None
     base_repo = (stamp or {}).get("repository")
     return {
         "repository": repo,
+        "claimed_repository": claimed,
         "version": src.version,
-        "tag": f"v{src.version}" if proven else None,
+        "tag": tag,
         "commit": src.commit or "unknown",
         "from": src.location,
+        "verified": verified,
         "base_repository": base_repo,
         "same_repository": None if base_repo is None or repo is None else base_repo == repo,
     }
 
 
-def other_repository_warning(prov: dict) -> str:
-    return (f"this source is {prov['repository']}, but this base follows "
-            f"{prov['base_repository']}: an upgrade from it replaces the template files with "
-            "that repository's. Go on only if you mean to switch.")
+def provenance_warnings(prov: dict) -> list[str]:
+    out = []
+    if prov["same_repository"] is False:
+        out.append(f"this source is {prov['repository']}, but this base follows "
+                   f"{prov['base_repository']}: an upgrade from it replaces the template "
+                   "files with that repository's. Go on only if you mean to switch.")
+    if prov["claimed_repository"] and prov["claimed_repository"] != prov["repository"]:
+        out.append(f"the archive downloaded from {prov['repository']} says it is "
+                   f"{prov['claimed_repository']}; it came from {prov['repository']}.")
+    if prov["verified"] is None:
+        out.append("this is a folder or an archive you gave: its repository and commit are "
+                   "what it says about itself, and nothing here proves them.")
+    return out
+
+
+def check_repository(prov: dict, allowed: str | None) -> None:
+    """Refuse a source from another repository than the stamp names, unless the owner
+    agreed to exactly that repository."""
+    if prov["same_repository"] is False and allowed != prov["repository"]:
+        raise kt.TemplateError(
+            provenance_warnings(prov)[0] + " Nothing was run or changed. If the owner "
+            f"agrees, run again with --allow-repository {prov['repository']}.")
 
 
 def cmd_fetch(args, opener) -> int:
@@ -659,6 +692,10 @@ def cmd_fetch(args, opener) -> int:
     stamp = kt.read_stamp(instance) if instance.is_dir() else None
     repo = args.repo or (stamp or {}).get("repository") or kt.DEFAULT_REPOSITORY
     src = sources.resolve(args.source, ref=args.ref, to=args.to, repository=repo, opener=opener)
+    prov = provenance(src, stamp)
+    # The gate is here, in the base's own engine: the source's engine is not trusted yet,
+    # so it is not even unpacked for a repository switch the owner has not agreed to.
+    check_repository(prov, args.allow_repository)
     if src.kind in ("zip", "download"):
         name = (src.manifest.repository if src.manifest else repo)
         tag = (src.commit or "unknown")[:12]
@@ -667,10 +704,7 @@ def cmd_fetch(args, opener) -> int:
     else:
         root = Path(src.location).resolve()
     engine = root / ".claude" / "skills" / "brain-upgrade" / "scripts" / "upgrade.py"
-    prov = provenance(src, stamp)
-    warnings = list(src.warnings)
-    if prov["same_repository"] is False:
-        warnings.append(other_repository_warning(prov))
+    warnings = list(src.warnings) + provenance_warnings(prov)
     say(json.dumps({"provenance": prov, "source": src.describe(), "root": str(root),
                     "engine": str(engine), "engine_exists": engine.is_file(),
                     "warnings": warnings}, indent=2))
@@ -718,6 +752,8 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--ref")
     p.add_argument("--to")
     p.add_argument("--repo")
+    p.add_argument("--allow-repository", metavar="OWNER/NAME",
+                   help="the owner agreed to use this repository instead of the stamp's")
     return ap
 
 

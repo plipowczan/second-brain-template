@@ -56,6 +56,10 @@ class Source:
         self.commit, self.ref, self.release = commit, ref, release
         self.warnings = list(warnings or [])
         self.archive = archive
+        # Set only for a download: the repository whose GitHub archive URL was fetched
+        # over HTTPS. A tree's own manifest only claims a repository.
+        self.origin_repository: str | None = None
+        self.origin_url: str | None = None
         raw = files.get(kt.MANIFEST)
         if raw is None and require_manifest:
             raise kt.TemplateError(
@@ -219,6 +223,7 @@ def from_git(root: Path, ref: str | None = None, require_manifest: bool = True) 
         raise kt.TemplateError(f"{root}: no such git ref: {ref}")
     src = Source("git", str(root), read_git(root, ref), commit=commit, ref=ref,
                  warnings=warnings, require_manifest=require_manifest)
+    src.origin_url = kt.git(root, "remote", "get-url", "origin", check=False).stdout.strip() or None
     version = src.version
     if version is not None:
         src.release = kt.tag_commit(root, f"v{version}") == commit
@@ -271,6 +276,7 @@ def download(repository: str, version: str | None = None, opener=default_open,
     files, commit = read_zip(data, url)
     src = Source("download", url, files, commit=commit, archive=str(path),
                  release=True, require_manifest=False)
+    src.origin_repository = repository
     if src.version not in (None, version):
         raise kt.TemplateError(f"{url} carries version {src.version}, expected {version}")
     return src
