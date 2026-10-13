@@ -7,7 +7,37 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
 
 ## [Unreleased]
 
+### Added
+- **The template is now developed directly in this repository, and the rules for doing
+  that live in `CONTRIBUTING.md`.** Until now this repository was a mirror: the template
+  was built inside the maintainer's own base and copied here in `sync from brain@…`
+  commits. From now on every change lands here first, comes with an entry in this file,
+  and passes `python tests/run_tests.py` before it is committed. `CONTRIBUTING.md` also
+  says which files are templates (`*.template.md`, rendered only by `/b:onboard` in your
+  base) and which are starter `content/`. Claude Code loads these rules through a
+  git-ignored `CLAUDE.local.md` that imports `CONTRIBUTING.md`, so they never become part
+  of your base's own instructions. `.gitignore` gained a `CLAUDE.local.md` line for that.
+
+  Existing bases: nothing to do. `CONTRIBUTING.md` is for people who develop the template;
+  if your clone has it, you can delete it. The new `.gitignore` line is optional and only
+  keeps a personal `CLAUDE.local.md` out of your commits.
+
 ### Fixed
+- **The `kb-maintain` workflow runs again.** `.github/workflows/kb-maintain.yml` still
+  called `.claude/skills/reindex/…` and `.claude/skills/lint/…` after those skills were
+  renamed to `brain-reindex` and `brain-lint`, so every scheduled run failed at the
+  rebuild step ("can't open file") and nothing was reindexed. In this repository that was
+  every Monday from 2026-07-20 on. The workflow now calls
+  `brain-reindex/scripts/build_indexes.py` and `brain-lint/scripts/lint_scan.py`. Its
+  comments and pull-request text, and the SessionStart hook's "no vault map yet" message,
+  now name the current commands (`/b:reindex`, `/b:lint`, `/b:onboard`).
+
+  Existing bases: re-pull `.github/workflows/kb-maintain.yml`, and
+  `.claude/hooks/load_vault_map.py` for the message. The optional `.githooks/pre-commit`
+  has the same stale path and is **not** fixed yet. With the path corrected it would
+  block every commit, because `lint_scan.py` reports `content/_privacy.md` as a note with
+  missing frontmatter. Until both are fixed, that hook lets every commit through without
+  checking anything.
 - **`brain-ingest` no longer forces every vault to English.** The "Language enforcement"
   paragraph in Phase 2 declared "the canonical vault language is **English**" and told the
   agent to translate Polish (or any other) sources on ingest — a value leaked from the

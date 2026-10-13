@@ -14,5 +14,5 @@ try:
 except FileNotFoundError:
     sys.stdout.write(
         "No content/_indexes/vault-map.md yet. "
-        "Run /onboard (new vault) or /reindex to build the navigation indexes.\n"
+        "Run /b:onboard (new vault) or /b:reindex to build the navigation indexes.\n"
     )

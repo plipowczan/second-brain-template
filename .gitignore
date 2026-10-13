@@ -5,3 +5,6 @@ __pycache__/
 *.pyc
 .kb-onboard.json
 content/.obsidian/workspace*.json
+
+# Personal Claude Code instructions for this checkout (see CONTRIBUTING.md)
+CLAUDE.local.md
