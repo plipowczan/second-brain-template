@@ -23,6 +23,21 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
   keeps a personal `CLAUDE.local.md` out of your commits.
 
 ### Fixed
+- **The optional `.githooks/pre-commit` lints commits again, and says so when it can't.**
+  It still called `.claude/skills/lint/scripts/lint_scan.py`, the path from before the
+  skills were renamed to `brain-*`, and let the commit through whenever that call failed
+  (`|| exit 0`). Since the rename it passed every commit without checking anything. It
+  was also not marked executable, so on Linux and macOS git skipped it with only a hint.
+  The hook now calls `.claude/skills/brain-lint/scripts/lint_scan.py`, lists the notes it
+  blocks on, and also blocks, with a message, when it cannot run the lint at all: no
+  Python 3 on `PATH`, the script missing, a crash, or output that is not a lint report.
+  `git commit --no-verify` skips it once. As before, it checks the whole `content/`
+  folder, not only the staged files.
+
+  Existing bases: only if you enabled the hook (`git config core.hooksPath .githooks`).
+  Re-pull `.githooks/pre-commit` together with the `brain-lint` fix below: without it the
+  hook blocks every commit on `content/_privacy.md`. On Linux or macOS, if your copy is
+  not executable, run `chmod +x .githooks/pre-commit`.
 - **`brain-lint` no longer reports underscore-prefixed files like `content/_privacy.md`.**
   `lint_scan.py` listed `_privacy.md` under `missing_frontmatter`, and `lint_links.py`
   listed it as an orphan, although the file is configuration, not a note. Both scripts now
@@ -44,10 +59,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
 
   Existing bases: re-pull `.github/workflows/kb-maintain.yml`, and
   `.claude/hooks/load_vault_map.py` for the message. The optional `.githooks/pre-commit`
-  has the same stale path and is **not** fixed yet. With the path corrected it would
-  block every commit, because `lint_scan.py` reports `content/_privacy.md` as a note with
-  missing frontmatter. Until both are fixed, that hook lets every commit through without
-  checking anything.
+  had the same stale path; it has its own entry above.
 - **`brain-ingest` no longer forces every vault to English.** The "Language enforcement"
   paragraph in Phase 2 declared "the canonical vault language is **English**" and told the
   agent to translate Polish (or any other) sources on ingest — a value leaked from the
