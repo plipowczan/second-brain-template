@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Tests for dev/check_manifest.py. Run: python -m unittest -v (from dev/)."""
 
+import re
 import shutil
 import subprocess
 import sys
@@ -54,11 +55,13 @@ class CheckManifestTest(unittest.TestCase):
     def test_duplicated_fixed_named(self):
         cl = self.repo / "CHANGELOG.md"
         text = cl.read_text(encoding="utf-8")
-        text = text.replace("## [Unreleased]\n", "## [Unreleased]\n\n### Fixed\n- one\n\n### Fixed\n- two\n", 1)
-        cl.write_text(text, encoding="utf-8")
+        # The newest block: [Unreleased] between releases, [X.Y.Z] on a release commit.
+        head = re.search(r"^## \[([^\]]+)\].*\n", text, re.MULTILINE)
+        dup = "\n### Fixed\n- one\n\n### Fixed\n- two\n"
+        cl.write_text(text[:head.end()] + dup + text[head.end():], encoding="utf-8")
         r = self.check()
         self.assertEqual(r.returncode, 1)
-        self.assertIn("[Unreleased] has ### Fixed more than once", r.stdout)
+        self.assertIn(f"[{head.group(1)}] has ### Fixed more than once", r.stdout)
 
     def test_version_mismatch_and_package_version(self):
         man = self.repo / ".kb-manifest.json"
