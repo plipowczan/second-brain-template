@@ -1,7 +1,7 @@
 name: KB maintenance
 
 # Keeps the navigation indexes fresh and surfaces vault-health drift without
-# relying on anyone remembering to run /reindex or /lint. Inspired by OpenWiki's
+# relying on anyone remembering to run /b:reindex or /b:lint. Inspired by OpenWiki's
 # "doc drift is a CI problem, not a discipline problem" design.
 #
 # What it does on a schedule (and on demand):
@@ -11,7 +11,7 @@ name: KB maintenance
 #      in substance (a restamped `updated:` timestamp alone never triggers a PR).
 #
 # Nothing here mutates your notes. The only writes are to _indexes/, and only via
-# a PR you review and merge. Safe to delete this file if you prefer manual /reindex.
+# a PR you review and merge. Safe to delete this file if you prefer manual /b:reindex.
 
 on:
   schedule:
@@ -41,12 +41,12 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Rebuild indexes
-        run: python .claude/skills/reindex/scripts/build_indexes.py
+        run: python .claude/skills/brain-reindex/scripts/build_indexes.py
 
       - name: Lint report
         id: lint
         run: |
-          python .claude/skills/lint/scripts/lint_scan.py > lint-report.json || true
+          python .claude/skills/brain-lint/scripts/lint_scan.py > lint-report.json || true
           python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
           import json, pathlib, sys
           if hasattr(sys.stdout, "reconfigure"):
@@ -108,7 +108,7 @@ jobs:
             gh pr create \
               --head "$BRANCH" \
               --title "chore(kb): refresh navigation indexes" \
-              --body "Automated \`/reindex\` — the navigation indexes drifted from the notes and have been rebuilt.
+              --body "Automated \`/b:reindex\` — the navigation indexes drifted from the notes and have been rebuilt.
 
           See the run's **Vault health** summary and the \`lint-report\` artifact for outstanding issues.
 
