@@ -38,6 +38,17 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
   keeps a personal `CLAUDE.local.md` out of your commits.
 
 ### Fixed
+- **`.claude/agents/AGENTS.md` no longer sends you to `kb-template/`.** Its rules said to
+  mirror every agent change into `kb-template/.claude/agents/` and log it in
+  `kb-template/CHANGELOG.md`, a folder that exists only in the maintainer's own base and
+  is frozen there. The file also pointed to a note from that base
+  (`AI/TOOLS/Deep-Research-skills`) and named the research skills without their `brain-`
+  prefix. It now says that agents come from the template, like the skills: in the
+  template repository a change to an agent gets an entry in this file, and in a base
+  agents arrive with template updates.
+
+  Existing bases: re-pull `.claude/agents/AGENTS.md`. It is documentation; the agents
+  themselves are unchanged.
 - **The optional `.githooks/pre-commit` lints commits again, and says so when it can't.**
   It still called `.claude/skills/lint/scripts/lint_scan.py`, the path from before the
   skills were renamed to `brain-*`, and let the commit through whenever that call failed
