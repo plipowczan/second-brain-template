@@ -33,7 +33,9 @@ Facts checked on 2026-10-13 that shape the approach:
 
 **Goals:**
 
-- Run an upgrade or an adoption without git and without network, given a local source.
+- Update from the public template repository on GitHub by default: the release archive is
+  downloaded over HTTPS, so the instance needs neither a clone of the template nor git.
+  With a previously downloaded archive or a local clone, the same run works offline.
 - Never overwrite an owner's edit without asking. Ask only when the template and the
   owner both changed the same file.
 - Keep the whole result reviewable: a plan before any write, one commit after it.
@@ -304,10 +306,10 @@ adoption is simply not an upgrade.
   - No file is ever moved to an older template state.
 - **R's content** comes from the same places as any source. If the source is R's release
   itself (its tag or its archive), the source is used. A source that only carries R's
-  version number, such as `main` between releases, does not count. If the source is a git clone, R is read from that clone's
-  tag `v<R>`. Otherwise R's archive is downloaded from the repository. Offline, the owner
-  passes `--base <zip|dir>`, and without it adoption stops before any change and names
-  the release it needs.
+  version number, such as `main` between releases, does not count. If the source is a git
+  clone, R is read from that clone's tag `v<R>`. Otherwise R's archive is downloaded from
+  the repository. Offline, the owner passes `--base <zip|dir>`, and without it adoption
+  stops before any change and names the release it needs.
 - **Rendered files are never written** during adoption. The engine renders R's templates
   with `.kb-onboard.json`. If the local file equals that rendering, the stamp records its
   output hash, and later upgrades may re-render it on request. If not, the stamp records
