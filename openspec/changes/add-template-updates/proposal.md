@@ -18,7 +18,8 @@ update path. It ships as `0.2.0`. The first instance to receive it is
   field, so the manifest is the only place that holds the number.
 - **File-class manifest.** `.kb-manifest.json` sorts every tracked file into one of four
   classes: **owned** (template files that are kept current in instances), **seeded**
-  (starter `content/`, which belongs to the instance once it is copied), **rendered**
+  (starter `content/` and `README.md`, which belong to the instance once they are
+  copied), **rendered**
   (`CLAUDE.md`, `AGENTS.md`, `content/WRITING_STYLE.md` and the `*.template.md` they come
   from) and **author** (`openspec/`, `CONTRIBUTING.md`, `CLAUDE.local.md`, `dev/`), which
   never reach an instance. A check fails on any tracked file that has no class.
@@ -41,8 +42,12 @@ update path. It ships as `0.2.0`. The first instance to receive it is
 - **`brain-upgrade --adopt`** for instances without a stamp, including generations older
   than `0.1.0`. Each release ships an index of every content hash that owned and author
   files have had in the template's history. Adoption uses it to recognise unmodified
-  older template files, finds the closest release, and plans the adoption and the upgrade
-  as one reviewed commit.
+  older template files and to find the nearest release. It aligns the instance with that
+  release, moving files forward only, and writes a stamp that names it.
+
+  Adoption is its own reviewed commit. The upgrade from that release to the new one
+  follows as a second commit, so the large first diff of an old generation comes in two
+  parts that can each be reviewed and reverted.
 - **Onboarding changes.** `/b:onboard` now writes the stamp, deletes author-class files
   from a fresh clone, and refuses to run in a checkout that has `CLAUDE.local.md` (the
   template source).
@@ -108,8 +113,8 @@ None. `openspec/specs/` is empty: this is the first OpenSpec change in the repos
 - **Changed:** `.claude/skills/brain-onboard/SKILL.md`, `.gitattributes`, `.gitignore`,
   `package.json`, `tests/run_tests.py`, `CHANGELOG.md`, `CONTRIBUTING.md` (file classes,
   release checklist), `README.md` and `AGENTS.template.md` (how to update).
-- **Instances:** none until they upgrade. The first upgrade of an existing base runs
-  `--adopt` from the `0.2.0` release, and its owner sees the whole plan before anything is
-  written.
+- **Instances:** none until they upgrade. An existing base first runs `--adopt` from the
+  `0.2.0` release (one commit), then upgrades (a second commit). Its owner sees each plan
+  before anything is written.
 - **Dependencies:** none new. The upgrade scripts use only the Python standard library, so
   they run before `pip install -r requirements.txt`.

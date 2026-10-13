@@ -55,12 +55,17 @@ Class patterns SHALL NOT claim instance files.
 
 ### Requirement: Seeded files belong to the instance
 
-brain-upgrade SHALL NOT create, change or delete seeded files (`content/**`). When the new
-version changes or adds seeded files, the dry run SHALL list them as information only.
+The seeded class SHALL contain `content/**` and `README.md`. brain-upgrade SHALL NOT
+create, change or delete seeded files. When the new version changes or adds seeded files,
+the dry run SHALL list them as information only.
 
 #### Scenario: Starter template changed upstream
 - **WHEN** the new version changes `content/templates/book.md`
 - **THEN** the instance's copy stays as it is, and the dry run lists the change as information
+
+#### Scenario: Template README changed upstream
+- **WHEN** the new version changes `README.md`
+- **THEN** the instance's `README.md` stays as it is, no question is asked, and the dry run lists the change as information
 
 #### Scenario: New starter file upstream
 - **WHEN** the new version adds a file under `content/`

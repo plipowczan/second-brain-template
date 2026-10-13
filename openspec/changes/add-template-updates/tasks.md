@@ -13,7 +13,7 @@ changes skill scripts also runs that skill's own `python -m unittest`.
 - [ ] 1.2 Add `.kb-manifest.json`:
   - format `1`, version `0.1.0`, repository `plipowczan/second-brain-template`;
   - the author, rendered, owned and seeded classes, and the `exclude` list, as in design
-    D1.
+    D1, with `README.md` in the seeded class.
 
   Remove `version` from `package.json`. Verify that the manifest loads with
   `python -c "import json; json.load(open('.kb-manifest.json'))"` and that
@@ -34,9 +34,9 @@ changes skill scripts also runs that skill's own `python -m unittest`.
 - [ ] 1.6 Remove the `.kb-onboard.json` line from `.gitignore`. Verify that
   `git check-ignore .kb-onboard.json .kb-template.json` matches neither file.
 - [ ] 1.7 Update the "What ships, and in what form" table in `CONTRIBUTING.md` to the four
-  classes, with `.kb-manifest.json` as their source of truth, and add the `CHANGELOG.md`
-  entries for 1.2, 1.5 and 1.6. Verify that every path in the table appears in the
-  manifest.
+  classes, with `.kb-manifest.json` as their source of truth. `README.md` moves from
+  "shipped as is" to seeded. Add the `CHANGELOG.md` entries for 1.2, 1.5 and 1.6. Verify
+  that every path in the table appears in the manifest.
 
 ## 2. Engine core: hashing, manifest, sources, stamp
 
@@ -74,10 +74,12 @@ changes skill scripts also runs that skill's own `python -m unittest`.
   is missing. Verify with unit tests for each rendered-file scenario.
 - [ ] 3.3 Implement seeded and author handling. Seeded changes are information only. An
   author-class leftover is proposed for deletion only when it is pristine. Verify with
-  unit tests that no seeded path ever appears among the write actions.
-- [ ] 3.4 Implement the `CHANGELOG.md` range extraction between two versions, with
-  **BREAKING** entries marked. Verify with unit tests that the range starts after the
-  stamp version and that `0.0.0` selects everything.
+  unit tests that no seeded path, `README.md` included, ever appears among the write
+  actions or the questions.
+- [ ] 3.4 Implement the `CHANGELOG.md` extraction, with **BREAKING** entries marked: the
+  range between two versions for an upgrade, and a single version's section for an
+  adoption. Verify with unit tests that the range starts after the stamp version and
+  that a single-version request returns only that section.
 - [ ] 3.5 Implement `upgrade.py plan`, covering:
   - the JSON plan written to the temp directory;
   - the summary, and `--diff <path|all>`;
@@ -102,8 +104,9 @@ changes skill scripts also runs that skill's own `python -m unittest`.
   the no-git backup contents, a stamp that records S for a kept local file, and
   `content/` byte-identical after apply.
 - [ ] 4.2 Implement `upgrade.py commit --plan`: stage only the planned paths, the stamp
-  and a newly tracked `.kb-onboard.json`, then make one commit. Without git, it reports
-  and exits 0. Verify in a temp git repo that has an unrelated dirty note: exactly one new
+  and a newly tracked `.kb-onboard.json`, then make one commit, `chore(template): adopt
+  <repo> <R>` for an adoption plan and `chore(template): upgrade to <repo> <version>`
+  otherwise. Without git, it reports and exits 0. Verify in a temp git repo that has an unrelated dirty note: exactly one new
   commit, and the note still dirty afterwards.
 
 ## 5. Adoption
@@ -113,27 +116,42 @@ changes skill scripts also runs that skill's own `python -m unittest`.
   (design D9), and commit the first generated index. Verify that the index contains the
   `v0.1.0` hash of `.claude/skills/ingest/SKILL.md` and of `.claude/hooks/load_vault_map.py`,
   and that a second run produces a byte-identical file.
-- [ ] 5.2 Implement `--adopt` planning:
-  - refusal when there is no stamp, or when there is one;
-  - pristine detection by index or by S;
-  - the starting version, with `0.0.0` before the first tag;
-  - additions the owner can deselect, selected deletions of pristine old paths;
-  - proposals only for rendered files.
+- [ ] 5.2 Implement `--adopt` planning (design D9):
+  - a plain upgrade without a stamp stops and suggests `--adopt`; `--adopt` with a stamp
+    is refused;
+  - pristine detection by the index;
+  - the nearest release R, always a tagged release no newer than the source;
+  - forward-only alignment to R: older pristine files updated, missing files added as
+    deselectable, pristine paths R does not ship deleted, newer pristine files and local
+    edits left alone with the baselines from D9;
+  - proposals only for rendered files, with the output hash recorded only when the file
+    equals R's rendering.
 
-  Verify with unit tests on a fixture index that simulates a pre-`0.1.0` instance and a
-  `0.1.0` instance with one hand-re-pulled file.
-- [ ] 5.3 Add an adoption case to `tests/run_tests.py`. It builds a synthetic old
-  generation (pre-rename skill paths, no `CHANGELOG.md`) and a synthetic source in temp
-  directories, runs `plan --adopt`, `apply` and `commit`, and asserts the planned
-  additions and deletions, the stamp, one commit and an untouched `content/`. Verify
-  `ALL PASS`.
+  Verify with unit tests on a fixture index that simulates a pre-`0.1.0` instance, an
+  instance between releases, and an instance with one file re-pulled from a newer state
+  that must not be rewound.
+- [ ] 5.3 Obtain R's content: the source itself only when it is R's release, the tag
+  `v<R>` of a git-clone source, a download, or `--base <zip|dir>`. Offline without any of
+  these, stop and name the release. Verify with unit tests on a temp git repo with two
+  tags, a stub download, and the offline stop (nothing written).
+- [ ] 5.4 Add an adoption case to `tests/run_tests.py`. It builds, in temp directories, a
+  synthetic old generation (pre-rename skill paths, no `CHANGELOG.md`), a synthetic
+  older release R and a newer source. It runs adoption (`plan --adopt`, `apply`,
+  `commit`) and then an upgrade (`plan`, `apply`, `commit`), and asserts:
+  - two commits;
+  - an adoption stamp naming R, and an upgrade stamp naming the source version;
+  - no file rewound;
+  - an untouched `content/` and `README.md`.
+
+  Verify `ALL PASS`.
 
 ## 6. Skill, command, onboarding and docs
 
 - [ ] 6.1 Write `.claude/skills/brain-upgrade/SKILL.md` as the thin launcher from design
   D3 and D8: resolve the source, run the source's engine, then plan, one review table,
-  apply, merges with the owner, and commit. Include the bootstrap path for bases without
-  the skill. Add `.claude/commands/b/upgrade.md`. Verify that the frontmatter `name`
+  apply, merges with the owner, and commit. For an unstamped base, run that cycle for the
+  adoption first, then offer the upgrade as a second cycle. Include the bootstrap path
+  for bases without the skill. Add `.claude/commands/b/upgrade.md`. Verify that the frontmatter `name`
   matches the directory, and that following the skill in a scratch instance produces a
   dry run without writes.
 - [ ] 6.2 Change `.claude/skills/brain-onboard/SKILL.md`:
@@ -156,9 +174,9 @@ changes skill scripts also runs that skill's own `python -m unittest`.
 
   Verify that `render.py` still renders `AGENTS.template.md` with a sample values file,
   and that `brain-onboard`'s `test_render.py` passes.
-- [ ] 6.5 Add the `CHANGELOG.md` entries for brain-upgrade, `--adopt` and the onboarding
-  changes, with "Existing bases" bootstrap steps (run the `0.2.0` release's engine with
-  `--adopt`). Verify that `dev/check_manifest.py` passes.
+- [ ] 6.5 Add the `CHANGELOG.md` entries for brain-upgrade, `--adopt`, the onboarding
+  changes and `README.md` becoming seeded. Include "Existing bases" bootstrap steps: run
+  the `0.2.0` release's engine with `--adopt`, commit, then upgrade. Verify that `dev/check_manifest.py` passes.
 - [ ] 6.6 Add a "Releasing" checklist and the `dev/` tools to `CONTRIBUTING.md`. Verify
   that each command in the checklist runs as written on a scratch branch, stopping before
   the tag.
@@ -177,10 +195,16 @@ changes skill scripts also runs that skill's own `python -m unittest`.
 - [ ] 7.2 No-git, offline round trip: unpack `git archive` output as an instance, then
   upgrade with `--source <zip>` and no network. Verify that the backup folder holds every
   replaced file and that the stamp's commit equals the zip comment.
-- [ ] 7.3 Adopt a `git archive v0.1.0` copy that carries rendered files and a
-  `.kb-onboard.json` fixture. Verify that unmodified files raise no conflicts, that the
-  starting version is reported as `0.1.0`, and that the pre-rename skill directories are
-  proposed for deletion.
+- [ ] 7.3 Adopt, with this clone as the source, a `git archive` copy of a pre-`0.1.0`
+  commit (for example `4d38b2b`) that carries rendered files and a `.kb-onboard.json`
+  fixture. Verify:
+  - R is reported as `0.1.0`;
+  - unmodified files raise no conflicts and are moved forward to `0.1.0`, and none is
+    rewound;
+  - the adoption is one commit.
+
+  Then upgrade it. Verify a second commit, and that the pre-rename skill directories are
+  proposed for deletion in that upgrade.
 
 ## 8. Release 0.2.0 (after this change is merged)
 

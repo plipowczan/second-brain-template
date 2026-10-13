@@ -18,8 +18,9 @@ library alone. It SHALL contain:
 - the template commit as a 40-character SHA, or `null`;
 - the UTC time of the last write;
 - a map from each template-owned file path to its content hash;
-- for each rendered file, its template source path, the hash of that template source and
-  the hash of the output as written.
+- for each rendered file, its template source path, the hash of that template source, and
+  the hash of the output as written, or `null` when an adoption could not prove the file
+  untouched.
 
 #### Scenario: Stamp after a completed upgrade
 - **WHEN** an upgrade to version `X.Y.Z` completes

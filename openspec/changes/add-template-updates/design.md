@@ -64,17 +64,27 @@ that matches no class.
 |---|---|---|---|
 | author | `openspec/**`, `CONTRIBUTING.md`, `CLAUDE.local.md`, `dev/**` | deleted | never copied; a pristine leftover is proposed for deletion |
 | rendered | `CLAUDE.md` ← `CLAUDE.template.md`, `AGENTS.md` ← `AGENTS.template.md`, `content/WRITING_STYLE.md` ← `content/WRITING_STYLE.template.md` | rendered, templates deleted | re-render on request only (D7) |
-| owned | `.claude/**`, `.githooks/**`, `.github/**`, `tests/**`, `.kb-manifest.json`, `.editorconfig`, `.gitattributes`, `.gitignore`, `.npmrc`, `.prettierrc`, `package.json`, `requirements.txt`, `schema.yml`, `README.md`, `ENVIRONMENTS.md`, `CHANGELOG.md`, `LICENSE` | kept | three-way update (D6) |
-| seeded | `content/**` | kept, pruned as today | never written; changes listed as information |
+| owned | `.claude/**`, `.githooks/**`, `.github/**`, `tests/**`, `.kb-manifest.json`, `.editorconfig`, `.gitattributes`, `.gitignore`, `.npmrc`, `.prettierrc`, `package.json`, `requirements.txt`, `schema.yml`, `ENVIRONMENTS.md`, `CHANGELOG.md`, `LICENSE` | kept | three-way update (D6) |
+| seeded | `content/**`, `README.md` | kept, `content/` pruned as today | never written; changes listed as information |
 
 Patterns only classify files in a template tree. **Inside an instance, a file counts as
 template-owned only by its concrete path:** a path the source version ships, a path in
 the stamp, or a path in the history index (D9). The `.claude/**` pattern therefore never
 claims an instance's own skills or its `settings.local.json`.
 
-`README.md`, `LICENSE` and `schema.yml` are owned. Three-way comparison leaves a locally
-edited file alone until the template also changes it, so files that owners may edit do
-not need a class of their own.
+`LICENSE` and `schema.yml` are owned. Three-way comparison leaves a locally edited file
+alone until the template also changes it, so an owner may edit them without being asked
+at every upgrade.
+
+**`README.md` is seeded** (the maintainer's decision, 2026-10-13). The template's README is
+the product page: it describes the template and the course. In an instance, the owner
+either describes their own knowledge there or has no use for the file. Template wording
+fixes should not reach every base, and they should not raise a question in any of them.
+An upgrade lists a changed upstream README as information only.
+
+*Rejected:* README as owned with the three-way rule. Every base that rewrote its README
+would get a question whenever the template's text changed. Every base that kept it would
+receive product-page edits that say nothing about its own knowledge.
 
 The **author class** is kept out by three independent measures:
 
@@ -257,7 +267,8 @@ upgrade finds an untracked `.kb-onboard.json`, its commit adds it and the plan s
   rendering, when the files are pristine by definition.
 
 `SKILL.md` drives the order: plan, then one review table (the same approve-or-edit form as
-`/b:import`), then apply, then any merges, then commit.
+`/b:import`), then apply, then any merges, then commit. In an unstamped instance it runs
+this cycle twice: first the adoption (D9), then the upgrade.
 
 ### D9. Adoption through a history index
 
@@ -268,26 +279,53 @@ index maps each hash to the template states that shipped it (commit, date, and r
 there is one). Old paths such as `.claude/skills/ingest/SKILL.md` match `.claude/**`, so
 they are included.
 
-`--adopt` needs no stamp:
+**Adoption is its own operation, with its own commit** (the maintainer's decision,
+2026-10-13). `--adopt` aligns the instance with the nearest template release R and writes
+a stamp that names R. The upgrade from R to the new version is a separate, ordinary
+stamped upgrade with its own plan and commit. The one-commit-per-upgrade rule stays, and
+adoption is simply not an upgrade.
 
-- **Pristine files.** A local file is pristine if its hash is in the index for its path,
-  or equals S. Pristine files take B = L, and the D6 table applies unchanged. Any other
-  differing file is a local edit. This handles owners who re-pulled single files, as the
-  changelog told them to.
-- **Starting version.** The starting version is the release with the most matching files
-  (ties go to the older one); a best match before the first tag is `0.0.0`. It only
-  selects the `CHANGELOG.md` range.
-- **Missing and removed files.** Owned files that older generations lack are planned as
-  additions, and the owner can deselect them. Pristine paths the source no longer ships,
-  such as the pre-rename skill directories, are planned as deletions.
-- **Rendered files are never rewritten** during adoption: there is no recorded output
-  hash, so they get diff proposals only.
-- **Adoption and upgrade are one plan and one commit.** Every adoption is followed by an
-  upgrade anyway, the pilot's definition of done asks for one commit, and one reviewed
-  diff is easier to judge than two.
+- **Pristine files.** A local file is pristine if its hash appears in the index for its
+  path. Any other file that differs from R is a local edit. This also recognises files
+  that owners re-pulled one at a time, as the changelog told them to.
+- **The nearest release R** is the tagged release, no newer than the source, whose files
+  the instance matches best (ties go to the older one). R is always a real release. A
+  generation older than `v0.1.0` that still has the pre-rename skill directories gets
+  `0.1.0`. The adoption dry run shows R's `CHANGELOG.md` section.
+- **Alignment only moves forward.**
+  - A pristine file from an older state is updated to R's content.
+  - A file R ships that the instance lacks is planned as an addition, which the owner
+    can deselect (it may have been deleted on purpose).
+  - A pristine file at a path R does not ship is planned as a selected deletion.
+  - A pristine file from a state newer than R stays as it is. Its baseline is its own
+    hash, so the next upgrade can still update it without a question.
+  - A locally edited file stays as it is, is reported, and gets R's hash as its baseline,
+    so the next upgrade still sees it as edited.
+  - No file is ever moved to an older template state.
+- **R's content** comes from the same places as any source. If the source is R's release
+  itself (its tag or its archive), the source is used. A source that only carries R's
+  version number, such as `main` between releases, does not count. If the source is a git clone, R is read from that clone's
+  tag `v<R>`. Otherwise R's archive is downloaded from the repository. Offline, the owner
+  passes `--base <zip|dir>`, and without it adoption stops before any change and names
+  the release it needs.
+- **Rendered files are never written** during adoption. The engine renders R's templates
+  with `.kb-onboard.json`. If the local file equals that rendering, the stamp records its
+  output hash, and later upgrades may re-render it on request. If not, the stamp records
+  `null` and later upgrades only propose. The difference to the new rendering is shown
+  either way.
+- **When R equals the source version**, the adoption also brings the instance up to date,
+  and the following upgrade reports "up to date".
+
+The two commits are `chore(template): adopt <repo> <R>`, then
+`chore(template): upgrade to <repo> <version>`.
 
 *Rejected:*
 
+- **Adoption and upgrade in one plan and one commit** (the first draft). For an old
+  generation the combined diff is too large to review, and it cannot be reverted in parts.
+- **Adoption that writes only the stamp and no files.** It does not split the large diff,
+  which is the reason for having two operations. It would also leave the following
+  upgrade with a diff that matches no `CHANGELOG.md` range.
 - **Comparing only with the newest release:** every file of an older generation would
   become a question.
 - **Requiring a git clone of the template to walk its history:** course participants
@@ -328,7 +366,13 @@ they are included.
   `git archive` would also drop a root `openspec/`, `dev/` or `CONTRIBUTING.md`.
   → Accepted. Instances do not publish through `git archive`. Recorded in `CHANGELOG.md`.
 - **The first adoption of an old generation produces a large diff.**
-  → One table, deselectable additions, and a single commit that can be reverted.
+  → It is split in two: the adoption brings the instance to the nearest release, and the
+  upgrade goes from that release to the new one. Each part has one table, deselectable
+  additions, and one commit that can be reverted on its own.
+- **Adopting an instance older than the source needs a second release's content**, and
+  offline that means a second archive.
+  → A git clone of the template provides every tag. Without one, adoption names the
+  release it needs and stops before any change.
 - **`.kb-onboard.json` becomes committed.** Its contents (name, owner, topics, voice)
   already appear in the committed `AGENTS.md`, so nothing new is disclosed.
 
@@ -337,10 +381,11 @@ they are included.
 1. Merge this change. The two pre-release changes (follow-ups 2 and 3) land separately.
 2. Release `0.2.0`: merged `[Unreleased]` → `[0.2.0]`, manifest version, regenerated
    index, tag, GitHub Release.
-3. The pilot `second-brain-demo-recipes` adopts from the `0.2.0` release by running the
-   engine from the release (D3). Fixes ship as `0.2.1`. The rest of the fleet follows,
+3. The pilot `second-brain-demo-recipes` runs the engine from the `0.2.0` release (D3).
+   It adopts first, in its own commit, and then upgrades, unless the adoption already
+   aligned it to `0.2.0`. Fixes ship as `0.2.1`. The rest of the fleet follows,
    with the maintainer's base last.
 4. Rollback:
-   - **An instance:** `git revert` of the single upgrade commit, or restore from
-     `.kb-upgrade-backup/` without git.
+   - **An instance:** `git revert` of the upgrade commit, the adoption commit, or both,
+     or a restore from `.kb-upgrade-backup/` without git.
    - **The template:** a patch release supersedes a bad one. Tags stay.

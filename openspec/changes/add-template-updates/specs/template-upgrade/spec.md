@@ -43,7 +43,7 @@ the instance. It SHALL be runnable against an instance path from an unpacked rel
 
 #### Scenario: Instance that has no brain-upgrade yet
 - **WHEN** the engine of an unpacked `0.2.0` release is run with `--instance` pointing to a base created before `0.2.0`
-- **THEN** it plans the update exactly as an instance-side run would
+- **THEN** it plans the adoption (or, for a stamped base, the update) exactly as an instance-side run would
 
 ### Requirement: Dry run by default
 
@@ -108,8 +108,8 @@ only if the proposal is still selected when the owner approves the plan.
 brain-upgrade SHALL re-render `CLAUDE.md`, `AGENTS.md` and `content/WRITING_STYLE.md` only
 when the owner asks for it. It SHALL use the source's templates and `.kb-onboard.json`,
 and SHALL write the result only if the local file still matches the output hash in the
-stamp. In every other case it SHALL show the difference as a proposal and leave the file
-unchanged.
+stamp. A `null` output hash never matches. In every other case it SHALL show the
+difference as a proposal and leave the file unchanged.
 
 #### Scenario: Untouched file, re-render requested
 - **WHEN** the owner requests a re-render and `AGENTS.md` matches its recorded output hash
