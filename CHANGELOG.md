@@ -23,6 +23,16 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
   keeps a personal `CLAUDE.local.md` out of your commits.
 
 ### Fixed
+- **`brain-lint` no longer reports underscore-prefixed files like `content/_privacy.md`.**
+  `lint_scan.py` listed `_privacy.md` under `missing_frontmatter`, and `lint_links.py`
+  listed it as an orphan, although the file is configuration, not a note. Both scripts now
+  skip any `_*.md` file under `content/`, the rule `build_indexes.py` already applies (see
+  the `brain-reindex` entry below). On the template's own content `/b:lint` now reports no
+  issues.
+
+  Existing bases: re-pull `.claude/skills/brain-lint/scripts/lint_scan.py` and
+  `lint_links.py`. A file of yours whose name starts with `_` is no longer linted, which
+  matches how `/b:reindex` already treats it; rename it if it is meant to be a note.
 - **The `kb-maintain` workflow runs again.** `.github/workflows/kb-maintain.yml` still
   called `.claude/skills/reindex/…` and `.claude/skills/lint/…` after those skills were
   renamed to `brain-reindex` and `brain-lint`, so every scheduled run failed at the
