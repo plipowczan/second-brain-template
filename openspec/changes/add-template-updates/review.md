@@ -47,3 +47,22 @@ as before and the plan not marked applied.
 Checks: `python tests/run_tests.py` — ALL PASS; brain-upgrade `python -m unittest` —
 137 passed; brain-onboard, brain-export, brain-gaps, brain-lint, brain-refactor suites —
 OK; `python dev/check_manifest.py` — ok
+
+Also fixed after round 2 (background security review of 76916e3, two findings named
+"path-validation-differential", in `upgrade.py` and `kbtemplate.py`), in ea6eba5:
+
+- apply checked targets only inside the transaction, after the no-git backup had already
+  copied files to `backup/<planned path>`; its stamp/`.kb-onboard.json` exemption applied
+  to planned actions too; and the notes guard read the planned string, so a link inside
+  the base or a short name could lead into `content/`. Now the plan's paths are checked
+  first, every target is resolved and checked by role before the dirty check, the backup
+  or any write, and a target that resolves to anything but the planned path is refused.
+- the path rule now also refuses Windows short names (`GIT~1`, `CONTEN~1`), device names
+  (`NUL`, `AUX`, `COM1`) and characters Windows forbids; collisions and the notes guard
+  compare NFC-normalised, case-folded names.
+
+Tests added to `test_safety.py`: short names, device names and forbidden characters in
+the stamp; composed and decomposed names colliding; tampered plan paths naming the stamp,
+`.kb-onboard.json` or a short name; a link inside the base into `content/`; a no-git
+base whose tampered plan leaves no backup folder. Checks: `python tests/run_tests.py` —
+ALL PASS; brain-upgrade `python -m unittest` — 140 passed.
