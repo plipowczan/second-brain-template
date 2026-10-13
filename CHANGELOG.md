@@ -8,6 +8,17 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
 ## [Unreleased]
 
 ### Added
+- **`.kb-manifest.json` holds the template version and sorts every file into a class.**
+  The version (`0.1.0` until the next release) now lives only there, and `package.json`
+  no longer has a `version` field. The four classes say what an update may touch:
+  **owned** files (`.claude/`, hooks, workflows, config, `CHANGELOG.md`, `LICENSE`, …)
+  are kept current; **seeded** files (`content/` and `README.md`) are yours once copied
+  and are never written; **rendered** files (`CLAUDE.md`, `AGENTS.md`,
+  `content/WRITING_STYLE.md`) come from the `*.template.md` files; **author** files
+  (`openspec/`, `dev/`, `CONTRIBUTING.md`, `CLAUDE.local.md`) are for developing the
+  template and never reach a base. This is the groundwork for `/b:upgrade`.
+
+  Existing bases: nothing to do by hand; your first `/b:upgrade --adopt` brings the file in.
 - **The template is now developed directly in this repository, and the rules for doing
   that live in `CONTRIBUTING.md`.** Until now this repository was a mirror: the template
   was built inside the maintainer's own base and copied here in `sync from brain@…`
@@ -100,6 +111,20 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
   Existing bases: re-pull `.claude/skills/research/validate_json.py`.
 
 ### Changed
+- **`.kb-onboard.json` is no longer git-ignored.** It holds your onboarding answers, which
+  are the input for re-rendering `CLAUDE.md`, `AGENTS.md` and `content/WRITING_STYLE.md`.
+  Every base checked kept it only on disk, so any other clone of the base lost it. Its
+  contents (name, owner, topics, voice) already appear in your committed `AGENTS.md`.
+
+  Existing bases: delete the `.kb-onboard.json` line from `.gitignore` and commit the
+  file. An upgrade does both for you.
+- **Template-development files are left out of archives.** `.gitattributes` marks
+  `openspec/`, `dev/`, `CONTRIBUTING.md` and `CLAUDE.local.md` `export-ignore`, so
+  "Download ZIP" and release archives no longer contain them. The lines reach your base
+  with `.gitattributes`: if you ever publish your base with `git archive`, a root
+  `openspec/`, `dev/` or `CONTRIBUTING.md` of your own would be left out of it.
+
+  Existing bases: nothing to do.
 - **BREAKING: all workflow commands and skills are namespaced** — command wrappers moved
   from `.claude/commands/*.md` to `.claude/commands/b/*.md` (subdirectory = native `:`
   namespace, so `/ingest` is now `/b:ingest`), and every vault skill directory gained a

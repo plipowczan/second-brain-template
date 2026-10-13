@@ -16,6 +16,7 @@ LINT_LINKS = SKILLS / "brain-lint" / "scripts" / "lint_links.py"
 REFACTOR = SKILLS / "brain-refactor" / "scripts" / "refactor.py"
 GAPS = SKILLS / "brain-gaps" / "scripts" / "gaps.py"
 CURATE_SCRIPTS = SKILLS / "brain-curate" / "scripts"
+DEV = ROOT / "dev"
 
 PAD = " padding" * 30
 NOTE_A = ('---\ntitle: "Alpha"\ndate: 2026-01-01\ntags: ["x"]\ntype: knowledge-note\n'
@@ -76,6 +77,17 @@ def main():
     r = subprocess.run([sys.executable, "-m", "unittest", "-v"],
                        cwd=str(CURATE_SCRIPTS), capture_output=True, text=True)
     check("curate unit tests pass", r.returncode == 0, r.stderr)
+
+    # Template source only: dev/ (author class) never reaches an instance, and its
+    # check of every tracked file would fail there.
+    if DEV.is_dir():
+        r = run(DEV / "check_manifest.py", cwd=str(ROOT))
+        check("dev/check_manifest.py passes", r.returncode == 0, r.stdout + r.stderr)
+        r = subprocess.run([sys.executable, "-m", "unittest", "-v"],
+                           cwd=str(DEV), capture_output=True, text=True)
+        check("dev unit tests pass", r.returncode == 0, r.stderr)
+    else:
+        print("SKIP - dev/check_manifest.py (no dev/: not the template source)")
 
     print("---")
     if failures:

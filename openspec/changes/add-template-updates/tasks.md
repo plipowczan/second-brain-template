@@ -10,7 +10,7 @@ changes skill scripts also runs that skill's own `python -m unittest`.
   `[Unreleased]` in `CHANGELOG.md` without losing or rewording any entry (follow-up 5).
   Verify that the merged sections contain the same bullet count as before and that each
   heading appears once.
-- [ ] 1.2 Add `.kb-manifest.json`:
+- [x] 1.2 Add `.kb-manifest.json`:
   - format `1`, version `0.1.0`, repository `plipowczan/second-brain-template`;
   - the author, rendered, owned and seeded classes, and the `exclude` list, as in design
     D1, with `README.md` in the seeded class.
@@ -18,7 +18,7 @@ changes skill scripts also runs that skill's own `python -m unittest`.
   Remove `version` from `package.json`. Verify that the manifest loads with
   `python -c "import json; json.load(open('.kb-manifest.json'))"` and that
   `npm run format` still starts.
-- [ ] 1.3 Write `dev/check_manifest.py`. It fails when:
+- [x] 1.3 Write `dev/check_manifest.py`. It fails when:
   - a tracked file matches no class;
   - the manifest version differs from the newest `## [X.Y.Z]` heading;
   - `package.json` has a `version`;
@@ -26,14 +26,14 @@ changes skill scripts also runs that skill's own `python -m unittest`.
 
   Verify that it passes on the repository and fails, naming the culprit, on a temp copy
   with an unclassified root file and on a temp copy with a duplicated `### Fixed`.
-- [ ] 1.4 Make `tests/run_tests.py` run `dev/check_manifest.py` when `dev/` exists and
+- [x] 1.4 Make `tests/run_tests.py` run `dev/check_manifest.py` when `dev/` exists and
   skip it otherwise. Verify `ALL PASS` here, and that the step is skipped in a temp copy
   without `dev/`.
-- [ ] 1.5 Mark the author paths `export-ignore` in `.gitattributes`. Verify that
+- [x] 1.5 Mark the author paths `export-ignore` in `.gitattributes`. Verify that
   `git archive --format=zip HEAD` lists no `openspec/`, `dev/` or `CONTRIBUTING.md` entry.
-- [ ] 1.6 Remove the `.kb-onboard.json` line from `.gitignore`. Verify that
+- [x] 1.6 Remove the `.kb-onboard.json` line from `.gitignore`. Verify that
   `git check-ignore .kb-onboard.json .kb-template.json` matches neither file.
-- [ ] 1.7 Update the "What ships, and in what form" table in `CONTRIBUTING.md` to the four
+- [x] 1.7 Update the "What ships, and in what form" table in `CONTRIBUTING.md` to the four
   classes, with `.kb-manifest.json` as their source of truth. `README.md` moves from
   "shipped as is" to seeded. Add the `CHANGELOG.md` entries for 1.2, 1.5 and 1.6. Verify
   that every path in the table appears in the manifest.

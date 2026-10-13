@@ -56,14 +56,22 @@ needed only for the optional `npm run format` (Prettier).
 
 ## What ships, and in what form
 
-| Path | What it is | In an instance |
-|------|------------|----------------|
-| `CLAUDE.template.md`, `AGENTS.template.md`, `content/WRITING_STYLE.template.md` | Instruction templates with `{{PLACEHOLDERS}}` | `/b:onboard` renders them to `CLAUDE.md`, `AGENTS.md`, `content/WRITING_STYLE.md` and deletes the templates |
-| everything else in `content/` | Starter content: example notes in `REFERENCE/`, note templates in `templates/`, a sample in `_raw/inbox/`, `_privacy.md`, prebuilt indexes | Copied once with the clone; from then on it belongs to the owner |
-| `.claude/` (skills, `commands/b/`, agents, hooks, `settings.json`) | The workflows and their scripts | Shipped as is and kept current by updates |
-| `.github/workflows/kb-maintain.yml`, `.githooks/` | Index and lint automation | Runs in the instance (the workflow also runs here) |
-| `README.md`, `ENVIRONMENTS.md`, `CHANGELOG.md`, `LICENSE` | Documentation | Shipped as is |
-| `CONTRIBUTING.md` | These rules | Ships with a clone today; meant to stay out of instances |
+[`.kb-manifest.json`](.kb-manifest.json) is the source of truth for what reaches an
+instance. It sorts every tracked file into one of four classes; the first class that
+matches wins, in the order author → rendered → owned → seeded. `dev/check_manifest.py`
+fails on any tracked file that has no class, so a new top-level file needs a pattern
+there.
+
+| Class | Paths | What they are | In an instance |
+|-------|-------|---------------|----------------|
+| author | `openspec/**`, `CONTRIBUTING.md`, `CLAUDE.local.md`, `dev/**` | Specs, these rules, release tools | Never: `export-ignore` keeps them out of archives, `/b:onboard` deletes them from a clone, `brain-upgrade` never copies them |
+| rendered | `CLAUDE.md` ← `CLAUDE.template.md`, `AGENTS.md` ← `AGENTS.template.md`, `content/WRITING_STYLE.md` ← `content/WRITING_STYLE.template.md` | Instruction templates with `{{PLACEHOLDERS}}` | `/b:onboard` renders them and deletes the templates; `brain-upgrade` re-renders a file only on request and only while it is untouched |
+| owned | `.claude/**`, `.githooks/**`, `.github/**`, `tests/**`, `.kb-manifest.json`, `.editorconfig`, `.gitattributes`, `.gitignore`, `.npmrc`, `.prettierrc`, `package.json`, `requirements.txt`, `schema.yml`, `ENVIRONMENTS.md`, `CHANGELOG.md`, `LICENSE` | Workflows and their scripts, automation, config, documentation | Kept current by `brain-upgrade`. A file the owner edited is kept, and they are asked only when the template changed it too |
+| seeded | `content/**`, `README.md` | Starter content and the product page | Copied once with the clone; from then on it belongs to the owner, and upgrades never write it |
+
+The manifest's `exclude` list names files that never ship, even when they sit in a
+source directory: caches, `.claude/settings.local.json`, and an instance's own
+`.kb-template.json` and `.kb-onboard.json`.
 
 - **No rendered `CLAUDE.md` or `AGENTS.md` here.** They exist only in an instance.
   `/b:onboard` recognises a fresh clone by `CLAUDE.template.md`, and Claude Code reads an

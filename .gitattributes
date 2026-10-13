@@ -14,3 +14,12 @@
 *.gif binary
 *.svg binary
 *.pdf binary
+
+# Author-class files (see .kb-manifest.json) belong to the template source only.
+# export-ignore keeps them out of `git archive`, GitHub "Download ZIP" and release
+# archives. In a knowledge base these lines only matter if you publish it with
+# `git archive` yourself.
+/openspec export-ignore
+/dev export-ignore
+/CONTRIBUTING.md export-ignore
+/CLAUDE.local.md export-ignore

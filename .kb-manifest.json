@@ -1,0 +1,51 @@
+{
+  "format": 1,
+  "version": "0.1.0",
+  "repository": "plipowczan/second-brain-template",
+  "classes": {
+    "author": [
+      "openspec/**",
+      "CONTRIBUTING.md",
+      "CLAUDE.local.md",
+      "dev/**"
+    ],
+    "rendered": {
+      "CLAUDE.md": "CLAUDE.template.md",
+      "AGENTS.md": "AGENTS.template.md",
+      "content/WRITING_STYLE.md": "content/WRITING_STYLE.template.md"
+    },
+    "owned": [
+      ".claude/**",
+      ".githooks/**",
+      ".github/**",
+      "tests/**",
+      ".kb-manifest.json",
+      ".editorconfig",
+      ".gitattributes",
+      ".gitignore",
+      ".npmrc",
+      ".prettierrc",
+      "package.json",
+      "requirements.txt",
+      "schema.yml",
+      "ENVIRONMENTS.md",
+      "CHANGELOG.md",
+      "LICENSE"
+    ],
+    "seeded": [
+      "content/**",
+      "README.md"
+    ]
+  },
+  "exclude": [
+    "**/__pycache__/**",
+    "**/*.pyc",
+    "**/.DS_Store",
+    ".claude/settings.local.json",
+    "graft/**",
+    "node_modules/**",
+    ".kb-template.json",
+    ".kb-onboard.json",
+    ".kb-upgrade-backup/**"
+  ]
+}
