@@ -1,6 +1,5 @@
 {
   "name": "kb-template",
-  "version": "0.1.0",
   "private": true,
   "description": "Claude Code knowledge-base template",
   "scripts": {

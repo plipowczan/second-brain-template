@@ -40,6 +40,16 @@ assistant can reach your files can drive it.
   Code / Desktop, Copilot, and Cursor. This is the basis for an optional future
   migration of the command files (not done — see the template's issue tracker).
 
+## Updating the template without a terminal
+
+`/b:upgrade` is a set of Python commands the agent runs for you, so it works wherever
+the agent can run Python on your files. Ask in a sentence where `/slash` commands are not
+native: *"follow `.claude/skills/brain-upgrade/SKILL.md`"*. It needs neither git nor a
+clone of the template: it downloads the release archive itself, or takes a release
+`.zip` you saved (offline). With git it ends in one commit you can review in the Source
+Control panel; without git it keeps a copy of every file it replaces in
+`.kb-upgrade-backup/`.
+
 ## The honest limit
 
 The only setup that will **not** work is a plain chat app with **no access to your

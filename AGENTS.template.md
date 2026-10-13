@@ -114,6 +114,7 @@ Each workflow is a skill with a matching slash command:
 - **CURATE** (`/b:curate`) — staleness/relevance hygiene: scores notes (age, isolation, dead links, duplication), proposes archive/merge/refresh, retires confirmed notes to `_graveyard/` (reversible, gated on confirmation).
 - **EXPORT** (`/b:export`) — pack selected notes (list/tag/folder) into a portable `brain-pack-*.zip` bundle; default level verbatim and read-only, `--public` runs a redaction pipeline (default policy + `content/_privacy.md` overrides, one verdict table, pattern-sweep + audit nets, local redaction report).
 - **IMPORT** (`/b:import`) — import a brain-pack bundle from another base: validate, triage collisions, adapt placement to this vault's taxonomy, stamp provenance, update indexes, write a report; at most 2 prompts per run.
+- **UPGRADE** (`/b:upgrade`) — pull a newer template release into this base: dry run with the changelog, one review table, apply, one commit; adopts a base without `.kb-template.json` first. Never touches notes in `content/`.
 
 ## Safety Rules
 

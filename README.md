@@ -63,6 +63,42 @@ any tool where an AI assistant can reach your files: Claude Code, Claude Desktop
 
 See [`ENVIRONMENTS.md`](ENVIRONMENTS.md) for the full tool-by-tool matrix.
 
+## Updating your base
+
+The template keeps improving: new skills, fixes, better hooks. Each release is listed in
+[`CHANGELOG.md`](CHANGELOG.md), and **`/b:upgrade`** pulls it into your base:
+
+1. It downloads the latest release from GitHub (or uses a release `.zip` or a local
+   clone you point it to) and runs a **dry run**: the changelog entries since your
+   version and a plan per file. Nothing changes yet.
+2. You approve the plan in one table. Files you edited are kept; you are asked only
+   when the template changed the same file. Your notes in `content/` and your
+   `README.md` are never touched.
+3. It applies the plan and records the new version in `.kb-template.json`.
+
+- **With git**, the update is one commit (`chore(template): upgrade to …`); undo it
+  with `git revert`.
+- **Without git**, every file it replaces or deletes is copied to
+  `.kb-upgrade-backup/` first.
+- **Offline**, pass a release `.zip` you downloaded earlier, or a local clone of the
+  template: `/b:upgrade` with the path. The download step prints where it saved the
+  archive, so the same file works next time.
+
+**What you trust.** Updates come from the template repository on GitHub over HTTPS (the
+one recorded in your base's `.kb-template.json`). Before the update tool from a release
+runs, `/b:upgrade` shows you its repository, version, tag, commit and where it was
+downloaded from, and waits for your yes; a release from a different repository than your
+base follows gets an explicit warning. Releases are not signed: the tool is code from the
+same source as the skills and hooks it installs, which run in every session anyway.
+
+**The first update of an older base** (created before `0.2.0`, so without
+`.kb-template.json` and without `/b:upgrade`) starts with an **adoption**: it recognises
+which files are unmodified template files from your generation, brings them to the
+nearest release, and writes the stamp, in its own commit. The upgrade follows as a
+second commit. Such a base has no `/b:upgrade` yet, so ask your agent to *"download the
+latest release of the template and follow its
+`.claude/skills/brain-upgrade/SKILL.md` to adopt this base"*.
+
 ## Skills
 
 | Command | What it does |
@@ -78,6 +114,7 @@ See [`ENVIRONMENTS.md`](ENVIRONMENTS.md) for the full tool-by-tool matrix.
 | `/b:refactor` | Rename/move/merge/split notes with automatic wikilink repair. |
 | `/b:gaps` | Coverage analysis: weakly-connected notes, missing topics, thin areas. |
 | `/b:curate` | Staleness hygiene: score notes (age, isolation, dead links, duplication), propose archive/merge/refresh, retire confirmed notes to `_graveyard/` (reversible). |
+| `/b:upgrade` | Pull a newer template release into this base: dry run, one review table, one commit; adopts a base without a `.kb-template.json` stamp first. Never touches your notes. |
 | (skill) `excalidraw-diagram` | Generate Excalidraw diagram JSON to embed in notes. |
 | (skill) `research`, `research-deep`, … | Structured multi-item web research into the vault (best-effort; depends on your Claude Code web tools). |
 

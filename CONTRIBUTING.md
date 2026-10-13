@@ -2,7 +2,7 @@
 
 These rules are for people who develop **the template itself**. If you cloned it to start
 your own knowledge base, you don't need this file: run `/b:onboard` (see the
-[README](README.md)), and you can delete `CONTRIBUTING.md` from your copy.
+[README](README.md)), which deletes it from your copy.
 
 ## This repository is the source
 
@@ -11,9 +11,10 @@ your own knowledge base, you don't need this file: run `/b:onboard` (see the
   maintainer's own base and copied here in `sync from brain@…` commits. That sync is gone.
 - Every knowledge base created from the template is an **instance**. Changes flow one way,
   template → instances. Don't build a change in an instance and copy it back here.
-- Instances pick changes up through an **update**, not by copying files around by hand. A
-  versioned update mechanism is planned for `0.2.0`. Until it ships, each `CHANGELOG.md`
-  entry tells the owner of an existing base what to re-pull.
+- Instances pick changes up through an **update**, not by copying files around by hand:
+  `/b:upgrade` (the `brain-upgrade` skill, from `0.2.0`) installs a tagged release and
+  shows the owner the `CHANGELOG.md` entries since their version. Each entry still says
+  what an existing base has to do, because the owner reads it during the upgrade.
 - **Never run `/b:onboard` in this repository.** It renders `CLAUDE.md`, `AGENTS.md` and
   `content/WRITING_STYLE.md`, then deletes the `*.template.md` files: it turns the source
   into an instance. To try onboarding, clone to a scratch directory and run it there:
@@ -34,12 +35,16 @@ your own knowledge base, you don't need this file: run `/b:onboard` (see the
 
 1. `pip install -r requirements.txt` (PyYAML) once per environment.
 2. `python tests/run_tests.py` must end with `ALL PASS` (exit code 0). It builds a
-   throwaway vault and exercises reindex, lint, gaps and refactor, plus the curate unit
-   tests.
+   throwaway vault and exercises reindex, lint, gaps and refactor, adopts and upgrades a
+   synthetic old base with `brain-upgrade`, and runs the curate and brain-upgrade unit
+   suites. Here (where `dev/` exists) it also runs `dev/check_manifest.py` and the `dev/`
+   tests. It takes a few minutes, mostly git in temporary repositories.
 3. If you changed a skill's scripts, also run that skill's own unit tests: `python -m
-   unittest` from `.claude/skills/<skill>/scripts/`. `tests/run_tests.py` runs only the
-   curate suite. The two `yt-dlp` integration tests in `brain-ingest` need `yt-dlp` and a
-   network connection.
+   unittest` from `.claude/skills/<skill>/scripts/`, or all of them at once with
+   `python tests/run_skill_tests.py`. `tests/run_tests.py` runs only the curate and
+   brain-upgrade suites. The two `yt-dlp` integration tests in `brain-ingest` need `yt-dlp`
+   and a network connection; `run_skill_tests.py` skips them, with the reason, when it is
+   missing.
 4. If you changed `.github/workflows/kb-maintain.yml`, or a script it calls
    (`build_indexes.py`, `lint_scan.py`), run what the workflow runs, from the repo root:
 
@@ -51,19 +56,30 @@ your own knowledge base, you don't need this file: run `/b:onboard` (see the
    Then `git diff content/_indexes` may show only `updated:` lines. Any other change means
    the workflow would open an index-refresh pull request.
 
-No CI runs these checks on push or pull request yet, so they are yours to run. Node is
-needed only for the optional `npm run format` (Prettier).
+`.github/workflows/tests.yml` runs `tests/run_tests.py` and `tests/run_skill_tests.py` (every
+skill's own unit tests) on Linux and Windows for every push to `main` and every pull request
+into it, and checks that `.githooks/pre-commit` blocks a note without frontmatter. Run the
+same checks locally before you push: CI tells you after the fact, and a red pull request is
+not merged. Node is needed only for the optional `npm run format` (Prettier).
 
 ## What ships, and in what form
 
-| Path | What it is | In an instance |
-|------|------------|----------------|
-| `CLAUDE.template.md`, `AGENTS.template.md`, `content/WRITING_STYLE.template.md` | Instruction templates with `{{PLACEHOLDERS}}` | `/b:onboard` renders them to `CLAUDE.md`, `AGENTS.md`, `content/WRITING_STYLE.md` and deletes the templates |
-| everything else in `content/` | Starter content: example notes in `REFERENCE/`, note templates in `templates/`, a sample in `_raw/inbox/`, `_privacy.md`, prebuilt indexes | Copied once with the clone; from then on it belongs to the owner |
-| `.claude/` (skills, `commands/b/`, agents, hooks, `settings.json`) | The workflows and their scripts | Shipped as is and kept current by updates |
-| `.github/workflows/kb-maintain.yml`, `.githooks/` | Index and lint automation | Runs in the instance (the workflow also runs here) |
-| `README.md`, `ENVIRONMENTS.md`, `CHANGELOG.md`, `LICENSE` | Documentation | Shipped as is |
-| `CONTRIBUTING.md` | These rules | Ships with a clone today; meant to stay out of instances |
+[`.kb-manifest.json`](.kb-manifest.json) is the source of truth for what reaches an
+instance. It sorts every tracked file into one of four classes; the first class that
+matches wins, in the order author → rendered → owned → seeded. `dev/check_manifest.py`
+fails on any tracked file that has no class, so a new top-level file needs a pattern
+there.
+
+| Class | Paths | What they are | In an instance |
+|-------|-------|---------------|----------------|
+| author | `openspec/**`, `CONTRIBUTING.md`, `CLAUDE.local.md`, `dev/**` | Specs, these rules, release tools | Never: `export-ignore` keeps them out of archives, `/b:onboard` deletes them from a clone, `brain-upgrade` never copies them |
+| rendered | `CLAUDE.md` ← `CLAUDE.template.md`, `AGENTS.md` ← `AGENTS.template.md`, `content/WRITING_STYLE.md` ← `content/WRITING_STYLE.template.md` | Instruction templates with `{{PLACEHOLDERS}}` | `/b:onboard` renders them and deletes the templates; `brain-upgrade` re-renders a file only on request and only while it is untouched |
+| owned | `.claude/**`, `.githooks/**`, `.github/**`, `tests/**`, `.kb-manifest.json`, `.editorconfig`, `.gitattributes`, `.gitignore`, `.npmrc`, `.prettierrc`, `package.json`, `requirements.txt`, `schema.yml`, `ENVIRONMENTS.md`, `CHANGELOG.md`, `LICENSE` | Workflows and their scripts, automation, config, documentation | Kept current by `brain-upgrade`. A file the owner edited is kept, and they are asked only when the template changed it too |
+| seeded | `content/**`, `README.md` | Starter content and the product page | Copied once with the clone; from then on it belongs to the owner, and upgrades never write it |
+
+The manifest's `exclude` list names files that never ship, even when they sit in a
+source directory: caches, `.claude/settings.local.json`, and an instance's own
+`.kb-template.json` and `.kb-onboard.json`.
 
 - **No rendered `CLAUDE.md` or `AGENTS.md` here.** They exist only in an instance.
   `/b:onboard` recognises a fresh clone by `CLAUDE.template.md`, and Claude Code reads an
@@ -78,6 +94,78 @@ needed only for the optional `npm run format` (Prettier).
 - **No values from your own base in skills or templates:** no fixed language, names,
   topics or file paths that only exist in one vault. Read them from the instance (for
   example the primary language from `content/WRITING_STYLE.md`) or add a placeholder.
+
+## Author tools in `dev/`
+
+`dev/` is author-class: it never reaches an instance.
+
+- `dev/check_manifest.py` — the release check: every tracked file has a class, the
+  manifest version equals the newest `## [X.Y.Z]` in `CHANGELOG.md`, `package.json` has
+  no `version`, and no section heading repeats within one version. `tests/run_tests.py`
+  runs it.
+- `dev/build_known_hashes.py` — regenerates `.claude/skills/brain-upgrade/known-hashes.json`,
+  the history index adoption uses: every hash each owned- and author-class file has had
+  in every commit reachable from HEAD, with the releases each state belongs to.
+  `--release` also indexes the staged tree as the release being made; `--check` only
+  reports whether the file is current.
+- `dev/release_notes.py X.Y.Z` — prints that version's `CHANGELOG.md` section for the
+  GitHub Release notes.
+
+## Releasing
+
+A release is one commit on `main` tagged `vX.Y.Z`, published as a GitHub Release whose
+notes are its `CHANGELOG.md` section. The version lives only in `.kb-manifest.json`.
+Instances install tags, so a tag is never moved: a defect gets a new patch release.
+
+Start on an up-to-date `main` with every change for the release merged, then (with the
+version in place of `X.Y.Z` and the UTC date in place of `YYYY-MM-DD`):
+
+1. In `CHANGELOG.md`, rename `## [Unreleased]` to `## [X.Y.Z] - YYYY-MM-DD`.
+2. Set `"version": "X.Y.Z"` in `.kb-manifest.json`.
+3. Stage both, then rebuild the history index with the staged tree as the release:
+
+   ```bash
+   git add CHANGELOG.md .kb-manifest.json
+   python dev/build_known_hashes.py --release
+   git add .claude/skills/brain-upgrade/known-hashes.json
+   ```
+
+4. Check, then commit:
+
+   ```bash
+   python dev/check_manifest.py
+   python tests/run_tests.py
+   git commit -m "chore(release): X.Y.Z"
+   ```
+
+5. Tag and publish:
+
+   ```bash
+   git tag -a vX.Y.Z -m "second-brain-template vX.Y.Z"
+   git push origin main vX.Y.Z
+   python dev/release_notes.py X.Y.Z > release-notes.md
+   gh release create vX.Y.Z --title "vX.Y.Z" --notes-file release-notes.md
+   ```
+
+6. Verify that the published archive is what instances will get: in a scratch folder,
+   `python .claude/skills/brain-upgrade/scripts/upgrade.py fetch --to X.Y.Z` downloads
+   `archive/refs/tags/vX.Y.Z.zip`, and the `commit` it prints equals
+   `git rev-parse vX.Y.Z^{commit}`. Delete `release-notes.md`.
+
+### What instances trust
+
+An instance trusts this repository on GitHub, reached over HTTPS: the one in its
+`.kb-template.json`. `/b:upgrade` runs the engine of the release it installs, which is
+code from the same source as the skills and hooks that release ships and that run in
+every session afterwards. Before that engine runs, the skill shows the owner the
+repository, version, tag, commit and download URL from the base's own copy of the engine
+(`upgrade.py fetch`) and asks for consent. Only an HTTPS download from GitHub counts as
+verified: a folder, a zip or a local clone (yours included, whatever its origin remote)
+only claims where it comes from, so `fetch` unpacks it only with
+`--allow-repository <the repository it claims>`, and a repository other than the stamp's
+needs the same consent. Releases are not signed: a deliberate decision
+(2026-10-13). So keep this repository's release process (above) and its tags clean:
+whatever is tagged here runs in every base that upgrades to it.
 
 ## Skills shared with the maintainer's base
 

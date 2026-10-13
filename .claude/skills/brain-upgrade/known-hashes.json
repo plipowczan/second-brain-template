@@ -1,0 +1,3024 @@
+{
+ "files": {
+  ".claude/agents/AGENTS.md": {
+   "sha256:5c519940009ef5cbd73645ba9c2874789de837cf71800ceeb86a68d788e530b9": [
+    9,
+    10,
+    12
+   ],
+   "sha256:aa0bd88be224cfd3ddc17ba8a2baa8f9a591ccad36c507a01a3a17eaeeac3b97": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/agents/web-search-agent.md": {
+   "sha256:76cd9d48ac88f8d4fd582f923d8dad147e9d057ed522de33d145fda4d0e43524": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ],
+   "sha256:bff7f64ad7d332ea9bccb69d22d49e1a651659c134c08f014dfd643b69e9c656": [
+    9,
+    10,
+    12
+   ]
+  },
+  ".claude/agents/web-search-modules/academic-papers.md": {
+   "sha256:7f0e271f9ba52d978cd08540142e8bce79906ad7d828603dc20060076b8530b2": [
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/agents/web-search-modules/chinese-tech.md": {
+   "sha256:d69e90038e278dd926a1aae46bac92ea25278ee93b5f9f70707cba724e966f73": [
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/agents/web-search-modules/general-web.md": {
+   "sha256:e6b2a119414daa643a902a53037a15c2867ff03c94d7d5ebbdca448c0b2b3df1": [
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/agents/web-search-modules/github-debug.md": {
+   "sha256:4ff703b48fa6b963aa731e14cffee111d543079d34beb997ed309705b5bc8bff": [
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/agents/web-search-modules/stackoverflow.md": {
+   "sha256:8bca4e46b9963d3e845a97e57f955a10f0549a33c129f7260b11957adb313877": [
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/commands/b/compile.md": {
+   "sha256:e106873e6d0238b4e82b5362bf7a48403d49f18498ddcf66ae9f0ed33fee023d": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/commands/b/curate.md": {
+   "sha256:99eab4bb34c72a774774d56466c715c8ce8f9e28d2f4de0fef67af09dfe51a76": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/commands/b/enhance.md": {
+   "sha256:91c2081d561c57b4c00fb942b848321af790119193213f3ad91b76aafb263527": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/commands/b/export.md": {
+   "sha256:2e490b553373c73c10d41d9305c6419aaa73a1c9b4aab1792732cde2d52547fc": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/commands/b/gaps.md": {
+   "sha256:2c1fe78878f0f0d5f2730e7115f9d09b76babba98fa411740241ecc4d585488c": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/commands/b/import.md": {
+   "sha256:0b4a3d614dc70e1e5e3272a73bc41428c8bb427b4836bec18bdddb19f836857b": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/commands/b/ingest.md": {
+   "sha256:a8250294109e1ab20b7773f70c343d355ce031ca48ba99ecf684a2420466c883": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/commands/b/lint.md": {
+   "sha256:f9771459385e081a1ff2b120f6f67fe8da863eb0fecc309e8e3f8e0bb89274f1": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/commands/b/onboard.md": {
+   "sha256:c1a597ca086526fbfc4839fb02959e768c9ae298e7162e697dae10abb229d138": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/commands/b/output.md": {
+   "sha256:90e69511d08aa528a113747ee9e4748a56b0963323cf6fd7d9810a414948933f": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/commands/b/qa.md": {
+   "sha256:08cb54b53e24d8fc1fe8d450fbe54338d7db440869a7c1f49314cfa157552b20": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/commands/b/refactor.md": {
+   "sha256:f52c20c753e12c57370553f9f6e74cb0cc10bc40174a92b6b40f8f3b18315264": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/commands/b/reindex.md": {
+   "sha256:088618ed5ba07afdd609b88a6cee5492d0c2e4c2c11ad3999d282a6d3dc75c3b": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/commands/b/research-add-fields.md": {
+   "sha256:f795fa3d1b42b8b96a2906e2c37feb12b12315504e39d8fcd6eb5617eebd30ad": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/commands/b/research-add-items.md": {
+   "sha256:77c36b2d71207439ea41661d305a9b45407ad1892d4914dedb47c1bdacebf8ff": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/commands/b/research-deep.md": {
+   "sha256:01bcaf01240f1205915b6b537370094959ba3f31287ee1c0703ab7a9e910ec8e": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/commands/b/research-report.md": {
+   "sha256:15fa29e308c9abf7799742643c5515019a815e153f5f7f8bcb8a27096d648cbc": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/commands/b/research.md": {
+   "sha256:b3c7f01e948ca669eafe19573c218983db01c68210ed0cde181972f067ae6ebc": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/commands/compile.md": {
+   "sha256:35349c7839fd03d9b7f97f975eacfb96c8ec23260ed709aba651c6c8e0a4a3c2": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    12
+   ]
+  },
+  ".claude/commands/curate.md": {
+   "sha256:5b503278f2e02ec0cda1354187f1f9f5b704b101f18af5cc95f5fd681fd5b258": [
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    12
+   ]
+  },
+  ".claude/commands/enhance.md": {
+   "sha256:8fe0f341a3c56b826eefbcdb8fc549c49313d6ea705d58b2d14901445dd2a66e": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    12
+   ]
+  },
+  ".claude/commands/export.md": {
+   "sha256:0bff53ed9015a39333897ac6684f9e6c33d660e09f9d6eeb0567e9935cd1ff47": [
+    9,
+    10,
+    12
+   ]
+  },
+  ".claude/commands/gaps.md": {
+   "sha256:48f9a6df6f674b69bc95c38eb53d9d6ae1dbd396332ee7c24a1b46e04a82e671": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    12
+   ]
+  },
+  ".claude/commands/import.md": {
+   "sha256:dd2c966185efbcd2a170352518cac7e3e9f8a4d8d87da0081506b9168b54fae9": [
+    9,
+    10,
+    12
+   ]
+  },
+  ".claude/commands/ingest.md": {
+   "sha256:43bbc6932f36a88ea7c280d3726bfca3a2ff8563bdd2bc88f58287577373ef0a": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    12
+   ]
+  },
+  ".claude/commands/lint.md": {
+   "sha256:7c668b410124abf8fd45e2a8cdd6ca82e5a14f867e704f68f03ea917ff6d71d7": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    12
+   ]
+  },
+  ".claude/commands/onboard.md": {
+   "sha256:847174e8cb19ee66319e4eaabfc53da8fd0cd47c077d5339a0c7b1264ed64287": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    12
+   ]
+  },
+  ".claude/commands/output.md": {
+   "sha256:ffb529188a922c052267828a5e4f061ac4bf6b00dd81a247dc52a48c35d6e49f": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    12
+   ]
+  },
+  ".claude/commands/qa.md": {
+   "sha256:fd3753f6a020d6edd83c5c0c8e4d3968072d097c8246d524b236343d76ffa4dc": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    12
+   ]
+  },
+  ".claude/commands/refactor.md": {
+   "sha256:f47f93b54cde3adda1f34e208e24def68d3cf86f31616980e7bd1734ca8f342e": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    12
+   ]
+  },
+  ".claude/commands/reindex.md": {
+   "sha256:a3d8b73195b96890d4f509d9b5b99d9e0fd21efa9e2330b691dc25897a07d118": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    12
+   ]
+  },
+  ".claude/hooks/load_vault_map.py": {
+   "sha256:cb9ac6c15300be9bda7841af7f029061d8f23e4ef6b3a820b403d436dde58c5c": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+   ],
+   "sha256:fc033373f4fadedb0f8895bc2d8a6303e5f287d24d8077ebf675f5d212699a07": [
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/settings.json": {
+   "sha256:e734f0d6e5ddbc0189039897154376e05dd5f8d283ba562cfcfe473588d6362c": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/skills/brain-compile/SKILL.md": {
+   "sha256:14b9a060501b9f4fdc93a40234e0902f563100123063c43635b4df6e23a92d9f": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/skills/brain-curate/SKILL.md": {
+   "sha256:669aee54df67c9f0b2506b31e96a555dba510956f9cf16b5b3afe8d6137fbada": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/skills/brain-curate/scripts/curate_links.py": {
+   "sha256:5a4b2e8a51e0d15f46970b9d7098683eccb82b6fbfdc352c08d7a368f7078a0c": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/skills/brain-curate/scripts/curate_score.py": {
+   "sha256:f0d3488c7146fe4b1913185055502eb8d2a1db0026da35a4ab790217511e0d8b": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/skills/brain-curate/scripts/test_curate_links.py": {
+   "sha256:69dae346e47bc36c5375cf6f86af10af9dda2da242baa3eb730365e30b52a0f6": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/skills/brain-curate/scripts/test_curate_score.py": {
+   "sha256:b6fbdd4f0a430438dbac53d0e35bd6a0bd24eff372d2da72b6034b68e4ea82ad": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/skills/brain-enhance/SKILL.md": {
+   "sha256:928e81d52ec893d98adba036a26029e892187b70cc9cbc76ab52372a9ec8dc95": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/skills/brain-export/SKILL.md": {
+   "sha256:c24bc1e375c8b90e6485135b67ba724e5665dd28bf4e90c69336c2621d5a26dd": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/skills/brain-export/scripts/bundle.py": {
+   "sha256:1444f90c0010b400da20c60c95486a904488f649363ea8718b821cda1b55f09c": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/skills/brain-export/scripts/privacy_sweep.py": {
+   "sha256:dd163cf4f170ed805f8c0c1491980f1d40a55b364e6d33753a6b90d43437665f": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/skills/brain-export/scripts/test_bundle.py": {
+   "sha256:67c6dbf95af26f2c7fde4a1f3b5003be7480b123a0000b56ad91557ff37c137b": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/skills/brain-export/scripts/test_privacy_sweep.py": {
+   "sha256:ca0e24cacc77fc6f0eb5161555642214d71ea1710bf1178d1ea9877570ca506d": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/skills/brain-gaps/SKILL.md": {
+   "sha256:1f164e90ce3e68c9bb004c57e8da49a2581eb2d7611789b5cf30bbb763de2518": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/skills/brain-gaps/scripts/gaps.py": {
+   "sha256:54551e0acdfeef4cbaf960eac669471483cfa7b11b5a65098aac24f7fe31c179": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/skills/brain-gaps/scripts/test_gaps.py": {
+   "sha256:03bd8cf8315872be9b74c81b190355820d5fdbb95c3a2f86c340b02cad0f4ecd": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/skills/brain-import/SKILL.md": {
+   "sha256:815f1835e34fd7624505e65026dcf38a8e481664a698f44e96bea5b83fbc25d2": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/skills/brain-ingest/SKILL.md": {
+   "sha256:2077e36a275d0d816d312e7bda9803057c305e163476cfe57d5c4f30c7d6050a": [
+    11,
+    13
+   ],
+   "sha256:55ac0ea4b37f43476bbba568f81fbdf75de5b08f3d08cdf67a4fd46a4de68820": [
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/skills/brain-ingest/scripts/.gitignore": {
+   "sha256:862263fa1f46c20f0d1e4dac5ffcc75abd55c08211b2c3864c5f8764b9d87793": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/skills/brain-ingest/scripts/test_yt_fetch.py": {
+   "sha256:3daf5c189a7d3b76b57a9fa8717019835dc915e56dea2f52a3cd7399384c75ff": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/skills/brain-ingest/scripts/yt_fetch.py": {
+   "sha256:ec04ea73e1a4bcffc4c2e3c1ef85b0f1aedec33b5101f90a20c773e5e0c63bbe": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/skills/brain-lint/SKILL.md": {
+   "sha256:042bdb11c572ddb748f770140bab0ddaf4a899b760f50b5e2867702684182fca": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/skills/brain-lint/scripts/lint_links.py": {
+   "sha256:626745b8054403be04b2e7ccfcbe3f2be89a82e35b14022043cad79e7873b15a": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/skills/brain-lint/scripts/lint_scan.py": {
+   "sha256:405510ddf408e2d7bd5bd8e5ab57ada2fb0cc0a31435eed9863e5fbd0b0039ac": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/skills/brain-lint/scripts/test_lint_scan.py": {
+   "sha256:b5dfc67a101e438d708a877975fdd32cfcbffd2ff85621b2ddb036238cad821e": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/skills/brain-onboard/SKILL.md": {
+   "sha256:f2bbf821133e2266a507f3351c7946af34c0156393bd27bb1ab3843f8b3b4ebc": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/skills/brain-onboard/scripts/render.py": {
+   "sha256:e425f488efac0a734e7bbbc9c82d39929523f587bcc21fe874f314f0ad7296d7": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/skills/brain-onboard/scripts/test_render.py": {
+   "sha256:c32772efdc73638e7514ffa1347d27cd971f3db18e30396ff0a49df904adf012": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/skills/brain-output/SKILL.md": {
+   "sha256:c584c29322b5d78eae785e72bcc3dd4364961f0ef9b0311160a13e2448c93614": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/skills/brain-qa/SKILL.md": {
+   "sha256:f67fe2ecfa4346fa06e43befb14758a88ddde81df659b5423bcb269a32037945": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/skills/brain-refactor/SKILL.md": {
+   "sha256:eabdee79cd85c561b55f7024d3582f9ea0decac98470edf88ed450d6ac3ac738": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/skills/brain-refactor/scripts/refactor.py": {
+   "sha256:f3e47660a5b218b064489551d94415fe12d64d5f5cd66061cfcc42712cea8aa2": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/skills/brain-refactor/scripts/test_refactor.py": {
+   "sha256:e92d20cdbc20cfb86247406df10dc0a077ec21cd99ea2434806c18ce9677482d": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/skills/brain-reindex/SKILL.md": {
+   "sha256:2544c71b5f654e4484d3da2d63bbab5cc1a0e333711e382ef7a628951593a85f": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/skills/brain-reindex/scripts/build_indexes.py": {
+   "sha256:30330f22e64f70ad33660ea94ee925fcba39349efc290de34873df1eb14d75c0": [
+    11,
+    13
+   ],
+   "sha256:3da8021bbd88fb7740f9e75064b3025df0f41199a9ac63b99d0c48a3283dfd26": [
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/skills/brain-research-add-fields/SKILL.md": {
+   "sha256:6dea87acd88f5ef1441426ea0876523cee91dc2b547c4866bffbb522871b30d2": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/skills/brain-research-add-items/SKILL.md": {
+   "sha256:bb9a1b37b2129974c6a6786dd22aad9b756f9fd90b44df7e7d03a337cd254053": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/skills/brain-research-deep/SKILL.md": {
+   "sha256:b259fc801c47d0142e1c3d82859286ec8be038a80077d8cf21ce64cd85bcbef9": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/skills/brain-research-report/SKILL.md": {
+   "sha256:1577e3aad47625e1cf39ec9dccaa35f0c603c071175dccb774278933b6f1af62": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/skills/brain-research/SKILL.md": {
+   "sha256:9243046aa3ef8a99d79227a32e5be14c1b7cca4155b53ca42749d295d4bafce2": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/skills/brain-research/validate_json.py": {
+   "sha256:6e4c9c73a20f6f872c62f2e21cc58e518e357bb0bd257dc56104888c0dd61ae4": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/skills/brain-upgrade/scripts/fixtures.py": {
+   "sha256:a01ec193d00f209ff24694c20d7a13052a0446404afc140343d7fad3d799fab8": [
+    22,
+    23
+   ]
+  },
+  ".claude/skills/brain-upgrade/scripts/kbtemplate.py": {
+   "sha256:85486cde0e9c3f59aefd9b7495dafe553243c358b9b0c18e6b2d6cdb0bce5bc6": [
+    21
+   ],
+   "sha256:c0c40a8b850ddd5242a12242322b57fcc54f547fe011857989fbb10f4a0245f1": [
+    22,
+    23
+   ]
+  },
+  ".claude/skills/brain-upgrade/scripts/planner.py": {
+   "sha256:927bd212da3e6ec744de4b4a78bdf928afecc06c06c36b26a2616a733c881616": [
+    22
+   ],
+   "sha256:9f80f6c0c9697ceba6a66520fb04b315f45fcb56c962e0be9fde452a6e4e8dfb": [
+    23
+   ]
+  },
+  ".claude/skills/brain-upgrade/scripts/sources.py": {
+   "sha256:00615b03be40bcfd91847bef1456ec2a03c416709abf98c2193502eb88ecf52d": [
+    22
+   ],
+   "sha256:bca1f74270f8856fedb2d4117a89cbb8f8e50823071ed8760150b9e0138912d3": [
+    23
+   ]
+  },
+  ".claude/skills/brain-upgrade/scripts/test_apply.py": {
+   "sha256:3e750c58e052bc6a50ec2264c7425bab888517f8e248699af04f6b6fd97b5e22": [
+    23
+   ]
+  },
+  ".claude/skills/brain-upgrade/scripts/test_kbtemplate.py": {
+   "sha256:fc87f930ff41942c911f9f768ee27cbd2c2f319647a360f59bb30a26f510c46d": [
+    22,
+    23
+   ]
+  },
+  ".claude/skills/brain-upgrade/scripts/test_planner.py": {
+   "sha256:dd98ef6ac76eed07dab9e4dce3e1fed7241bbd937306681d061c56f7577ab74b": [
+    23
+   ]
+  },
+  ".claude/skills/brain-upgrade/scripts/test_sources.py": {
+   "sha256:ce3f95124828a3d28c24ee15603058102d851f83501a3e7e3633b042225300d2": [
+    22,
+    23
+   ]
+  },
+  ".claude/skills/brain-upgrade/scripts/test_stamp.py": {
+   "sha256:9d9a2d33cf7198a3531a79d59232971cc853667bd3f2616b70d68b5bcce45c3a": [
+    22,
+    23
+   ]
+  },
+  ".claude/skills/brain-upgrade/scripts/upgrade.py": {
+   "sha256:4586c9f5e53aca7fe3e60cb65296c4a8da0b9ec2008e3d7c86c61a0579cafaf5": [
+    23
+   ],
+   "sha256:f61329998bf2c627da55c6e68e1eeceba6e2f12419033062fc478eba0639079e": [
+    22
+   ]
+  },
+  ".claude/skills/compile/SKILL.md": {
+   "sha256:79b48a537872bca56d7a371f07ed1e907c6a4092118f3ada168574d90f9c5085": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    12
+   ]
+  },
+  ".claude/skills/curate/SKILL.md": {
+   "sha256:cae6908dd50d0ed2b7ea1468d96e454557b45b223d4f55920eac0bc945229660": [
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    12
+   ]
+  },
+  ".claude/skills/curate/scripts/curate_links.py": {
+   "sha256:5a4b2e8a51e0d15f46970b9d7098683eccb82b6fbfdc352c08d7a368f7078a0c": [
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    12
+   ]
+  },
+  ".claude/skills/curate/scripts/curate_score.py": {
+   "sha256:f0d3488c7146fe4b1913185055502eb8d2a1db0026da35a4ab790217511e0d8b": [
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    12
+   ]
+  },
+  ".claude/skills/curate/scripts/test_curate_links.py": {
+   "sha256:69dae346e47bc36c5375cf6f86af10af9dda2da242baa3eb730365e30b52a0f6": [
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    12
+   ]
+  },
+  ".claude/skills/curate/scripts/test_curate_score.py": {
+   "sha256:b6fbdd4f0a430438dbac53d0e35bd6a0bd24eff372d2da72b6034b68e4ea82ad": [
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    12
+   ]
+  },
+  ".claude/skills/enhance/SKILL.md": {
+   "sha256:b6482826085fbb0bc5827346b14ca0f737a276e3e856457d101297f9e3275c4c": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    12
+   ]
+  },
+  ".claude/skills/excalidraw-diagram/.gitignore": {
+   "sha256:5e28b87652d6eca5f57d7457f0d6bac7130d618a3487bf5a594c1d9e6f88301a": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/skills/excalidraw-diagram/README.md": {
+   "sha256:9b51f93c50f942044f041db3b2f59153d5230d848622cb58db04755305438817": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/skills/excalidraw-diagram/SKILL.md": {
+   "sha256:f737a9720455fddca9532fbaeb148e49e2746fd37250fa4cf54aa48a807ce1a5": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/skills/excalidraw-diagram/references/color-palette.md": {
+   "sha256:445cec2c0e1d9e30dd02127018584eb0ecfd0581e348ed90d8da161d22c724c6": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/skills/excalidraw-diagram/references/element-templates.md": {
+   "sha256:ae810232af0278813bc1c311c7ecaefa3c9bd41c4b9aa2f31e29b121663159db": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/skills/excalidraw-diagram/references/json-schema.md": {
+   "sha256:9048830015f3c0c4e075aa983763990d2a3d19fa32f0577917b6bfb49aeb9bd7": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/skills/excalidraw-diagram/references/pyproject.toml": {
+   "sha256:b68f2d373a50b623bb04f3f96e9ce12118d89b01d5ac7a538820f64e7fbdcdd0": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/skills/excalidraw-diagram/references/render_excalidraw.py": {
+   "sha256:45f096f53859c24857dfb67421a241a701afaeed976d9a467d30747401ef30f8": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/skills/excalidraw-diagram/references/render_template.html": {
+   "sha256:aea70c7b69664c27d1ac74a8543f5e9310ed47a264da38ac09db56f64e9adee4": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".claude/skills/export/SKILL.md": {
+   "sha256:a1ca1b11404f5025e045602ab5518b474350cae7b3f1fb321e5d4eb1536aff26": [
+    9,
+    10,
+    12
+   ]
+  },
+  ".claude/skills/export/scripts/bundle.py": {
+   "sha256:1444f90c0010b400da20c60c95486a904488f649363ea8718b821cda1b55f09c": [
+    9,
+    10,
+    12
+   ]
+  },
+  ".claude/skills/export/scripts/privacy_sweep.py": {
+   "sha256:dd163cf4f170ed805f8c0c1491980f1d40a55b364e6d33753a6b90d43437665f": [
+    9,
+    10,
+    12
+   ]
+  },
+  ".claude/skills/export/scripts/test_bundle.py": {
+   "sha256:40f739619a6b488fe6d082f730b448d680ae960031f0c010a07dd36c153efb3c": [
+    9,
+    10,
+    12
+   ]
+  },
+  ".claude/skills/export/scripts/test_privacy_sweep.py": {
+   "sha256:2b30b1e495040e6096f30b15f7bf256c5b6c326b5752e62a50d0846de2922747": [
+    9,
+    10,
+    12
+   ]
+  },
+  ".claude/skills/gaps/SKILL.md": {
+   "sha256:f65547f1e19eaa0fde5f75ce3bb702d5b6044d13576c1de1eae997b44181a162": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    12
+   ]
+  },
+  ".claude/skills/gaps/scripts/gaps.py": {
+   "sha256:08f26b39bddc7974ea5ba962cf773e27312fd51eb4b2cebe7684093e41d9ec49": [
+    0
+   ],
+   "sha256:7078adf1d40e3f0f21f14e3511db86c6c46971ad6e33810427da4add2ab2e7b0": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    12
+   ]
+  },
+  ".claude/skills/gaps/scripts/test_gaps.py": {
+   "sha256:03bd8cf8315872be9b74c81b190355820d5fdbb95c3a2f86c340b02cad0f4ecd": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    12
+   ]
+  },
+  ".claude/skills/import/SKILL.md": {
+   "sha256:18673e517359c3e99c224252fc82913406c3e3ed518818b7d81fc992c13f2cc1": [
+    9,
+    10,
+    12
+   ]
+  },
+  ".claude/skills/ingest/SKILL.md": {
+   "sha256:283e195e74d21ba9e8cc5bc0ccca01af6069140cd5fa7eaff61e0e79ca14d714": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    12
+   ]
+  },
+  ".claude/skills/ingest/scripts/.gitignore": {
+   "sha256:862263fa1f46c20f0d1e4dac5ffcc75abd55c08211b2c3864c5f8764b9d87793": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    12
+   ]
+  },
+  ".claude/skills/ingest/scripts/test_yt_fetch.py": {
+   "sha256:3daf5c189a7d3b76b57a9fa8717019835dc915e56dea2f52a3cd7399384c75ff": [
+    9,
+    10,
+    12
+   ],
+   "sha256:a6a41752546dbf2be17a1f1cacfefa5a44a3c2e7d60eaf2520835135e0d6f01a": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+   ]
+  },
+  ".claude/skills/ingest/scripts/yt_fetch.py": {
+   "sha256:ec04ea73e1a4bcffc4c2e3c1ef85b0f1aedec33b5101f90a20c773e5e0c63bbe": [
+    9,
+    10,
+    12
+   ],
+   "sha256:f1d90a98e1207c758ba6cc2b00702841793571192a0439a1cf3047fe04583513": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+   ]
+  },
+  ".claude/skills/lint/SKILL.md": {
+   "sha256:472834517666e7b673a485ef61428eff14c1b5b3099e0ba3158de987bed228da": [
+    9,
+    10,
+    12
+   ],
+   "sha256:4b37c35b2192bbec79189895022ff8bbd71aa1c86470fab3ff4462db94c938a4": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+   ]
+  },
+  ".claude/skills/lint/scripts/lint_links.py": {
+   "sha256:06393e61c3c03d866f27027d48356d8c969a40f2d70a9acd717885f072186433": [
+    0
+   ],
+   "sha256:0b7e81e321ffdaf9ac87d67b408170962c5aaf285b23879cdbff75bb6e71c381": [
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+   ],
+   "sha256:5e3697b4861f6bf12ec5168f16114370986988c99efff811c0821530ab59f0d3": [
+    1,
+    2
+   ],
+   "sha256:626745b8054403be04b2e7ccfcbe3f2be89a82e35b14022043cad79e7873b15a": [
+    9,
+    10,
+    12
+   ]
+  },
+  ".claude/skills/lint/scripts/lint_scan.py": {
+   "sha256:405510ddf408e2d7bd5bd8e5ab57ada2fb0cc0a31435eed9863e5fbd0b0039ac": [
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    12
+   ],
+   "sha256:5ba64b031c9943fbe141232276bdcd9553c2566682944e2e956bb20b7a15413f": [
+    1
+   ],
+   "sha256:8122e6ec9ab70caf0008d3129d7e667528460424e17f79fbc20bb9857a197efd": [
+    2
+   ],
+   "sha256:99e7c9d125b2e0582f96382d72f92e51ee9374fca3b11da7b0d8496689456645": [
+    0
+   ]
+  },
+  ".claude/skills/lint/scripts/test_lint_scan.py": {
+   "sha256:22ea404f187479e244ab8df650be8478c932e253bed2cb8bc3594b0ef75307ef": [
+    0,
+    1
+   ],
+   "sha256:b5dfc67a101e438d708a877975fdd32cfcbffd2ff85621b2ddb036238cad821e": [
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    12
+   ]
+  },
+  ".claude/skills/onboard/SKILL.md": {
+   "sha256:28322b79dd74a06f362e9b7db478abd9e1c4a8b5ac2ca422bb36301bd986c725": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    12
+   ]
+  },
+  ".claude/skills/onboard/scripts/render.py": {
+   "sha256:e425f488efac0a734e7bbbc9c82d39929523f587bcc21fe874f314f0ad7296d7": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    12
+   ]
+  },
+  ".claude/skills/onboard/scripts/test_render.py": {
+   "sha256:c32772efdc73638e7514ffa1347d27cd971f3db18e30396ff0a49df904adf012": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    12
+   ]
+  },
+  ".claude/skills/output/SKILL.md": {
+   "sha256:19136c02f1c4bbfdee00b7204378983d5d8195af5e59c8fc9f3e4d5ceec6b1de": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    12
+   ]
+  },
+  ".claude/skills/qa/SKILL.md": {
+   "sha256:4bbdda8a2ebabdfbd85f0e3e3dd2af0d9103916c3d0a9371de91616feebf1cc6": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+   ],
+   "sha256:8eb8a29d11be22f7552adc4eee96077ae530804c9595bed03195a2bb7cc2714d": [
+    9,
+    10,
+    12
+   ]
+  },
+  ".claude/skills/refactor/SKILL.md": {
+   "sha256:d2f3926ffc73fc9064314608e825aeb6655e4541dfa1e9757ce693d957990943": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    12
+   ]
+  },
+  ".claude/skills/refactor/scripts/refactor.py": {
+   "sha256:8e4ac8bccecd3a4c61273e7f8948be2bbf55878eb846c998c28b184c07e0d501": [
+    0
+   ],
+   "sha256:f3e47660a5b218b064489551d94415fe12d64d5f5cd66061cfcc42712cea8aa2": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    12
+   ]
+  },
+  ".claude/skills/refactor/scripts/test_refactor.py": {
+   "sha256:e92d20cdbc20cfb86247406df10dc0a077ec21cd99ea2434806c18ce9677482d": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    12
+   ]
+  },
+  ".claude/skills/reindex/SKILL.md": {
+   "sha256:2b72d95afe87a6d3034e006a9ca301c9fd14a4fe83626e978569e12ffc7f89b6": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    12
+   ]
+  },
+  ".claude/skills/reindex/scripts/build_indexes.py": {
+   "sha256:261c277cc3139e4988e5ea57af133dbcde41a6a3c184ad6c6a505f59a6fa0fb4": [
+    0,
+    1,
+    2
+   ],
+   "sha256:30330f22e64f70ad33660ea94ee925fcba39349efc290de34873df1eb14d75c0": [
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    12
+   ]
+  },
+  ".claude/skills/research-add-fields/SKILL.md": {
+   "sha256:2f9c4818824ba6b0af950189f0c046e4eca072d50a59738af1586283c10aec31": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    12
+   ]
+  },
+  ".claude/skills/research-add-items/SKILL.md": {
+   "sha256:2d60f109c25a9b5cb54eddb3478810be950abc93310a308769543c360e9e744d": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    12
+   ]
+  },
+  ".claude/skills/research-deep/SKILL.md": {
+   "sha256:1cbf8f569d1fbd0228264f684e539691f724bb5a018eea8b05cdd7abb8174c95": [
+    9,
+    10,
+    12
+   ],
+   "sha256:d576d4774c29a7ccff54d0bb8f1f7d89e23fa02f72f8cf53e720aca7e95357bc": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+   ]
+  },
+  ".claude/skills/research-report/SKILL.md": {
+   "sha256:357d28878b8c20b88788eed56c05298ba460b40380e59267d324847b95f484b1": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    12
+   ]
+  },
+  ".claude/skills/research/SKILL.md": {
+   "sha256:80f6e9a9345ecee2768733d0765249a3a383e9b2dc11df764a9dc67e878ff67b": [
+    9,
+    10,
+    12
+   ],
+   "sha256:b8267cd381e898adbd4f12779c6ad77c0475484fc5d8bc79a2fb1a44c712b3b9": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+   ]
+  },
+  ".claude/skills/research/validate_json.py": {
+   "sha256:50afb305e1111c7570b8373f7b0596587dcadec1d3c09eb97840b7df6ee37819": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    12
+   ]
+  },
+  ".editorconfig": {
+   "sha256:447353fb72bcab8846671d36701f60e20683228ec8cfa0062e20e8378338896d": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".gitattributes": {
+   "sha256:296974f5e946af58e176af26ca8a7f726f79844babe4eecb5748e4c4df84916a": [
+    21,
+    22,
+    23
+   ],
+   "sha256:40bc479ec0b2f98d3b5ad1512cd1f80530c3dd6d16e31f251413398268fc7433": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20
+   ]
+  },
+  ".githooks/pre-commit": {
+   "sha256:145735a853075df9d76e7a9f991e1b8c5c2ded0c9574cabe55568698fd2e12fc": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".github/workflows/kb-maintain.yml": {
+   "sha256:66be820f87e9907b456aa839c9f9ada67c132831ec8c3689f9d1085ba7a42718": [
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+   ],
+   "sha256:a5093f5ad03856beda84a7f5a7e2c3df3c216b83f6ac7e293ea472f342b4d0a4": [
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".gitignore": {
+   "sha256:48bbc6d879264c72e5dfb11d55dd6af835b328b940a37bf9ff7cea1fcfa8a5f9": [
+    15,
+    16,
+    17,
+    18,
+    19,
+    20
+   ],
+   "sha256:6f64ee459ea6ba9b844cff1945316710f87c4714c731322af1fcdf3ab6280a19": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14
+   ],
+   "sha256:74875df40cb449a467bbe16f5c475898a962d955a4e2ab71aef7fba21dc338d1": [
+    21,
+    22,
+    23
+   ]
+  },
+  ".kb-manifest.json": {
+   "sha256:bda9376e291ed4a86973e9e2541bf1c341b459b874f21d050cc56d9750d2d0e1": [
+    21,
+    22,
+    23
+   ]
+  },
+  ".npmrc": {
+   "sha256:be85cc462e740587626bbcbb1c3ed1c40b26e62ec072e8cbd2768f23915c28e6": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  ".prettierrc": {
+   "sha256:c45b5df8ffbac24ef9e0e843309c14eac01600eaf6732c283c8557b40de85561": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  "CHANGELOG.md": {
+   "sha256:159a0b67d1f4ae328a6aa51ec784aed4d654ca2fa8c07cc29bdf80dda2d6f613": [
+    20
+   ],
+   "sha256:259c4831aebae751b1f9c0a0256645e3756ff9435d875522c26838b058242b26": [
+    11,
+    13
+   ],
+   "sha256:27748a1c49c31b78e76376bf6ddfea52aacfdc14b03766e6cf4dc74381352ff0": [
+    21
+   ],
+   "sha256:30de01bd47befcdf30ab71ffda509dc6e2fa6dd49a82d08a9a874745fcfdc546": [
+    14
+   ],
+   "sha256:31fa0d46e82e235bfe3487b27ef68b2534a3481f2c783f0c3c089d948e7c6566": [
+    6
+   ],
+   "sha256:3473f00ab0200a76d0776710362ff9384b7a8a076053ef98ec699997ac339c80": [
+    10,
+    12
+   ],
+   "sha256:53ae283fcb5ea10ec6c1a7a252f5f172aa6fe93a933518e81bd47a1f9bc25f4b": [
+    22
+   ],
+   "sha256:5d4f3a0755a0134e5ea5e82792cc8c073730fe54347be99119c9f44bf27ebc51": [
+    8
+   ],
+   "sha256:689e97d912c1106ea375a4f8322e13d27e12a1546b18c823b0902e05ee5cdfd3": [
+    7
+   ],
+   "sha256:85e6dbb2e78f4de2611848926920f3359b02982353ded7c259df6e269e0d88a2": [
+    3,
+    5
+   ],
+   "sha256:cc59cb3313684ead84f2dc20e6616f24c1dedd5b363c21944b526bc105207c46": [
+    15
+   ],
+   "sha256:ce1342a127f85ecf2fbf0835b756048e20a7d16be73eb12aaf786b36ed2dcb54": [
+    23
+   ],
+   "sha256:db636dbebaafc072945e3e123ba6c5c48b54f386477a7f4914250260f8e2c8d8": [
+    16,
+    17,
+    18,
+    19
+   ],
+   "sha256:fc7619c15ff7f771c97c9c6c7df002a8032fd62a3ef5ae56fddbd8fbc7f486e6": [
+    9
+   ]
+  },
+  "CONTRIBUTING.md": {
+   "sha256:228a13fa6919e8d5c545f99e638d5739539edb91b17f88d86884b7e06bebf847": [
+    21,
+    22,
+    23
+   ],
+   "sha256:996ae48bb6c2edda65ee9d57492ecf45bf8e110f03aad5eff3d19f93313c8e05": [
+    15,
+    16,
+    17,
+    18,
+    19,
+    20
+   ]
+  },
+  "ENVIRONMENTS.md": {
+   "sha256:ce2013aa73a2e1bdd62ee4c19032c20fbcdd398d9fe99059651e16167b81486e": [
+    8,
+    9,
+    10,
+    12
+   ],
+   "sha256:e3d3a0b3f9ede7b9b6521ecc8e2ba5fcc8da78216115023a33bedb257d93e3ba": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  "LICENSE": {
+   "sha256:0b5877a0b650b0c9df005a940f0b330051f9a5710a806f351a5b5571a8461e07": [
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  "dev/check_manifest.py": {
+   "sha256:29aba0bc8f9612bea1b69b12a7bf5e707884f728246af95a6b1ac41f01aea577": [
+    21,
+    22,
+    23
+   ]
+  },
+  "dev/test_check_manifest.py": {
+   "sha256:3f73d9012f8cc2475f353724af92942d2c9a1713ad8b398f427dc38c7c90ac5e": [
+    21,
+    22,
+    23
+   ]
+  },
+  "openspec/changes/add-template-updates/.openspec.yaml": {
+   "sha256:010447270992e8e9533b7bbfb4dbdecda78eab560f05c50428c80463aa9e0ec1": [
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  "openspec/changes/add-template-updates/README.md": {
+   "sha256:8f8a2ffef8eab1f5c605b5a685e21067f40f6de93e42b62544e23e63b0b421a0": [
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  "openspec/changes/add-template-updates/design.md": {
+   "sha256:078b5de0593bfebcbc8ce73a5131cc925745e104561079f9bae1d9b281892265": [
+    17
+   ],
+   "sha256:caa69b3845cbae0b50544000a888573d6606d32fba5f2524f09a17adf0d95a8c": [
+    18
+   ],
+   "sha256:e2291770349b9acf6240536bbb8a14cf6845b4f98f760bb681d308947973ecae": [
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  "openspec/changes/add-template-updates/proposal.md": {
+   "sha256:1a98546022e102bef575c052ef044e57a3d42bcdf87f05d8e7fbe0f4f1b27a9b": [
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ],
+   "sha256:dfa0e676c5bfc46715225184b3b7df510d3b316550aa72a419d816640cd5cdee": [
+    17
+   ]
+  },
+  "openspec/changes/add-template-updates/specs/instance-stamp/spec.md": {
+   "sha256:a66fe2feba0004ee0056928bb46ca79baf6ea44e163d582c598b392c58f81af9": [
+    17
+   ],
+   "sha256:c60df7cbd9dfb630bbb546e310c1044c081a8298b126a40b485c032ab50fe127": [
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  "openspec/changes/add-template-updates/specs/template-adoption/spec.md": {
+   "sha256:74077b9a789d6cee1624444b17e308867399e3c1224f54fc437dbccc8704e27b": [
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ],
+   "sha256:95652ee18506457a50cafc6430f00953906cc66bbabf8611ac6ee2bdc55847ae": [
+    17
+   ]
+  },
+  "openspec/changes/add-template-updates/specs/template-manifest/spec.md": {
+   "sha256:ee233eb08355f41dc6f942bc89e97e3c5fb9025fcb6518587e0f70a04e9737b1": [
+    17
+   ],
+   "sha256:eeb0190cd7644292c8b53d5fa9b796f1d8ff399043d414ca276328eb893be6a7": [
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  "openspec/changes/add-template-updates/specs/template-releases/spec.md": {
+   "sha256:434fa5944bd09a69d97ddbd5e725d62d6bc17978fe9c344d107927b2c44f8527": [
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  "openspec/changes/add-template-updates/specs/template-upgrade/spec.md": {
+   "sha256:3d3962375897e606cf122f3e9014e24eb951896bc17d50c60272f0403f29a9e7": [
+    17
+   ],
+   "sha256:b25e4fab4bae851072d03382d53f6fe9852ae5afc7dabd36560dbff5c52660ce": [
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  "openspec/changes/add-template-updates/tasks.md": {
+   "sha256:0342de43152c7a91612711ceec6e16652d3d3f80c8a3ddf953d4ed505c4f33ca": [
+    20
+   ],
+   "sha256:1147a5af3c4b3c577f5865c9acd21c77df99fdb9578620dd5fe13314c21fba8b": [
+    23
+   ],
+   "sha256:20ee17b234d9acfc727f85997b417f602373aa4c7f668e39c837a1d79bec2b13": [
+    22
+   ],
+   "sha256:85caf192a49f0bb1b0e0b1baa44c8c2d39a2c03f2787e0d43876fdfb95b7c1b2": [
+    17
+   ],
+   "sha256:90ee490ba773f433b7711d72647f2cbe9526ab00849292a55a6106819ef950e4": [
+    21
+   ],
+   "sha256:fd032f5b41fa290b0e273f2e5b15c36210506593648a62e56297352948c37454": [
+    18,
+    19
+   ]
+  },
+  "openspec/changes/archive/.gitkeep": {
+   "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855": [
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  "openspec/config.yaml": {
+   "sha256:352c6ff9067c3b01dad950355270cda82140dfbb007af399fabf0448087fc425": [
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  "openspec/specs/.gitkeep": {
+   "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855": [
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  "package.json": {
+   "sha256:b411598bdab79a1533801ffee98024aeb18c6ac3d01308654aabf9f953b1480a": [
+    21,
+    22,
+    23
+   ],
+   "sha256:c37a11ca8f08cc8e9d3b54f14bf3d92de77f3e328835b639d85e9fcbe9e8ac5a": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20
+   ]
+  },
+  "requirements.txt": {
+   "sha256:98be018df95a79b97880548f12ff681762cb5cf1633e90306707a353734c7318": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  "schema.yml": {
+   "sha256:5920d2dc533de8cdd3e5714c235fce032ca3834ec9d759bc739892c92b6a32c8": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ]
+  },
+  "tests/run_tests.py": {
+   "sha256:69c0241784da18ee5b8786acf2f41ab2de82f5b3e53cf3db5808d607700fc58c": [
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    12
+   ],
+   "sha256:90c51b55a6c6d027cba29db7687b3cfc2cff1d4937ab3f10d8feb50e24283ff9": [
+    11,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20
+   ],
+   "sha256:c448248511d3917ae6484565bf14d03f1dba17ee30f0635eca91a96d15193e0f": [
+    0,
+    1,
+    2
+   ],
+   "sha256:eebb3ced7fa83a6698bed7ce6eabf16fb79190598ffbba3af4b62126ae6afe70": [
+    21,
+    22,
+    23
+   ]
+  }
+ },
+ "format": 1,
+ "repository": "plipowczan/second-brain-template",
+ "states": [
+  {
+   "commit": "218d337ee938778f8f4029ebab03b3b073811444",
+   "date": "2026-06-16",
+   "in": [
+    "0.1.0"
+   ],
+   "release": null
+  },
+  {
+   "commit": "5a670b2369bb18d1acedb7324dfd91ebb752d195",
+   "date": "2026-06-16",
+   "in": [
+    "0.1.0"
+   ],
+   "release": null
+  },
+  {
+   "commit": "b9288efcfd6f6603da4edf5406c9eb56c33a6c76",
+   "date": "2026-06-16",
+   "in": [
+    "0.1.0"
+   ],
+   "release": null
+  },
+  {
+   "commit": "8a42f18b406d241e1bb6f0d4a86e5216ea27f25b",
+   "date": "2026-07-05",
+   "in": [
+    "0.1.0"
+   ],
+   "release": null
+  },
+  {
+   "commit": "4d38b2be4c764737e2b95cf94339b41f6a5cd8c6",
+   "date": "2026-06-25",
+   "in": [
+    "0.1.0"
+   ],
+   "release": null
+  },
+  {
+   "commit": "31961af630c4e83aa1fad91cda38689c88775aa4",
+   "date": "2026-07-05",
+   "in": [
+    "0.1.0"
+   ],
+   "release": null
+  },
+  {
+   "commit": "eb339a4fcba14b3b999688fdba0981809c34595a",
+   "date": "2026-07-05",
+   "in": [
+    "0.1.0"
+   ],
+   "release": null
+  },
+  {
+   "commit": "d17f0e70a987d7fbb89ff0bfd1d1ec07818b23da",
+   "date": "2026-07-07",
+   "in": [
+    "0.1.0"
+   ],
+   "release": null
+  },
+  {
+   "commit": "fd108ff7eefefe8277e2c54e70a7a0c79bbaacdf",
+   "date": "2026-07-09",
+   "in": [
+    "0.1.0"
+   ],
+   "release": null
+  },
+  {
+   "commit": "662b7bcd4b7cbcf70b2782d29128bf4e6d653680",
+   "date": "2026-07-13",
+   "in": [
+    "0.1.0"
+   ],
+   "release": null
+  },
+  {
+   "commit": "c8407e22b414098ffc45fa7373610e9c951d11ae",
+   "date": "2026-07-13",
+   "in": [
+    "0.1.0"
+   ],
+   "release": "0.1.0"
+  },
+  {
+   "commit": "cf89f8b65b7e4f309da2d66e3d763c019df18669",
+   "date": "2026-07-23",
+   "in": [],
+   "release": null
+  },
+  {
+   "commit": "578485d6e79a9f1889e6d8889526a8eb22c79711",
+   "date": "2026-07-20",
+   "in": [],
+   "release": null
+  },
+  {
+   "commit": "fa7c23848096f722d0cde97a70b7c21a97f0274d",
+   "date": "2026-07-24",
+   "in": [],
+   "release": null
+  },
+  {
+   "commit": "5cc542d8db0bf96c1b9abbd3761fc9f5d8e4c59d",
+   "date": "2026-08-07",
+   "in": [],
+   "release": null
+  },
+  {
+   "commit": "8f34952c507def094a450d7176a479c88bc01c9f",
+   "date": "2026-10-13",
+   "in": [],
+   "release": null
+  },
+  {
+   "commit": "a7905e6d8b13f1906635832e6739e15f038f12fe",
+   "date": "2026-10-13",
+   "in": [],
+   "release": null
+  },
+  {
+   "commit": "f4e7edefd3e05cdf5cbf646961dbeac35a375ef1",
+   "date": "2026-10-13",
+   "in": [],
+   "release": null
+  },
+  {
+   "commit": "cec6faec970daea4dfe53c92ba23836d260935f6",
+   "date": "2026-10-13",
+   "in": [],
+   "release": null
+  },
+  {
+   "commit": "cb9ff5eab526bbcbd3d64e8fa99f425e959da9b8",
+   "date": "2026-10-13",
+   "in": [],
+   "release": null
+  },
+  {
+   "commit": "b2b617aea3fc0ecc1ea8419d98002af553b10347",
+   "date": "2026-10-13",
+   "in": [],
+   "release": null
+  },
+  {
+   "commit": "266626eeb8d927563ecbf2ae5444add7194e5aee",
+   "date": "2026-10-13",
+   "in": [],
+   "release": null
+  },
+  {
+   "commit": "501246707fe540d293c996cabec3a83aee2c01f5",
+   "date": "2026-10-13",
+   "in": [],
+   "release": null
+  },
+  {
+   "commit": "a5ea20034b20c5e774c23878e8b98affb69518ec",
+   "date": "2026-10-13",
+   "in": [],
+   "release": null
+  }
+ ]
+}
