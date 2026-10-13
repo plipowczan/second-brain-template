@@ -208,17 +208,17 @@ changes skill scripts also runs that skill's own `python -m unittest`.
 
 ## 8. Release 0.2.0 (after this change is merged)
 
-- [ ] 8.1 Gate: confirm that the separate changes for follow-up 2 (`lint_scan.py` and
+- [x] 8.1 Gate: confirm that the separate changes for follow-up 2 (`lint_scan.py` and
   `content/_privacy.md`, then the `.githooks/pre-commit` path) and follow-up 3 (CI on push
   and pull request) are merged, or record the maintainer's decision to release without
   them.
-- [ ] 8.2 Release commit on `main`:
+- [x] 8.2 Release commit on `main`:
   - rename `[Unreleased]` to `## [0.2.0] - <date>`;
   - set the manifest version to `0.2.0`;
   - regenerate `known-hashes.json`.
 
   Verify that `dev/check_manifest.py` and `python tests/run_tests.py` pass.
-- [ ] 8.3 Create the annotated tag `v0.2.0`, push it, and publish a GitHub Release with
+- [x] 8.3 Create the annotated tag `v0.2.0`, push it, and publish a GitHub Release with
   the `[0.2.0]` section as notes. Verify that
   `upgrade.py plan --instance <scratch> --adopt --to 0.2.0` downloads
   `archive/refs/tags/v0.2.0.zip` and records a commit equal to `git rev-parse v0.2.0^{commit}`.
