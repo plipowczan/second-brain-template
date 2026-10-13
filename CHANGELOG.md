@@ -7,6 +7,21 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
 
 ## [Unreleased]
 
+### Added
+- **The template is now developed directly in this repository, and the rules for doing
+  that live in `CONTRIBUTING.md`.** Until now this repository was a mirror: the template
+  was built inside the maintainer's own base and copied here in `sync from brain@…`
+  commits. From now on every change lands here first, comes with an entry in this file,
+  and passes `python tests/run_tests.py` before it is committed. `CONTRIBUTING.md` also
+  says which files are templates (`*.template.md`, rendered only by `/b:onboard` in your
+  base) and which are starter `content/`. Claude Code loads these rules through a
+  git-ignored `CLAUDE.local.md` that imports `CONTRIBUTING.md`, so they never become part
+  of your base's own instructions. `.gitignore` gained a `CLAUDE.local.md` line for that.
+
+  Existing bases: nothing to do. `CONTRIBUTING.md` is for people who develop the template;
+  if your clone has it, you can delete it. The new `.gitignore` line is optional and only
+  keeps a personal `CLAUDE.local.md` out of your commits.
+
 ### Fixed
 - **`brain-ingest` no longer forces every vault to English.** The "Language enforcement"
   paragraph in Phase 2 declared "the canonical vault language is **English**" and told the
