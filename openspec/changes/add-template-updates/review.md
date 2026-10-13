@@ -318,3 +318,35 @@ form, is unverified and refused until the owner accepts it.
 Checks: `python tests/run_tests.py` — ALL PASS; brain-upgrade `python -m unittest` —
 173 passed; brain-onboard, brain-export, brain-gaps, brain-lint, brain-refactor suites —
 OK; `python dev/check_manifest.py` — ok
+
+## Round 8 — adversarial (Codex, focused) — 2026-10-13 — reviewed 06a997b
+
+Same focus, run from the coordinating session.
+
+| id | sev | where | finding | outcome |
+|---|---|---|---|---|
+| R8-1 | high | .claude/skills/brain-upgrade/scripts/upgrade.py:134-138 | For an unverified source (a clone, a folder, a ZIP), `cmd_plan` only called `check_repository`, so one that claimed the stamp's repository was planned without `--allow-repository`, unlike `cmd_fetch` | fixed in bfdee07 |
+
+How it was fixed: `cmd_plan` calls `check_verified(prov, args.allow_repository)` before
+planning, as `cmd_fetch` does, so an unverified source is planned only when
+`--allow-repository` names exactly the repository it claims. This is the second line of
+defence: the code of `plan` already comes from the source, so the gate that matters is
+`fetch`, run with the base's own trusted engine before anything from the source runs.
+
+New tests in `test_safety.py` (`PlanConsentTest`): a folder, a ZIP and a clone (one with
+the template's GitHub origin) that all claim the stamp's repository are refused by a
+direct `plan` without the option and with an option naming another repository, and
+planned with the option naming exactly the claimed repository; a refusal writes no plan
+and changes nothing.
+
+Test changes:
+- `.claude/skills/brain-upgrade/scripts/test_adopt.py`, `test_apply.py`, `test_planner.py` — R8-1: their `plan` helpers plan from folders and local clones, which now need the owner's consent, so they pass `fixtures.CONSENT` (`--allow-repository example/kb-template`); assertions unchanged
+- `.claude/skills/brain-upgrade/scripts/test_safety.py` — R8-1: `SafetyCase.plan` passes the same consent by default, with `consent=False` for the new test
+- `tests/run_tests.py` — R8-1: the adoption end-to-end plans from a local clone, so its `plan` calls pass `--allow-repository` for the clone's repository
+
+Checks: `python tests/run_tests.py` — ALL PASS; brain-upgrade `python -m unittest` —
+174 passed; brain-onboard, brain-export, brain-gaps, brain-lint, brain-refactor suites —
+OK; `python dev/check_manifest.py` — ok; `openspec validate add-template-updates
+--strict` — valid
+
+Review closed after round 8 by the coordinating session (2026-10-13): findings narrowed to one per round, each in code added by the previous fix; human sign-off via issue #6.
