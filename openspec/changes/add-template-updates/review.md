@@ -66,3 +66,42 @@ the stamp; composed and decomposed names colliding; tampered plan paths naming t
 `.kb-onboard.json` or a short name; a link inside the base into `content/`; a no-git
 base whose tampered plan leaves no backup folder. Checks: `python tests/run_tests.py` —
 ALL PASS; brain-upgrade `python -m unittest` — 140 passed.
+
+## Round 3 — adversarial (Codex, focused) — 2026-10-13 — reviewed 9e6cbee
+
+Same focus as round 2, run from the coordinating session; the round 2 fixes were
+accepted. The round ran against 9e6cbee, before the follow-up ea6eba5, which already
+refused a target resolving to another path at apply; R3-1 asked for the stop in the dry
+run and for an explicit link check.
+
+| id | sev | where | finding | outcome |
+|---|---|---|---|---|
+| R3-1 | critical | .claude/skills/brain-upgrade/scripts/upgrade.py:183-198 | An owned path that is a symlink (or under one) into `content/`, `README.md` or a file outside the manifest is hashed through the link by the planner and written or deleted through it by apply | fixed in f4fbbc2 |
+| R3-2 | high | .claude/skills/brain-upgrade/scripts/upgrade.py:356-390 | The uncommitted-work check omits `.kb-template.json` and `.kb-onboard.json`, so a stamp edited or staged before the dry run is overwritten without warning | fixed in f4fbbc2 |
+
+How they were fixed:
+
+- R3-1: `kbtemplate.link_in_path()` finds a symbolic link or a Windows junction at any
+  level of a path inside the base. The planner's `check_links()` runs it on every path the
+  plan would write or delete, and on the stamp and `.kb-onboard.json`, so the dry run
+  stops with "Nothing was changed" before a plan exists. Apply's `target_of()` runs it
+  again, and the resolved path must also pass the path rule and the notes guard.
+- R3-2: apply builds the full set of mutations first and checks uncommitted work in every
+  path it writes or deletes, the stamp and `.kb-onboard.json` included, plus the files
+  left for a merge. Only an untracked `.kb-onboard.json` passes: bases from before 0.2.0
+  have it that way, apply only adds keys to it, and the commit adds the file. The dry run
+  warns about an uncommitted stamp.
+
+New tests in `test_safety.py`: an owned file linked to a note, to `README.md` and to a file
+outside the manifest; an owned folder linked into `content/`, and the same through a
+junction (Windows only); a link planted between the dry run and apply; a stamp edited, and
+edited and staged, before the dry run; `.kb-onboard.json` edited, and edited and staged,
+before an apply that writes render values; an untracked `.kb-onboard.json` that still
+applies.
+
+Test changes:
+- `.claude/skills/brain-upgrade/scripts/test_safety.py` — R3-1: `test_link_out_of_the_base_refused` and `test_link_inside_the_base_into_notes_refused` expected the dry run to plan through a link and apply to refuse; the dry run now refuses first, so they assert that, and keep apply's refusal by planting the link after the dry run
+
+Checks: `python tests/run_tests.py` — ALL PASS; brain-upgrade `python -m unittest` —
+149 passed (symlink and junction tests ran, none skipped); brain-onboard, brain-export,
+brain-gaps, brain-lint, brain-refactor suites — OK; `python dev/check_manifest.py` — ok
