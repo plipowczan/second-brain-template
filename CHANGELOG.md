@@ -86,6 +86,18 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
   report a substantive index diff and open a no-op PR whose only effect was clobbering
   that section. After this fix a clean vault reproduces all three indexes exactly
   (0 substantive diff), so the workflow opens a PR only on genuine drift.
+- **`/research-deep` JSON validator was a silent no-op** —
+  `.claude/skills/research/validate_json.py` only read the `field_categories:` /
+  `category:` schema, but `/research` Step 4 emits `fields.yaml` with `categories:` /
+  `name:`. On that schema the loader parsed **0 fields** and every file "passed"
+  trivially (100% of nothing). The loader now accepts **both** schema styles
+  (`field_categories`|`categories`, category label `category`|`name`). Second fix:
+  `valid` gated only on `required` fields, and nothing was ever marked `required`, so
+  even a correctly-parsed schema passed with fields missing — when a schema marks
+  nothing required the validator now **treats all defined fields as required and
+  enforces full coverage** (a file missing any field FAILs with exit 1). Backward
+  compatible: schemas that set explicit `required:` flags keep the original gating.
+  Existing bases: re-pull `.claude/skills/research/validate_json.py`.
 
 ### Changed
 - **BREAKING: all workflow commands and skills are namespaced** — command wrappers moved
@@ -126,22 +138,6 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
   `git mv` each skill dir to its `brain-*` name, update each `SKILL.md` `name:` field
   to match the new directory name, then re-pull the updated docs (README, AGENTS
   template, REFERENCE notes). Muscle-memory note: type `/b:` and tab-complete.
-
-### Fixed
-- **`/research-deep` JSON validator was a silent no-op** —
-  `.claude/skills/research/validate_json.py` only read the `field_categories:` /
-  `category:` schema, but `/research` Step 4 emits `fields.yaml` with `categories:` /
-  `name:`. On that schema the loader parsed **0 fields** and every file "passed"
-  trivially (100% of nothing). The loader now accepts **both** schema styles
-  (`field_categories`|`categories`, category label `category`|`name`). Second fix:
-  `valid` gated only on `required` fields, and nothing was ever marked `required`, so
-  even a correctly-parsed schema passed with fields missing — when a schema marks
-  nothing required the validator now **treats all defined fields as required and
-  enforces full coverage** (a file missing any field FAILs with exit 1). Backward
-  compatible: schemas that set explicit `required:` flags keep the original gating.
-  Existing bases: re-pull `.claude/skills/research/validate_json.py`.
-
-### Changed
 - **`web-search-agent` no longer hard-depends on a Unix `date` call** — step 0 ("Get
   Current Date") ran `date +%Y-%m-%d`, which errors in a PowerShell-only environment
   (`date` is a `Get-Date` alias that rejects `+%Y-%m-%d`). It now takes today's date from
@@ -164,12 +160,28 @@ First tagged release of the second-brain template.
   points at the two canonical scanners (`lint_scan.py`, `lint_links.py`) so runs use them
   instead of ad-hoc greps, and reminds the operator to triage raw broken-link counts.
   Existing bases: re-pull `.claude/skills/lint/`.
+- **Non-Latin vaults** — forced UTF-8 stdout so `/lint`, `/gaps`, and `/refactor` no longer
+  crash on non-ASCII content (e.g. Polish); `build_indexes.py` writes UTF-8 too.
+- **`/lint` false positives** — `lint_scan` now parses block-style YAML tag lists, so notes
+  using multi-line `tags:` no longer report a spurious `missing_tags`.
 
 ### Changed
 - **`/qa` cites chat answers as percent-encoded markdown links** — instead of
   `[[wikilinks]]`, the Q&A skill now emits `[Title](content/…%20path.md)` links that are
   clickable in Claude Desktop and VS Code markdown preview (saved answer-notes still use
   `[[wikilinks]]` for Obsidian/graph). Existing bases: re-pull `.claude/skills/qa/`.
+- **Single source of truth for agent instructions.** `AGENTS.md` is now the canonical
+  file that holds all project instructions (role, navigation protocol, writing style,
+  frontmatter, workflows, safety). `CLAUDE.md` is reduced to a thin pointer that imports
+  `AGENTS.md` via the `@AGENTS.md` line, so Claude Code and any `AGENTS.md`-reading agent
+  (Codex, Gemini CLI, OpenCode) all follow **one** file. Previously the content lived in
+  `CLAUDE.md` and `AGENTS.md` was a short mirror — the two could drift.
+  - **Migration (existing bases):** move your instruction body from `CLAUDE.md` into
+    `AGENTS.md`, then replace `CLAUDE.md` with a pointer whose last line is `@AGENTS.md`.
+    Fresh clones get this automatically from the updated templates via `/onboard`.
+  - `onboard` still renders and personalizes both files; no action needed for new setups.
+- **README** — clearer positioning: the base as an LLM Wiki (Karpathy) that is portable
+  via the OKF standard, with the index-first "why it scales without embeddings" explainer.
 
 ### Added
 - **YT ingest supports an alternate yt-dlp `player_client`** — `ingest/scripts/yt_fetch.py`
@@ -255,26 +267,6 @@ First tagged release of the second-brain template.
   `content/_graveyard/` (reversible — never `git rm`, gated on your confirmation).
 - **`content/_graveyard/`** — holding folder for retired notes, excluded from the indexes.
 - **This `CHANGELOG.md`** — from now on every template change is recorded here.
-
-### Changed
-- **Single source of truth for agent instructions.** `AGENTS.md` is now the canonical
-  file that holds all project instructions (role, navigation protocol, writing style,
-  frontmatter, workflows, safety). `CLAUDE.md` is reduced to a thin pointer that imports
-  `AGENTS.md` via the `@AGENTS.md` line, so Claude Code and any `AGENTS.md`-reading agent
-  (Codex, Gemini CLI, OpenCode) all follow **one** file. Previously the content lived in
-  `CLAUDE.md` and `AGENTS.md` was a short mirror — the two could drift.
-  - **Migration (existing bases):** move your instruction body from `CLAUDE.md` into
-    `AGENTS.md`, then replace `CLAUDE.md` with a pointer whose last line is `@AGENTS.md`.
-    Fresh clones get this automatically from the updated templates via `/onboard`.
-  - `onboard` still renders and personalizes both files; no action needed for new setups.
-- **README** — clearer positioning: the base as an LLM Wiki (Karpathy) that is portable
-  via the OKF standard, with the index-first "why it scales without embeddings" explainer.
-
-### Fixed
-- **Non-Latin vaults** — forced UTF-8 stdout so `/lint`, `/gaps`, and `/refactor` no longer
-  crash on non-ASCII content (e.g. Polish); `build_indexes.py` writes UTF-8 too.
-- **`/lint` false positives** — `lint_scan` now parses block-style YAML tag lists, so notes
-  using multi-line `tags:` no longer report a spurious `missing_tags`.
 
 ---
 

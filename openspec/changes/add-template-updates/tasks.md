@@ -6,7 +6,7 @@ changes skill scripts also runs that skill's own `python -m unittest`.
 
 ## 1. Manifest, file classes and the release check
 
-- [ ] 1.1 Merge the duplicated `### Fixed` and `### Changed` sections under
+- [x] 1.1 Merge the duplicated `### Fixed` and `### Changed` sections under
   `[Unreleased]` in `CHANGELOG.md` without losing or rewording any entry (follow-up 5).
   Verify that the merged sections contain the same bullet count as before and that each
   heading appears once.
