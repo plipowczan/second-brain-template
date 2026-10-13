@@ -1,0 +1,92 @@
+name: Tests
+
+# Runs the template's checks on every push to main and every pull request into it,
+# on Linux and Windows:
+#   1. tests/run_tests.py: the integration suite (a throwaway vault through reindex,
+#      lint, gaps, refactor and the curate unit tests).
+#   2. tests/run_skill_tests.py: every skill's own unit tests. Tests that need a tool
+#      the runner does not have (the yt-dlp integration tests in brain-ingest need the
+#      yt-dlp binary and access to YouTube) are skipped, and each skip is listed with
+#      its reason in the job summary and as a notice, so a skip never reads as a pass.
+#   3. The optional .githooks/pre-commit, through real `git commit` calls: it lets a
+#      commit through on the template's own tree, blocks a note without frontmatter,
+#      and blocks when the lint script is missing.
+#
+# Read-only: the probe commits stay on the runner and nothing is pushed.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: test (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.x"
+
+      - name: Install Python deps
+        run: pip install -r requirements.txt
+
+      - name: Integration tests (tests/run_tests.py)
+        run: python tests/run_tests.py
+
+      - name: Skill unit tests (tests/run_skill_tests.py)
+        run: python tests/run_skill_tests.py
+
+      - name: Pre-commit hook (.githooks/pre-commit)
+        run: |
+          git config user.name "CI"
+          git config user.email "ci@example.invalid"
+          git config core.hooksPath .githooks
+          lint=.claude/skills/brain-lint/scripts/lint_scan.py
+          probe=content/CI-Hook-Probe.md
+
+          # Only the template's own content is known to lint clean. In a base made
+          # from the template the result would depend on the owner's notes.
+          if [ -f CLAUDE.template.md ]; then
+            git commit --allow-empty -q -m "hook probe: clean tree" \
+              || { echo "::error::The pre-commit hook blocked a commit on the template's own tree."; exit 1; }
+            echo "PASS - the hook lets a commit through on the template's own tree"
+          else
+            echo "SKIP - clean-tree check: no CLAUDE.template.md, so this is a base, not the template source"
+          fi
+
+          printf '# A note without frontmatter\n' > "$probe"
+          if git commit --allow-empty -q -m "hook probe: note without frontmatter"; then
+            echo "::error::The pre-commit hook let a note without frontmatter through."
+            exit 1
+          fi
+          rm "$probe"
+          echo "PASS - the hook blocks a note without frontmatter"
+
+          mv "$lint" "$lint.away"
+          if git commit --allow-empty -q -m "hook probe: lint script missing"; then
+            echo "::error::The pre-commit hook let a commit through although the lint script is missing."
+            exit 1
+          fi
+          mv "$lint.away" "$lint"
+          echo "PASS - the hook blocks when the lint script is missing"
