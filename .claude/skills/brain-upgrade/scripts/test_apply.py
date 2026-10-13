@@ -199,7 +199,8 @@ class NoGitTest(ApplyCase):
         self.assertEqual((backups[0] / ".claude/hooks/hook.py").read_bytes(), old_hook)
         self.assertEqual((backups[0] / ".claude/skills/demo/scripts/tool.py").read_bytes(), old_tool)
         self.assertTrue((backups[0] / kt.STAMP).is_file())
-        self.assertIn(str(backups[0]), out)
+        # The engine prints the resolved path; a temp dir can be an 8.3 alias (RUNNER~1).
+        self.assertIn(str(backups[0].resolve()), out)
         code, out, err = self.commit()
         self.assertEqual(code, 0, err)
         self.assertIn("nothing to commit", out.lower())
