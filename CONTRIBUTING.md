@@ -154,8 +154,11 @@ An instance trusts this repository on GitHub, reached over HTTPS: the one in its
 code from the same source as the skills and hooks that release ships and that run in
 every session afterwards. Before that engine runs, the skill shows the owner the
 repository, version, tag, commit and download URL from the base's own copy of the engine
-(`upgrade.py fetch`) and asks for consent; `upgrade.py plan` refuses a source from another
-repository without `--allow-repository`. Releases are not signed: a deliberate decision
+(`upgrade.py fetch`) and asks for consent. Only an HTTPS download from GitHub counts as
+verified: a folder, a zip or a local clone (yours included, whatever its origin remote)
+only claims where it comes from, so `fetch` unpacks it only with
+`--allow-repository <the repository it claims>`, and a repository other than the stamp's
+needs the same consent. Releases are not signed: a deliberate decision
 (2026-10-13). So keep this repository's release process (above) and its tags clean:
 whatever is tagged here runs in every base that upgrades to it.
 

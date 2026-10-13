@@ -536,32 +536,30 @@ class ProvenanceTest(SafetyCase):
             fx.git(repo, "remote", "add", "origin", origin)
         return repo, sha
 
-    def test_fetch_reports_a_git_release(self):
-        repo, sha = self.clone(f"https://github.com/{fx.REPO}.git")
-        prov = self.fetch("--source", str(repo))["provenance"]
-        self.assertEqual(prov.pop("verified"),
-                         f"a local git clone of github.com/{fx.REPO} (its origin remote), read with git")
-        self.assertEqual(prov, {"repository": fx.REPO, "claimed_repository": fx.REPO,
-                                "version": "0.3.0", "tag": "v0.3.0", "commit": sha,
-                                "from": str(repo), "base_repository": fx.REPO,
-                                "same_repository": True})
-
-    def test_clone_of_a_fork_claiming_ours_is_judged_by_its_origin(self):
-        repo, _ = self.clone("git@github.com:someone/fork.git", claims=fx.REPO)
-        err = self.fetch("--source", str(repo), ok=False)
-        self.assertIn("--allow-repository someone/fork", err)
-        out = self.fetch("--source", str(repo), "--allow-repository", "someone/fork")
-        self.assertEqual((out["provenance"]["repository"], out["provenance"]["same_repository"]),
-                         ("someone/fork", False))
-        self.assertTrue(any("says it is" in w for w in out["warnings"]))
-
-    def test_clone_without_a_github_origin_is_unverified(self):
-        repo, _ = self.clone(None)
+    def test_a_local_clone_only_claims_even_with_our_origin(self):
+        # Any clone can name the template repository as its origin remote; that setting
+        # proves nothing about where its commits came from.
+        origin = f"https://github.com/{fx.REPO}.git"
+        repo, sha = self.clone(origin, claims=fx.REPO)
         err = self.fetch("--source", str(repo), ok=False)
         self.assertIn("cannot show where it comes from", err)
-        out = self.fetch("--source", str(repo), "--allow-repository", fx.REPO)
-        self.assertEqual((out["provenance"]["verified"], out["provenance"]["same_repository"]),
-                         (None, None))
+        self.assertIn("is a setting of that clone, not proof", err)
+        prov = self.fetch("--source", str(repo), "--allow-repository", fx.REPO)["provenance"]
+        self.assertEqual(prov, {"repository": None, "claimed_repository": fx.REPO,
+                                "version": "0.3.0", "tag": None, "commit": sha,
+                                "from": str(repo), "origin_remote": origin, "verified": None,
+                                "base_repository": fx.REPO, "same_repository": None})
+
+    def test_consent_must_name_the_claimed_repository(self):
+        repo, _ = self.clone("git@github.com:someone/fork.git", claims="someone/fork")
+        self.fetch("--source", str(repo), "--allow-repository", fx.REPO, ok=False)
+        out = self.fetch("--source", str(repo), "--allow-repository", "Someone/Fork")
+        self.assertEqual(out["provenance"]["claimed_repository"], "someone/fork")
+
+    def test_repository_names_ignore_case(self):
+        archive = fx.zip_bytes(fx.template("0.3.0"), comment="f" * 40)
+        out = self.fetch("--repo", fx.REPO.upper(), "--to", "0.3.0", opener=lambda url: archive)
+        self.assertIs(out["provenance"]["same_repository"], True)
 
     def test_fetch_reports_a_download(self):
         archive = fx.zip_bytes(fx.template("0.3.0"), comment="c" * 40)

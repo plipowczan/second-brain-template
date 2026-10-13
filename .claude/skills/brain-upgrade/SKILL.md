@@ -46,17 +46,17 @@ it reports where the source comes from before any code from the source runs.
    - repository, version, tag (or "not a tagged release"), commit (or "commit unknown":
      the source cannot prove which commit it is);
    - where it came from (`from`: the download URL or the path they gave), and `verified`:
-     what this base's engine itself established (an HTTPS download of that repository's
-     tag, or a git clone whose origin remote is that GitHub repository);
+     what this base's engine itself established. Only one thing counts: an HTTPS
+     download of that repository's tag from GitHub;
    - every line of `warnings`, in plain words.
 
    `fetch` itself stops in two cases, says why, and unpacks nothing:
    - **another repository** than the base's stamp names: tell the owner outright that
      this base follows that repository, the source is another one, and upgrading from it
      replaces the template files with that repository's;
-   - **an unverified source** (`verified` is null: a folder, a zip, or a clone without a
-     GitHub origin): it only claims its repository (`claimed_repository`) and commit, and
-     nothing proves them; say exactly that.
+   - **an unverified source** (`verified` is null: a folder, a zip, or a local clone,
+     whatever its origin remote says): it only claims its repository
+     (`claimed_repository`) and commit, and nothing proves them; say exactly that.
 
    Only if the owner accepts it, run `fetch` again with `--allow-repository <the
    repository it names>`, and pass the same option to `plan` in Phase 3.
