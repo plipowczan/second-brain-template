@@ -528,7 +528,8 @@ def summary(plan: dict) -> str:
     lines = []
     where = src["location"] + (f" @ {src['ref']}" if src.get("ref") else "")
     lines.append(f"Source: {src['kind']} {where}")
-    lines.append(f"  version {src['version']}, commit {src['commit'] or 'unknown'}"
+    lines.append(f"  repository {src.get('repository')}, version {src['version']}, "
+                 f"commit {src['commit'] or 'unknown'}"
                  + (f", archive {src['archive']}" if src.get("archive") else ""))
     if plan["mode"] == "adopt":
         b = plan["base"]

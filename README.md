@@ -84,6 +84,13 @@ The template keeps improving: new skills, fixes, better hooks. Each release is l
   template: `/b:upgrade` with the path. The download step prints where it saved the
   archive, so the same file works next time.
 
+**What you trust.** Updates come from the template repository on GitHub over HTTPS (the
+one recorded in your base's `.kb-template.json`). Before the update tool from a release
+runs, `/b:upgrade` shows you its repository, version, tag, commit and where it was
+downloaded from, and waits for your yes; a release from a different repository than your
+base follows gets an explicit warning. Releases are not signed: the tool is code from the
+same source as the skills and hooks it installs, which run in every session anyway.
+
 **The first update of an older base** (created before `0.2.0`, so without
 `.kb-template.json` and without `/b:upgrade`) starts with an **adoption**: it recognises
 which files are unmodified template files from your generation, brings them to the

@@ -505,6 +505,63 @@ class RaceTest(SafetyCase):
         self.assertTrue((self.base / ".claude/skills/demo/scripts/tool.py").is_file())
 
 
+class ProvenanceTest(SafetyCase):
+    """R5-1 (the maintainer's decision): before any code from a source runs, the base's
+    own engine says where the source comes from, and a switch of repository needs the
+    owner's explicit consent."""
+
+    def fetch(self, *args, opener=None):
+        code, out, err = fx.run("fetch", "--instance", str(self.base), *args, opener=opener)
+        self.assertEqual(code, 0, err)
+        return json.loads(out)
+
+    def other_repo_source(self):
+        manifest = json.loads(fx.manifest("0.3.0"))
+        manifest["repository"] = "someone/fork"
+        return self.source(manifest=manifest)
+
+    def test_fetch_reports_a_git_release(self):
+        repo = self.tmp.path / "tpl"
+        fx.git_init(repo)
+        sha = fx.commit_tree(repo, fx.template("0.3.0"), "release", tag="v0.3.0")
+        prov = self.fetch("--source", str(repo))["provenance"]
+        self.assertEqual(prov, {"repository": fx.REPO, "version": "0.3.0", "tag": "v0.3.0",
+                                "commit": sha, "from": str(repo),
+                                "base_repository": fx.REPO, "same_repository": True})
+
+    def test_fetch_reports_a_download(self):
+        archive = fx.zip_bytes(fx.template("0.3.0"), comment="c" * 40)
+        out = self.fetch("--to", "0.3.0", opener=lambda url: archive)
+        prov = out["provenance"]
+        self.assertEqual((prov["tag"], prov["commit"], prov["same_repository"]),
+                         ("v0.3.0", "c" * 40, True))
+        self.assertEqual(prov["from"], f"https://github.com/{fx.REPO}/archive/refs/tags/v0.3.0.zip")
+        self.assertTrue(out["engine"].endswith("upgrade.py"))
+
+    def test_unproven_source_says_commit_unknown(self):
+        prov = self.fetch("--source", str(self.source()))["provenance"]
+        self.assertEqual((prov["commit"], prov["tag"]), ("unknown", None))
+
+    def test_other_repository_is_flagged(self):
+        out = self.fetch("--source", str(self.other_repo_source()))
+        self.assertIs(out["provenance"]["same_repository"], False)
+        self.assertTrue(any("someone/fork" in w and fx.REPO in w for w in out["warnings"]))
+
+    def test_plan_refuses_another_repository_without_consent(self):
+        src = self.other_repo_source()
+        before = snapshot(self.base)
+        code, out, err = self.plan(src)
+        self.assertEqual(code, 1)
+        self.assertIn("--allow-repository someone/fork", err)
+        self.assertEqual(snapshot(self.base), before)
+        self.assertFalse(self.planfile.exists())
+        code, out, err = self.plan(src, "--allow-repository", "someone/other")
+        self.assertEqual(code, 1)
+        code, out, err = self.plan(src, "--allow-repository", "someone/fork")
+        self.assertEqual(code, 0, err)
+        self.assertIn("repository someone/fork", out)
+
+
 class RollbackTest(SafetyCase):
     CHANGES = {".claude/hooks/hook.py": "print('hook v2')\n",                 # update
                ".claude/skills/new/deep/SKILL.md": "new\n",                    # add, new folders

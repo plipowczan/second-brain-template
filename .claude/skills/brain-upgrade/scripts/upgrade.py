@@ -6,9 +6,11 @@ are installing, against your base:
 
 Subcommands:
   plan    [--source DIR|ZIP] [--ref REF] [--to VERSION] [--adopt] [--base DIR|ZIP]
-          [--rerender] [--diff PATH|all] [--out FILE]
+          [--rerender] [--diff PATH|all] [--out FILE] [--allow-repository OWNER/NAME]
           Dry run. Writes a JSON plan to the temp directory and prints a summary; changes
-          nothing in the base. Without --source it downloads the release archive.
+          nothing in the base. Without --source it downloads the release archive. It
+          refuses a source from another repository than the stamp names, unless the
+          owner agreed and that repository is passed with --allow-repository.
   apply   --plan FILE --decisions FILE
           Checks every planned path, then writes the approved actions and the stamp.
   commit  --plan FILE
@@ -17,8 +19,11 @@ Subcommands:
   prune-author
           Deletes author-class files from a fresh clone (used by /b:onboard).
   fetch   [--source DIR|ZIP] [--to VERSION]
-          Resolves a source (downloading if needed), unpacks archives to the temp
-          directory and prints where that version's engine is.
+          Run with the base's own copy of this script. Resolves a source (downloading if
+          needed), unpacks archives to the temp directory, and prints its provenance
+          (repository, version, tag, commit, where it came from, whether it matches the
+          stamp's repository) and where that version's engine is, so the owner can agree
+          before any code from it runs.
 
 Every subcommand takes --instance (default: the current directory).
 Exit codes: 0 ok, 1 refused or failed (nothing written unless the message says so).
@@ -123,6 +128,11 @@ def cmd_plan(args, opener) -> int:
             "Nothing was changed.")
     repo = (stamp or {}).get("repository") or kt.DEFAULT_REPOSITORY
     src = sources.resolve(args.source, ref=args.ref, to=args.to, repository=repo, opener=opener)
+    prov = provenance(src, stamp)
+    if prov["same_repository"] is False and args.allow_repository != prov["repository"]:
+        raise kt.TemplateError(
+            other_repository_warning(prov) + " Nothing was changed. If the owner agrees, "
+            f"run again with --allow-repository {prov['repository']}.")
     if src.kind == "download":
         say(f"Downloaded {src.location}\n  to {src.archive}\n  (reuse it offline with "
             f"--source {src.archive})")
@@ -620,19 +630,50 @@ def cmd_prune_author(args) -> int:
     return 0
 
 
+def provenance(src: sources.Source, stamp: dict | None) -> dict:
+    """Where a source comes from, as the owner sees it before its engine runs."""
+    repo = src.manifest.repository if src.manifest else None
+    proven = bool(src.release) or (src.version is not None and src.proven_release(src.version))
+    base_repo = (stamp or {}).get("repository")
+    return {
+        "repository": repo,
+        "version": src.version,
+        "tag": f"v{src.version}" if proven else None,
+        "commit": src.commit or "unknown",
+        "from": src.location,
+        "base_repository": base_repo,
+        "same_repository": None if base_repo is None or repo is None else base_repo == repo,
+    }
+
+
+def other_repository_warning(prov: dict) -> str:
+    return (f"this source is {prov['repository']}, but this base follows "
+            f"{prov['base_repository']}: an upgrade from it replaces the template files with "
+            "that repository's. Go on only if you mean to switch.")
+
+
 def cmd_fetch(args, opener) -> int:
-    src = sources.resolve(args.source, ref=args.ref, to=args.to,
-                          repository=args.repo or kt.DEFAULT_REPOSITORY, opener=opener)
+    """Resolve a source with the base's own engine and say where it comes from, so the
+    owner can agree before any code from it runs (the trust step of SKILL.md)."""
+    instance = Path(args.instance).resolve()
+    stamp = kt.read_stamp(instance) if instance.is_dir() else None
+    repo = args.repo or (stamp or {}).get("repository") or kt.DEFAULT_REPOSITORY
+    src = sources.resolve(args.source, ref=args.ref, to=args.to, repository=repo, opener=opener)
     if src.kind in ("zip", "download"):
-        name = (src.manifest.repository if src.manifest else args.repo or kt.DEFAULT_REPOSITORY)
+        name = (src.manifest.repository if src.manifest else repo)
         tag = (src.commit or "unknown")[:12]
         root = sources.private_dir() / f"{name.split('/')[-1]}-{src.version}-{tag}"
         src.materialize(root)
     else:
         root = Path(src.location).resolve()
     engine = root / ".claude" / "skills" / "brain-upgrade" / "scripts" / "upgrade.py"
-    say(json.dumps({"source": src.describe(), "root": str(root), "engine": str(engine),
-                    "engine_exists": engine.is_file(), "warnings": src.warnings}, indent=2))
+    prov = provenance(src, stamp)
+    warnings = list(src.warnings)
+    if prov["same_repository"] is False:
+        warnings.append(other_repository_warning(prov))
+    say(json.dumps({"provenance": prov, "source": src.describe(), "root": str(root),
+                    "engine": str(engine), "engine_exists": engine.is_file(),
+                    "warnings": warnings}, indent=2))
     return 0
 
 
@@ -652,6 +693,8 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--rerender", action="store_true", help="re-render untouched instruction files")
     p.add_argument("--diff", metavar="PATH|all", help="also print diffs")
     p.add_argument("--out", help="where to write the plan (default: temp directory)")
+    p.add_argument("--allow-repository", metavar="OWNER/NAME",
+                   help="the owner agreed to upgrade from this repository, not the one in the stamp")
 
     p = sub.add_parser("apply", help="apply a reviewed plan")
     p.add_argument("--instance")
@@ -669,7 +712,8 @@ def parser() -> argparse.ArgumentParser:
     p = sub.add_parser("prune-author", help="delete author-class files (onboarding)")
     p.add_argument("--instance", default=".")
 
-    p = sub.add_parser("fetch", help="resolve a source and print its engine path")
+    p = sub.add_parser("fetch", help="resolve a source; print where it comes from and its engine")
+    p.add_argument("--instance", default=".")
     p.add_argument("--source")
     p.add_argument("--ref")
     p.add_argument("--to")

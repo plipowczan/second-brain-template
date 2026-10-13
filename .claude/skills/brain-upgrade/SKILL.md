@@ -11,6 +11,9 @@ make every decision that can be computed; you drive the order and talk to the ow
 
 ## Rules
 
+- **Consent before code runs.** The engine of a downloaded or named source is code from
+  that source. Show the owner where it comes from and get an explicit yes before running
+  it (Phase 1, step 5). No yes, nothing runs.
 - **Dry run first.** Nothing in the base changes until the owner approves a plan.
 - **Run the engine of the version being installed**, not this base's copy: the new
   version knows its own layout. The engine is `<source>/.claude/skills/brain-upgrade/scripts/upgrade.py`.
@@ -22,22 +25,35 @@ make every decision that can be computed; you drive the order and talk to the ow
 - Plans and decision files go to the temp directory or your scratchpad, never into the
   base.
 
-## Phase 1 — The source and its engine
+## Phase 1 — The source, its provenance and the owner's consent
+
+Run `fetch` with **this base's own copy** of the engine: it only reads and unpacks, and
+it reports where the source comes from before any code from the source runs.
 
 1. **The owner named a source** (a clone of the template, an unpacked release, or a
    release `.zip`):
-   - a folder: `SOURCE=<folder>`, `ENGINE=<folder>/.claude/skills/brain-upgrade/scripts/upgrade.py`;
-   - a `.zip`: unpack it with `python .claude/skills/brain-upgrade/scripts/upgrade.py fetch --source <zip>`
-     and take `engine` from the JSON it prints. `SOURCE=<zip>` (the zip carries the
-     release commit).
+   `python .claude/skills/brain-upgrade/scripts/upgrade.py fetch --source <folder or zip>`.
+   `SOURCE=<folder or zip>` (a zip carries the release commit).
 2. **No source named:** download the latest release (or `--to X.Y.Z`):
    `python .claude/skills/brain-upgrade/scripts/upgrade.py fetch [--to X.Y.Z]`.
-   It prints `engine` and `source.archive`; `SOURCE=<archive>`. Tell the owner the
-   archive path: passing it as the source later works offline.
+   `SOURCE=<source.archive>`. Tell the owner the archive path: passing it as the source
+   later works offline.
 3. `fetch` stops when there is no network. Say so, and ask for a release `.zip` or a
    local clone. Nothing has changed.
 4. If `engine_exists` is false, the source is older than `0.2.0` and cannot upgrade a
-   base. Stop.
+   base. Stop. Otherwise `ENGINE=<engine>` from the JSON.
+5. **Provenance and consent.** Show the owner the `provenance` block in plain words:
+   - repository, version, tag (or "not a tagged release"), commit (or "commit unknown":
+     the source cannot prove which commit it is);
+   - where it came from (`from`: the download URL or the path they gave);
+   - when `same_repository` is false, say it outright: this base follows
+     `base_repository`, the source is another repository, and upgrading from it replaces
+     the template files with that repository's.
+
+   Ask: *"Run the upgrade tool from this source?"* Only an explicit yes goes on; anything
+   else ends here, with nothing run and nothing changed. For a different repository, the
+   yes must cover the switch too, and Phase 3 then passes
+   `--allow-repository <repository>` (the engine refuses a switch without it).
 
 A base that does not have this skill yet: see **Bootstrap** below.
 
@@ -54,6 +70,9 @@ A base that does not have this skill yet: see **Bootstrap** below.
 python ENGINE plan --instance . --source SOURCE            # upgrade
 python ENGINE plan --instance . --source SOURCE --adopt    # adoption
 ```
+
+Add `--allow-repository <repository>` only when the owner agreed to switch repository in
+Phase 1.
 
 Add `--rerender` when the owner wants `CLAUDE.md`, `AGENTS.md` and
 `content/WRITING_STYLE.md` refreshed from the new templates. Add `--diff <path>` or
@@ -144,10 +163,26 @@ engine directly against the base:
    Python if the owner has no browser at hand:
    `python -c "import urllib.request as u; u.urlretrieve('https://github.com/plipowczan/second-brain-template/archive/refs/tags/vX.Y.Z.zip', 'kb-template.zip')"`
    (save it outside the base).
-2. Unpack it outside the base and follow **that copy** of this file, with
+2. **Provenance and consent first.** The base has no engine to run `fetch`, so read the
+   facts without running anything from the release: for a zip,
+   `python -c "import json,sys,zipfile; z=zipfile.ZipFile(sys.argv[1]); m=[n for n in z.namelist() if n.count('/')==1 and n.endswith('/.kb-manifest.json')][0]; d=json.loads(z.read(m)); print(d['repository'], d['version'], z.comment.decode() or 'commit unknown')" <zip>`
+   (for a clone: `git -C <clone> describe --tags` and `git -C <clone> rev-parse HEAD`,
+   and the repository from its `.kb-manifest.json`). Show the owner the repository,
+   version, tag, commit and where it came from, as in Phase 1 step 5, and ask for an
+   explicit yes. No yes, stop.
+3. Unpack it outside the base and follow **that copy** of this file, with
    `ENGINE=<unpacked>/.claude/skills/brain-upgrade/scripts/upgrade.py` and
    `SOURCE=<zip or clone>`, starting at Phase 2 (`--adopt`).
-3. The adoption commit brings this skill into the base; later upgrades start at Phase 1.
+4. The adoption commit brings this skill into the base; later upgrades start at Phase 1.
+
+## What you trust
+
+The trust anchor is the template repository on GitHub, reached over HTTPS: the one in the
+base's stamp (`plipowczan/second-brain-template` by default). The upgrade tool you run is
+code from the same source as the skills and hooks it installs, which run in every
+session after the upgrade anyway. Releases are not signed; that is a deliberate decision
+(2026-10-13). What protects the owner is seeing the provenance and agreeing before
+anything from the source runs, the dry run, and one reviewable commit.
 
 ## Without a terminal
 

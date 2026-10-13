@@ -21,7 +21,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
   when you ask and only while you have not edited them by hand. Your notes in `content/`
   and your `README.md` are never written. With git the update is one commit
   (`chore(template): upgrade to …`); without git every replaced file is copied to
-  `.kb-upgrade-backup/` first. Applying is all or nothing: if a write fails halfway (a
+  `.kb-upgrade-backup/` first. Before the update tool from a downloaded release (or a
+  folder or zip you point to) runs at all, `/b:upgrade` shows you its repository,
+  version, tag, commit and where it came from, and asks for your yes; a release from a
+  different repository than your base follows is called out, and the tool refuses it
+  without your explicit consent. Releases are not signed: the tool comes from the same
+  repository as the skills and hooks it installs. Applying is all or nothing: if a write fails halfway (a
   file locked by OneDrive or an antivirus, a full disk), every file is put back as it was
   and the run says so; the same happens when a planned file changes, or a link appears,
   while the update runs. A file that something else (a sync client, an editor) changed
