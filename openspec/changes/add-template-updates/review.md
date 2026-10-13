@@ -138,3 +138,40 @@ only the test's own interference.
 Checks: `python tests/run_tests.py` — ALL PASS; brain-upgrade `python -m unittest` —
 154 passed (link and junction tests ran, none skipped); brain-onboard, brain-export,
 brain-gaps, brain-lint, brain-refactor suites — OK; `python dev/check_manifest.py` — ok
+
+## Round 5 — adversarial (Codex, focused) — 2026-10-13 — reviewed de6a073
+
+Same focus, this time with an explicit threat model, run from the coordinating session.
+
+| id | sev | where | finding | outcome |
+|---|---|---|---|---|
+| R5-1 | critical | .claude/skills/brain-upgrade/scripts/sources.py:268-275 | The downloaded engine is trusted before its code runs: no check of its origin beyond HTTPS from the repository | Paweł's decision, open: R5-1 — przekazane Pawłowi jako decyzja projektowa (D3), bez zmian w kodzie w tej rundzie. Trust today is the repository named in the manifest, on GitHub over HTTPS: the same source as the skills and hooks it installs, which run in every session anyway. Signatures, or showing the origin and asking before running it, are for the maintainer to decide |
+| R5-2 | high | .claude/skills/brain-upgrade/scripts/upgrade.py:304-311 | The rollback restores the preimage unconditionally, so a change a sync client or an editor made to a file after apply wrote it is overwritten (or a new file deleted) | fixed in 025c354 |
+| R5-3 | high | .claude/skills/brain-upgrade/scripts/upgrade.py:475-483 | A failure saving the plan's applied marker after the transaction leaves an updated base with a plan commit refuses and apply sees as stale | fixed in 025c354 |
+
+How they were fixed:
+
+- R5-2: each journal entry holds the preimage (the read that passed the hash check) and
+  the postimage (the bytes apply writes, or None for a deletion). The rollback puts a
+  target back only while it still holds the postimage; a target that already holds the
+  preimage needs nothing; anything else was changed by someone else after apply wrote it,
+  is left as it is, and the error reports an incomplete rollback naming those files and
+  pointing to git and the backup folder.
+- R5-3: `save_plan()` rewrites the plan file atomically (temp file and rename), and
+  recording the plan as applied is the transaction's final step (`finish`). The journal
+  lives until it succeeds; when it fails, the base is rolled back under the R5-2 rule and
+  the plan stays unapplied.
+
+New tests in `test_safety.py` (`RollbackTest`): a failure recording the plan as applied
+leaves the base as before and the plan unapplied; an updated file and an added file that
+something else changes after apply wrote them, followed by a failing write, are kept with
+the other change and named in an "incomplete rollback" error, while every other file is
+put back. The failure-at-every-step test now also covers the plan record, as the last
+write.
+
+Test changes:
+- `.claude/skills/brain-upgrade/scripts/test_safety.py` — R5-3: `test_stamp_is_written_last` asserted that the stamp is the last write of all; recording the plan as applied is now the transaction's last write, so it asserts the stamp is the last write in the base, followed by the plan file
+
+Checks: `python tests/run_tests.py` — ALL PASS; brain-upgrade `python -m unittest` —
+156 passed; brain-onboard, brain-export, brain-gaps, brain-lint, brain-refactor suites —
+OK; `python dev/check_manifest.py` — ok
