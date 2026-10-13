@@ -282,3 +282,39 @@ Test changes:
 Checks: `python tests/run_tests.py` — ALL PASS; brain-upgrade `python -m unittest` —
 169 passed; brain-onboard, brain-export, brain-gaps, brain-lint, brain-refactor suites —
 OK; `python dev/check_manifest.py` — ok
+
+## Round 7 — adversarial (Codex, focused) — 2026-10-13 — reviewed 5764ae6
+
+Same focus, run from the coordinating session. The round ran against 5764ae6, before
+1a4f0ef, which had already removed origin-based verification of clones.
+
+| id | sev | where | finding | outcome |
+|---|---|---|---|---|
+| R7-1 | high | .claude/skills/brain-upgrade/scripts/upgrade.py:738-744 | `github_repository()` searched the origin URL with an unanchored regex and no host check, so a mirror URL containing `github.com/<owner>/<repo>` passed as a verified GitHub clone and skipped the consent gate | fixed: the function and origin-based verification were removed in 1a4f0ef (no clone is ever verified, whatever its origin URL); repository names are validated everywhere in 0d24af3 |
+
+How it was fixed:
+
+- There is no URL parsing to harden any more: since 1a4f0ef only a download fetched over
+  HTTPS from `https://github.com/<owner>/<name>/archive/refs/tags/...`, a URL this
+  engine builds itself, counts as verified. A folder, a zip or a clone is unverified in
+  every case, so the supported-forms whitelist the finding proposes would only re-open
+  what was closed.
+- The rest of the finding, "apply the same rule wherever a repository is judged by
+  address, the download URL included", is done with `kbtemplate.repository_problem()`:
+  a repository must be a plain GitHub `owner/name` (owner: letters, digits, hyphens, at
+  most 39, not starting with a hyphen; name: letters, digits, `.`, `_`, `-`, not `.`
+  or `..`). It is checked for the manifest, the stamp, `--repo` and
+  `--allow-repository`, and in `sources.download()` / `latest_version()` before the
+  URL is built.
+
+New tests in `test_safety.py` (`RepositoryNameTest`): the names a mirror path,
+`github.com.evil.example`, `evil-github.com`, a port, user info, a query, a fragment,
+an extra segment, dot segments, a leading hyphen and a full URL would give are refused;
+plain names pass; a bad `--repo` or `--allow-repository` stops `fetch` before any
+download; a bad repository in the stamp or the source's manifest stops `plan`; a clone
+whose origin is any of those URLs, or a genuine GitHub URL in https, scp-ssh or ssh://
+form, is unverified and refused until the owner accepts it.
+
+Checks: `python tests/run_tests.py` — ALL PASS; brain-upgrade `python -m unittest` —
+173 passed; brain-onboard, brain-export, brain-gaps, brain-lint, brain-refactor suites —
+OK; `python dev/check_manifest.py` — ok
