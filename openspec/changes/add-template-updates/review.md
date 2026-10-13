@@ -105,3 +105,36 @@ Test changes:
 Checks: `python tests/run_tests.py` — ALL PASS; brain-upgrade `python -m unittest` —
 149 passed (symlink and junction tests ran, none skipped); brain-onboard, brain-export,
 brain-gaps, brain-lint, brain-refactor suites — OK; `python dev/check_manifest.py` — ok
+
+## Round 4 — adversarial (Codex, focused) — 2026-10-13 — reviewed 5f8802e
+
+Same focus, run from the coordinating session. Decision on the one finding: partial
+accept, as the review coordinator decided.
+
+| id | sev | where | finding | outcome |
+|---|---|---|---|---|
+| R4-1 | critical | .claude/skills/brain-upgrade/scripts/upgrade.py:400-424 | Target validation goes stale before mutation: after the stale check, the git check and resolve_mutations(), transaction() writes to the checked Path objects without checking again; Codex asks for handle-based writes that do not follow reparse points and lock against rename | partially fixed in 59d4c19; rejected: handle-based writes with locks — a process that can plant a link in the base can already write to the base and to everything the user can, so this is not a security boundary; what remains is a window of microseconds after the re-check, and rebuilding the writes on Windows handles would be risky and platform-specific |
+
+How the accepted part was fixed:
+
+- `transaction()` re-checks each target right before its step: `recheck()` refuses a link
+  or junction anywhere on its path and a target that now resolves elsewhere;
+  `make_parents()` creates missing folders one at a time and checks each for links before
+  and after it is made; the target is re-checked once more right before the write.
+- The step reads the target, compares its hash with the one the dry run read (carried in
+  each mutation; `.kb-onboard.json` and the stamp use the plan's `onboard_before` and
+  `stamp_before`), and journals that same read as the rollback preimage. A mismatch stops
+  apply with "Nothing was changed: every file was put back as it was."
+- Rollback never restores through a link: a journaled path that has become one is
+  reported as not put back, and created folders that became links are left alone.
+
+New tests in `test_safety.py` (`RaceTest`): a target's content changed after all checks
+(as the transaction starts) and between two writes; a checked parent folder swapped for a
+symlink, and for a junction (Windows only), after the checks; a folder created by the
+transaction swapped for a link out of the base between two writes. In each, apply stops,
+the plan is not marked applied, nothing is written outside the base, and the base holds
+only the test's own interference.
+
+Checks: `python tests/run_tests.py` — ALL PASS; brain-upgrade `python -m unittest` —
+154 passed (link and junction tests ran, none skipped); brain-onboard, brain-export,
+brain-gaps, brain-lint, brain-refactor suites — OK; `python dev/check_manifest.py` — ok
