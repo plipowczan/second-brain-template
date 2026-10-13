@@ -183,7 +183,7 @@ changes skill scripts also runs that skill's own `python -m unittest`.
 
 ## 7. End-to-end checks
 
-- [ ] 7.1 Git round trip in scratch directories:
+- [x] 7.1 Git round trip in scratch directories:
   - onboard a clone;
   - edit `schema.yml` and one skill file;
   - build a "next version" source with a changed hook, a removed file and a changed
@@ -192,10 +192,10 @@ changes skill scripts also runs that skill's own `python -m unittest`.
 
   Verify one commit, the edited `schema.yml` kept (it was unchanged upstream), the
   conflict asked about only for the skill file, and `content/` untouched.
-- [ ] 7.2 No-git, offline round trip: unpack `git archive` output as an instance, then
+- [x] 7.2 No-git, offline round trip: unpack `git archive` output as an instance, then
   upgrade with `--source <zip>` and no network. Verify that the backup folder holds every
   replaced file and that the stamp's commit equals the zip comment.
-- [ ] 7.3 Adopt, with this clone as the source, a `git archive` copy of a pre-`0.1.0`
+- [x] 7.3 Adopt, with this clone as the source, a `git archive` copy of a pre-`0.1.0`
   commit (for example `4d38b2b`) that carries rendered files and a `.kb-onboard.json`
   fixture. Verify:
   - R is reported as `0.1.0`;
