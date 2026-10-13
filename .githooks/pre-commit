@@ -2,7 +2,49 @@
 # Optional KB pre-commit hook. NOT installed by default.
 # Enable:  git config core.hooksPath .githooks
 # Blocks the commit if lint finds missing frontmatter or schema violations.
-out="$(python .claude/skills/lint/scripts/lint_scan.py)" || exit 0
-echo "$out" | python -c "import sys,json; c=json.load(sys.stdin)['counts']; sys.exit(1 if (c['missing_frontmatter'] or c['schema_violation']) else 0)" && exit 0
-echo 'KB lint: fix missing frontmatter / schema violations before committing (run /lint).' >&2
-exit 1
+# It also blocks, and says why, when the lint cannot run at all (no Python, the
+# script is missing, it crashed): a check that passes whenever it breaks checks
+# nothing. Bypass once with `git commit --no-verify`.
+set -u
+
+LINT=.claude/skills/brain-lint/scripts/lint_scan.py
+
+fail() {
+  printf 'KB lint: %s\n' "$1" >&2
+  printf 'Commit blocked. Fix the above, or skip this check once with: git commit --no-verify\n' >&2
+  exit 1
+}
+
+cd "$(git rev-parse --show-toplevel)" || fail "cannot find the repository root."
+
+# python3 first; a candidate counts only if it really runs Python 3 (this skips
+# the Windows Store alias, which exists on PATH but only prints an install hint).
+PY=""
+for candidate in python3 python; do
+  if "$candidate" -c 'import sys; sys.exit(sys.version_info[0] != 3)' >/dev/null 2>&1; then
+    PY="$candidate"
+    break
+  fi
+done
+[ -n "$PY" ] || fail "no Python 3 on PATH (tried python3, python), so the lint cannot run."
+[ -f "$LINT" ] || fail "lint script not found at $LINT."
+
+report="$("$PY" "$LINT")" || fail "$LINT failed (exit $?); its error output is above."
+
+printf '%s' "$report" | PYTHONIOENCODING=utf-8 "$PY" -c '
+import json, sys
+try:
+    issues = json.load(sys.stdin)["issues"]
+    found = issues["missing_frontmatter"] + issues["schema_violation"]
+except (ValueError, KeyError, TypeError) as e:
+    print("KB lint: could not read the lint report (%r)." % e, file=sys.stderr)
+    sys.exit(2)
+for path in found:
+    print("  " + path, file=sys.stderr)
+sys.exit(1 if found else 0)
+'
+case $? in
+  0) exit 0 ;;
+  1) fail "the notes above have missing frontmatter or schema violations (run /b:lint)." ;;
+  *) fail "$LINT printed something that is not a lint report." ;;
+esac

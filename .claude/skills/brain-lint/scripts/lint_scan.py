@@ -95,6 +95,12 @@ def scan(root=ROOT, schema=None):
                 continue
             if fn.endswith(".template.md") or fn in EXCLUDE_FILES:
                 continue
+            # Underscore prefix means infrastructure, not a note -- the same rule that
+            # skips _raw/, _indexes/ etc. above, and the one build_indexes.py applies
+            # to loose files, so a config file like content/_privacy.md is not linted
+            # as a note without frontmatter.
+            if fn.startswith("_"):
+                continue
             path = os.path.join(dirpath, fn)
             with open(path, encoding="utf-8") as f:
                 text = f.read()

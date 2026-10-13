@@ -16,6 +16,7 @@ for dp,dn,fns in os.walk(ROOT):
     for fn in fns:
         if not fn.endswith(".md"): continue
         if fn.endswith(".template.md") or fn in EXCLUDE_FILES: continue
+        if fn.startswith("_"): continue  # underscore prefix = infrastructure, not a note (as in build_indexes.py)
         p=os.path.join(dp,fn).replace("\\","/")
         relp=os.path.relpath(p,ROOT).replace("\\","/")[:-3]
         names.add(fn[:-3]); paths.add(relp); paths.add(relp.lower())

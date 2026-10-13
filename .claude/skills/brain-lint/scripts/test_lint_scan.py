@@ -50,6 +50,20 @@ class TestScanIntegration(unittest.TestCase):
             self.assertEqual(res["issues"]["bad_type"], [])
 
 
+class TestUnderscoreFiles(unittest.TestCase):
+    def test_scan_skips_underscore_prefixed_files(self):
+        with tempfile.TemporaryDirectory() as d:
+            content = Path(d) / "content"
+            (content / "T").mkdir(parents=True)
+            (content / "_privacy.md").write_text("# Privacy rules\n", encoding="utf-8")
+            (content / "T" / "_draft.md").write_text("# Draft\n", encoding="utf-8")
+            (content / "T" / "Loose.md").write_text("# Loose\n", encoding="utf-8")
+            res = lint_scan.scan(str(content))
+            self.assertEqual(res["total"], 1)
+            self.assertEqual(res["issues"]["missing_frontmatter"],
+                             [str(content / "T" / "Loose.md").replace("\\", "/")])
+
+
 class TestBlockStyleFrontmatter(unittest.TestCase):
     def test_parse_fm_collects_block_list(self):
         fm, _ = lint_scan.parse_fm(

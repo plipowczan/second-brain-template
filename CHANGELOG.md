@@ -75,6 +75,21 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
   template and never reach a base. This is the groundwork for `/b:upgrade`.
 
   Existing bases: nothing to do by hand; your first `/b:upgrade --adopt` brings the file in.
+- **Tests run on every push to `main` and on every pull request into it.** The new
+  `.github/workflows/tests.yml` runs on Linux and Windows. It runs `python
+  tests/run_tests.py`, then the new `python tests/run_skill_tests.py`, which runs every
+  skill's own unit tests (`.claude/skills/*/scripts/test_*.py`; `run_tests.py` runs only
+  the curate and brain-upgrade suites). Last, it makes real commits to check that `.githooks/pre-commit` lets
+  a commit through on the template's own tree, blocks a note without frontmatter, and
+  blocks when the lint script is missing. A test that needs a tool the runner doesn't have
+  is skipped and listed with its reason in the job summary, never counted as passed. Today
+  that is the two `yt-dlp` integration tests in `brain-ingest`, which need the `yt-dlp`
+  binary and access to YouTube. A skill suite that finds no tests fails.
+
+  Existing bases: optional. Pull `.github/workflows/tests.yml` and
+  `tests/run_skill_tests.py` to run the same checks on your base's pushes; it runs only if
+  your default branch is `main`. The clean-tree hook check is skipped there, because its
+  result depends on your own notes. `python tests/run_skill_tests.py` also works locally.
 - **The template is now developed directly in this repository, and the rules for doing
   that live in `CONTRIBUTING.md`.** Until now this repository was a mirror: the template
   was built inside the maintainer's own base and copied here in `sync from brain@…`
@@ -90,6 +105,42 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
   keeps a personal `CLAUDE.local.md` out of your commits.
 
 ### Fixed
+- **`.claude/agents/AGENTS.md` no longer sends you to `kb-template/`.** Its rules said to
+  mirror every agent change into `kb-template/.claude/agents/` and log it in
+  `kb-template/CHANGELOG.md`, a folder that exists only in the maintainer's own base and
+  is frozen there. The file also pointed to a note from that base
+  (`AI/TOOLS/Deep-Research-skills`) and named the research skills without their `brain-`
+  prefix. It now says that agents come from the template, like the skills: in the
+  template repository a change to an agent gets an entry in this file, and in a base
+  agents arrive with template updates.
+
+  Existing bases: re-pull `.claude/agents/AGENTS.md`. It is documentation; the agents
+  themselves are unchanged.
+- **The optional `.githooks/pre-commit` lints commits again, and says so when it can't.**
+  It still called `.claude/skills/lint/scripts/lint_scan.py`, the path from before the
+  skills were renamed to `brain-*`, and let the commit through whenever that call failed
+  (`|| exit 0`). Since the rename it passed every commit without checking anything. It
+  was also not marked executable, so on Linux and macOS git skipped it with only a hint.
+  The hook now calls `.claude/skills/brain-lint/scripts/lint_scan.py`, lists the notes it
+  blocks on, and also blocks, with a message, when it cannot run the lint at all: no
+  Python 3 on `PATH`, the script missing, a crash, or output that is not a lint report.
+  `git commit --no-verify` skips it once. As before, it checks the whole `content/`
+  folder, not only the staged files.
+
+  Existing bases: only if you enabled the hook (`git config core.hooksPath .githooks`).
+  Re-pull `.githooks/pre-commit` together with the `brain-lint` fix below: without it the
+  hook blocks every commit on `content/_privacy.md`. On Linux or macOS, if your copy is
+  not executable, run `chmod +x .githooks/pre-commit`.
+- **`brain-lint` no longer reports underscore-prefixed files like `content/_privacy.md`.**
+  `lint_scan.py` listed `_privacy.md` under `missing_frontmatter`, and `lint_links.py`
+  listed it as an orphan, although the file is configuration, not a note. Both scripts now
+  skip any `_*.md` file under `content/`, the rule `build_indexes.py` already applies (see
+  the `brain-reindex` entry below). On the template's own content `/b:lint` now reports no
+  issues.
+
+  Existing bases: re-pull `.claude/skills/brain-lint/scripts/lint_scan.py` and
+  `lint_links.py`. A file of yours whose name starts with `_` is no longer linted, which
+  matches how `/b:reindex` already treats it; rename it if it is meant to be a note.
 - **The `kb-maintain` workflow runs again.** `.github/workflows/kb-maintain.yml` still
   called `.claude/skills/reindex/…` and `.claude/skills/lint/…` after those skills were
   renamed to `brain-reindex` and `brain-lint`, so every scheduled run failed at the
@@ -101,10 +152,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
 
   Existing bases: re-pull `.github/workflows/kb-maintain.yml`, and
   `.claude/hooks/load_vault_map.py` for the message. The optional `.githooks/pre-commit`
-  has the same stale path and is **not** fixed yet. With the path corrected it would
-  block every commit, because `lint_scan.py` reports `content/_privacy.md` as a note with
-  missing frontmatter. Until both are fixed, that hook lets every commit through without
-  checking anything.
+  had the same stale path; it has its own entry above.
 - **`brain-ingest` no longer forces every vault to English.** The "Language enforcement"
   paragraph in Phase 2 declared "the canonical vault language is **English**" and told the
   agent to translate Polish (or any other) sources on ingest — a value leaked from the
@@ -196,6 +244,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
   `openspec/`, `dev/` or `CONTRIBUTING.md` of your own would be left out of it.
 
   Existing bases: nothing to do.
+- **`kb-maintain` uses current versions of its GitHub actions.**
+  `.github/workflows/kb-maintain.yml` moves from `actions/checkout@v4`,
+  `actions/setup-python@v5` and `actions/upload-artifact@v4`, which run on the Node 20
+  runtime GitHub is retiring, to `@v7` of all three, which run on Node 24. The new
+  `tests.yml` uses the same versions. What the workflow does is unchanged.
+
+  Existing bases: re-pull `.github/workflows/kb-maintain.yml`. A self-hosted runner needs
+  Actions Runner 2.327.1 or newer.
 - **BREAKING: all workflow commands and skills are namespaced** — command wrappers moved
   from `.claude/commands/*.md` to `.claude/commands/b/*.md` (subdirectory = native `:`
   namespace, so `/ingest` is now `/b:ingest`), and every vault skill directory gained a
