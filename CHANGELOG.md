@@ -8,6 +8,21 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
 ## [Unreleased]
 
 ### Added
+- **Tests run on every push to `main` and on every pull request into it.** The new
+  `.github/workflows/tests.yml` runs on Linux and Windows. It runs `python
+  tests/run_tests.py`, then the new `python tests/run_skill_tests.py`, which runs every
+  skill's own unit tests (`.claude/skills/*/scripts/test_*.py`; `run_tests.py` runs only
+  the curate suite). Last, it makes real commits to check that `.githooks/pre-commit` lets
+  a commit through on the template's own tree, blocks a note without frontmatter, and
+  blocks when the lint script is missing. A test that needs a tool the runner doesn't have
+  is skipped and listed with its reason in the job summary, never counted as passed. Today
+  that is the two `yt-dlp` integration tests in `brain-ingest`, which need the `yt-dlp`
+  binary and access to YouTube. A skill suite that finds no tests fails.
+
+  Existing bases: optional. Pull `.github/workflows/tests.yml` and
+  `tests/run_skill_tests.py` to run the same checks on your base's pushes; it runs only if
+  your default branch is `main`. The clean-tree hook check is skipped there, because its
+  result depends on your own notes. `python tests/run_skill_tests.py` also works locally.
 - **The template is now developed directly in this repository, and the rules for doing
   that live in `CONTRIBUTING.md`.** Until now this repository was a mirror: the template
   was built inside the maintainer's own base and copied here in `sync from brain@…`
@@ -110,6 +125,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
   (0 substantive diff), so the workflow opens a PR only on genuine drift.
 
 ### Changed
+- **`kb-maintain` uses current versions of its GitHub actions.**
+  `.github/workflows/kb-maintain.yml` moves from `actions/checkout@v4`,
+  `actions/setup-python@v5` and `actions/upload-artifact@v4`, which run on the Node 20
+  runtime GitHub is retiring, to `@v7` of all three, which run on Node 24. The new
+  `tests.yml` uses the same versions. What the workflow does is unchanged.
+
+  Existing bases: re-pull `.github/workflows/kb-maintain.yml`. A self-hosted runner needs
+  Actions Runner 2.327.1 or newer.
 - **BREAKING: all workflow commands and skills are namespaced** — command wrappers moved
   from `.claude/commands/*.md` to `.claude/commands/b/*.md` (subdirectory = native `:`
   namespace, so `/ingest` is now `/b:ingest`), and every vault skill directory gained a
