@@ -263,3 +263,22 @@ status.
 Checks: `python tests/run_tests.py` — ALL PASS; brain-upgrade `python -m unittest` —
 169 passed; brain-onboard, brain-export, brain-gaps, brain-lint, brain-refactor suites —
 OK; `python dev/check_manifest.py` — ok
+
+Also fixed after round 6 (background security review, "trust-bypass / provenance
+spoofing"), in 604c2ad: a local git clone still counted as verified through its origin
+remote, which is a setting of the clone and proves nothing about its commits. Now only a
+download fetched over HTTPS from GitHub is verified; a folder, a zip or a local clone is
+unverified, and `fetch` unpacks it only when the owner accepts the repository it claims
+(`--allow-repository`). The origin remote is shown as information, marked as the
+clone's own setting. Repository names are compared case-insensitively, as GitHub does.
+
+Tests in `test_safety.py` (`ProvenanceTest`): a clone whose origin remote names the
+template repository is still refused until accepted and is reported unverified; consent
+has to name the repository the source claims; repository names match regardless of case.
+
+Test changes:
+- `.claude/skills/brain-upgrade/scripts/test_safety.py` — this follow-up: `test_fetch_reports_a_git_release`, `test_clone_of_a_fork_claiming_ours_is_judged_by_its_origin` and `test_clone_without_a_github_origin_is_unverified` expected a clone with a GitHub origin to be verified; replaced by `test_a_local_clone_only_claims_even_with_our_origin` and `test_consent_must_name_the_claimed_repository`, which expect every clone to be unverified
+
+Checks: `python tests/run_tests.py` — ALL PASS; brain-upgrade `python -m unittest` —
+169 passed; brain-onboard, brain-export, brain-gaps, brain-lint, brain-refactor suites —
+OK; `python dev/check_manifest.py` — ok
