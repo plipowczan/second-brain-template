@@ -44,7 +44,7 @@ changes skill scripts also runs that skill's own `python -m unittest`.
   It covers manifest loading, classification by first match, concrete-path ownership, and
   the hash from design D5. Verify with unit tests for CRLF/LF equality, binary files, the
   class order, `exclude`, and an instance-only skill that is never claimed.
-- [ ] 2.2 Implement source resolution:
+- [x] 2.2 Implement source resolution:
   - a plain directory;
   - a git working copy read through `git archive <ref>`, with the ref defaulting to
     `v<version>`, else HEAD with a warning;
@@ -57,7 +57,7 @@ changes skill scripts also runs that skill's own `python -m unittest`.
   Verify with unit tests on local fixtures: a temp git repo with a tag, an archive made by
   `git archive`, a stub URL opener for the download, and a simulated network error. No
   test touches the network.
-- [ ] 2.3 Implement reading and writing the stamp, and the `upgrade.py stamp`
+- [x] 2.3 Implement reading and writing the stamp, and the `upgrade.py stamp`
   subcommand. Verify with unit tests that its output holds every field from the
   instance-stamp spec, that the commit is `null` without proof, and that a tagged HEAD
   yields the tag's commit.

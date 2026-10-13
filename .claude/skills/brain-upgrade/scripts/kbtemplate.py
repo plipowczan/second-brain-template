@@ -257,7 +257,10 @@ def read_stamp(root: Path) -> dict | None:
 
 
 def make_stamp(repository: str, version: str, commit: str | None, files: dict,
-               rendered: dict) -> dict:
+               rendered: dict, seeded: dict | None = None) -> dict:
+    """`files`: owned path -> hash as the template shipped it; `rendered`: output path ->
+    {template, template_hash, output_hash}; `seeded`: starter file -> shipped hash, used
+    only to tell the owner what changed upstream."""
     return {
         "format": STAMP_FORMAT,
         "repository": repository,
@@ -266,6 +269,7 @@ def make_stamp(repository: str, version: str, commit: str | None, files: dict,
         "updated": utc_now(),
         "files": dict(sorted(files.items())),
         "rendered": dict(sorted(rendered.items())),
+        "seeded": dict(sorted((seeded or {}).items())),
     }
 
 
