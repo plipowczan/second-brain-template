@@ -560,7 +560,52 @@ class RollbackTest(SafetyCase):
         with mock.patch.object(upgrade, "_write", record):
             code, out, err = self.apply(self.DECISIONS)
         self.assertEqual(code, 0, err)
-        self.assertEqual(order[-1], kt.STAMP)
+        # The stamp is the last file written in the base; recording the plan as applied
+        # (outside the base) is the transaction's final step.
+        self.assertEqual(order[-2:], [kt.STAMP, self.planfile.name])
+
+    def test_failing_to_record_the_plan_rolls_the_base_back(self):
+        self.fresh(0)
+        before = snapshot(self.base)
+        with mock.patch.object(upgrade, "save_plan", side_effect=OSError("disk full")):
+            code, out, err = self.apply(self.DECISIONS)
+        self.assertEqual(code, 1)
+        self.assertIn("recording the plan as applied", err)
+        self.assertIn("rolled back", err)
+        self.assertEqual(snapshot(self.base), before)
+        self.assertNotIn("applied", json.loads(self.planfile.read_text(encoding="utf-8")))
+
+    def test_rollback_keeps_a_file_changed_after_apply_wrote_it(self):
+        for target, label in ((".claude/hooks/hook.py", "updated"),
+                              (".claude/skills/new/deep/SKILL.md", "added")):
+            with self.subTest(file=label):
+                self.fresh(label)
+                before = snapshot(self.base)
+                state, real_write = {"fail_next": False}, upgrade._write
+                edited = b"someone else's edit, made while apply ran\n"
+
+                def racing(path, data):
+                    # Apply writes the target, a sync client or an editor changes it,
+                    # and the next write fails.
+                    if state["fail_next"]:
+                        state["fail_next"] = False  # once: the rollback may write again
+                        raise OSError("injected failure")
+                    real_write(path, data)
+                    if Path(path) == (self.base / target).resolve():
+                        Path(path).write_bytes(edited)
+                        state["fail_next"] = True
+                with mock.patch.object(upgrade, "_write", racing):
+                    code, out, err = self.apply(self.DECISIONS)
+                self.assertEqual(code, 1)
+                self.assertIn("rollback is incomplete", err)
+                self.assertIn(target, err)
+                self.assertEqual((self.base / target).read_bytes(), edited)
+                files, dirs = snapshot(self.base)
+                files.pop(target)
+                expected = dict(before[0])
+                expected.pop(target, None)
+                self.assertEqual(files, expected)
+                self.assertNotIn("applied", json.loads(self.planfile.read_text(encoding="utf-8")))
 
 
 if __name__ == "__main__":

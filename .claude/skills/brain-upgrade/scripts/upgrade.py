@@ -153,9 +153,9 @@ def load_plan(path: str) -> dict:
 
 
 def save_plan(plan: dict) -> None:
-    path = Path(plan.pop("_path"))
-    path.write_bytes(kt.dump_json(plan))
-    plan["_path"] = str(path)
+    """Rewrite the plan file in one step (temp file, then rename)."""
+    path = Path(plan["_path"])
+    _write(path, kt.dump_json({k: v for k, v in plan.items() if k != "_path"}))
 
 
 def plan_instance(plan: dict, given: str | None) -> Path:
@@ -268,28 +268,35 @@ def make_parents(root: Path, target: Path, created: list) -> None:
             raise ChangedDuringApply(f"{rel} became a link or junction")
 
 
-def transaction(instance: Path, items: list) -> None:
+def _current(target: Path) -> bytes | None:
+    return target.read_bytes() if target.is_file() else None
+
+
+def transaction(instance: Path, items: list, finish=None, backup: Path | None = None) -> None:
     """Apply (path, target, bytes | None for delete, expected hash) in order, all or
-    nothing.
+    nothing, then run `finish()` (recording the plan as applied) as the last step.
 
     Right before each step it checks the target again: no link or junction on its path
     (folders made on the way included), and its current content still has the hash the
-    dry run read. That same read is the step's entry in the rollback journal. On any
-    failure every journaled target is put back, created files and folders are removed,
-    and it raises: the base is then as it was before apply.
+    dry run read. That same read is the step's preimage in the rollback journal, next to
+    its postimage: the exact bytes apply writes, or None for a deletion.
+
+    On any failure, `finish()` included, each journaled target is put back only while it
+    still holds what apply left there: a file something else changed in the meantime is
+    left alone and reported. Created folders are removed when empty. Then it raises.
     """
     root = instance.resolve()
-    journal: list[tuple[str, Path, bytes | None]] = []
+    journal: list[tuple[str, Path, bytes | None, bytes | None]] = []
     created: list[Path] = []
     failed_rel = "?"
     try:
         for rel, target, data, expected in items:
             failed_rel = rel
             recheck(root, rel, target)
-            before = target.read_bytes() if target.is_file() else None
+            before = _current(target)
             if (kt.content_hash(before) if before is not None else None) != expected:
                 raise ChangedDuringApply(f"{rel} changed while the update was running")
-            journal.append((rel, target, before))
+            journal.append((rel, target, before, data))
             if data is None:
                 if before is not None:
                     _unlink(target)
@@ -297,16 +304,24 @@ def transaction(instance: Path, items: list) -> None:
             make_parents(root, target, created)
             recheck(root, rel, target)
             _write(target, data)
+        failed_rel = "recording the plan as applied"
+        if finish is not None:
+            finish()
     except BaseException as e:
-        problems = []
-        for rel, target, before in reversed(journal):
+        problems, left = [], []
+        for rel, target, before, after in reversed(journal):
             try:
                 if kt.link_in_path(root, rel):  # never restore through a link
                     raise OSError("its path is now a link or junction")
+                now = _current(target)
+                if now == before:
+                    continue  # this step never happened, or is already undone
+                if now != after:
+                    left.append(rel)  # changed by something else after apply wrote it
+                    continue
                 if before is None:
-                    if target.exists():
-                        _unlink(target)
-                elif not target.is_file() or target.read_bytes() != before:
+                    _unlink(target)
+                else:
                     target.parent.mkdir(parents=True, exist_ok=True)
                     _write(target, before)
             except BaseException as err:  # keep going: restore as much as possible
@@ -317,11 +332,15 @@ def transaction(instance: Path, items: list) -> None:
                     d.rmdir()
             except OSError:
                 pass
-        if problems:
+        where = (f"git (git status, git diff) or the backup folder {backup}" if backup
+                 else "git (git status, git diff)")
+        if problems or left:
             raise kt.TemplateError(
-                f"apply failed at {failed_rel} ({e}), and these could not be put back: "
-                + "; ".join(problems) + ". Restore them from git (git status) or the backup "
-                "folder before anything else.") from e
+                f"apply failed at {failed_rel} ({e}). The rollback is incomplete: "
+                + (f"could not be put back: {'; '.join(problems)}. " if problems else "")
+                + (f"changed by something else after apply wrote them, so left as they are: "
+                   f"{', '.join(sorted(left))}. " if left else "")
+                + f"Check these against {where} before anything else.") from e
         if isinstance(e, ChangedDuringApply):
             raise kt.TemplateError(
                 f"apply stopped: {e}. Nothing was changed: every file was put back as it "
@@ -467,12 +486,7 @@ def cmd_apply(args) -> int:
                 dst.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(target, dst)
 
-    transaction(instance, items)
-    for rel, target, data, _ in items:
-        if data is None:
-            remove_empty_dirs(instance, target.parent)
-
-    plan["applied"] = {
+    applied = {
         "time": kt.utc_now(),
         "written": sorted(a["path"] for a in writes) + sorted(e["path"] for e, _ in renders),
         "deleted": sorted(a["path"] for a in deletes),
@@ -480,7 +494,17 @@ def cmd_apply(args) -> int:
         "onboard_values": bool(new_values),
         "backup": str(backup) if backup else None,
     }
-    save_plan(plan)
+
+    def record_applied():
+        # The last step of the transaction: a plan that cannot say it was applied must
+        # not leave an applied base behind (commit would refuse, apply would see stale).
+        save_plan({**plan, "applied": applied})
+
+    transaction(instance, items, finish=record_applied, backup=backup)
+    plan["applied"] = applied
+    for rel, target, data, _ in items:
+        if data is None:
+            remove_empty_dirs(instance, target.parent)
     ap = plan["applied"]
     say(f"Applied: {len(ap['written'])} written, {len(ap['deleted'])} deleted; "
         f"{kt.STAMP} now names {s['version']}.")
