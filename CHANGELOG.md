@@ -5,6 +5,32 @@ who have cloned the template and want to pull improvements into their own base.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are ISO (UTC).
 
+## [Unreleased]
+
+### Fixed
+- **YouTube ingest works on Windows with Smart App Control.** `brain-ingest`'s
+  `yt_fetch.py` always ran the `yt-dlp` command and gave up when it was not on PATH. On
+  Windows with Smart App Control in enforce mode, the unsigned `yt-dlp.exe` that pip
+  installs is blocked (`WinError 4551: An Application Control policy has blocked this
+  file`), so every `/b:ingest` of a YouTube URL failed. The signed `python.exe` is
+  allowed, so `python -m yt_dlp` still runs. The script now picks the command itself, in
+  this order: `$YT_DLP_CMD` if you set it (used as given, for example
+  `"C:\Program Files\yt-dlp\yt-dlp.exe"`; double-quote paths with spaces); a `yt-dlp` on
+  PATH that actually starts (`yt-dlp --version` succeeds); `python -m yt_dlp` with the
+  interpreter the script runs under, when the module is installed. Metadata, captions
+  and the Whisper audio download all use that command. When none is found, the script
+  exits 3 with `yt-dlp not found` and the install hint (`pip install yt-dlp`, or set
+  `YT_DLP_CMD`), and `/b:ingest` stops with that hint; it no longer pre-checks `yt-dlp`
+  with `which`. A `$YT_DLP_CMD` that cannot start fails the same way, naming the command,
+  instead of with a traceback. A working `yt-dlp` on PATH is still preferred, so nothing
+  changes where ingest already worked. The `/b:onboard` prerequisite check also accepts `python -m yt_dlp`, and the
+  README and the test notes no longer say yt-dlp has to be on PATH.
+
+  Existing bases: pick it up with `/b:upgrade`, which updates the `brain-ingest` skill
+  (`SKILL.md`, `scripts/yt_fetch.py` and its tests). Nothing else is needed, unless you
+  relied on a standalone `yt-dlp` executable that is no longer there: then run
+  `pip install yt-dlp` with the Python you run the skills with.
+
 ## [0.2.0] - 2026-10-13
 
 ### Added

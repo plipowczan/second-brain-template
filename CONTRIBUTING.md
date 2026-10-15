@@ -42,9 +42,9 @@ your own knowledge base, you don't need this file: run `/b:onboard` (see the
 3. If you changed a skill's scripts, also run that skill's own unit tests: `python -m
    unittest` from `.claude/skills/<skill>/scripts/`, or all of them at once with
    `python tests/run_skill_tests.py`. `tests/run_tests.py` runs only the curate and
-   brain-upgrade suites. The two `yt-dlp` integration tests in `brain-ingest` need `yt-dlp`
-   and a network connection; `run_skill_tests.py` skips them, with the reason, when it is
-   missing.
+   brain-upgrade suites. The two `yt-dlp` integration tests in `brain-ingest` need yt-dlp
+   (`pip install yt-dlp`; the command on PATH is not required) and a network connection;
+   `run_skill_tests.py` skips them, with the reason, when yt-dlp is missing.
 4. If you changed `.github/workflows/kb-maintain.yml`, or a script it calls
    (`build_indexes.py`, `lint_scan.py`), run what the workflow runs, from the repo root:
 

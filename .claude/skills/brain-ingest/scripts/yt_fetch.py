@@ -114,20 +114,92 @@ def archive_filename(date_str: str, video_id: str, title: str) -> str:
     return f"{date_str}_yt-{video_id}_{slugify(title)}.md"
 
 
+import functools
+import importlib.util
 import json
+import shlex
 import shutil
 import subprocess
+import sys
 import tempfile
 import os
 from pathlib import Path
+from typing import Callable, Mapping
 
 
 class YTFetchError(RuntimeError):
     """Raised when yt-dlp or whisper fails in a way we should report."""
 
 
+_YT_DLP_MISSING = "yt-dlp not found: run `pip install yt-dlp`, or set YT_DLP_CMD"
+
+
+def _split_cmd(raw: str) -> list[str]:
+    """Split a YT_DLP_CMD value into argv. Double-quote paths that contain spaces."""
+    return [t[1:-1] if len(t) >= 2 and t[0] == t[-1] == '"' else t
+            for t in shlex.split(raw, posix=False)]
+
+
+def _starts(cmd: list[str]) -> bool:
+    """True if `cmd --version` runs and exits 0 (an OS policy may block the binary)."""
+    try:
+        proc = subprocess.run([*cmd, "--version"], capture_output=True, text=True, timeout=30)
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+    return proc.returncode == 0
+
+
+def _has_yt_dlp_module() -> bool:
+    return importlib.util.find_spec("yt_dlp") is not None
+
+
+def resolve_yt_dlp_cmd(
+    env: Mapping[str, str],
+    *,
+    which: Callable[[str], str | None] = shutil.which,
+    starts: Callable[[list[str]], bool] = _starts,
+    has_module: Callable[[], bool] = _has_yt_dlp_module,
+) -> tuple[str, ...] | None:
+    """Return the argv prefix that runs yt-dlp here, or None.
+
+    Order: $YT_DLP_CMD (used as given, not probed); a `yt-dlp` on PATH that actually
+    starts; the yt_dlp module under this interpreter. The middle check matters on
+    Windows, where Smart App Control blocks pip's unsigned yt-dlp.exe while the
+    signed python.exe runs `-m yt_dlp` fine.
+    """
+    raw = env.get("YT_DLP_CMD", "").strip()
+    if raw:
+        return tuple(_split_cmd(raw))
+    exe = which("yt-dlp")
+    if exe and starts([exe]):
+        return (exe,)
+    if has_module():
+        return (sys.executable, "-m", "yt_dlp")
+    return None
+
+
+@functools.lru_cache(maxsize=None)
+def yt_dlp_cmd() -> tuple[str, ...] | None:
+    """resolve_yt_dlp_cmd for this process, probed once."""
+    return resolve_yt_dlp_cmd(os.environ)
+
+
 def yt_dlp_available() -> bool:
-    return shutil.which("yt-dlp") is not None
+    return yt_dlp_cmd() is not None
+
+
+def _yt_dlp() -> list[str]:
+    """argv prefix for yt-dlp; raises YTFetchError with an install hint if there is none."""
+    cmd = yt_dlp_cmd()
+    if cmd is None:
+        raise YTFetchError(_YT_DLP_MISSING)
+    return list(cmd)
+
+
+def _cannot_start(cmd: list[str], err: OSError) -> str:
+    """Message for a yt-dlp command that does not start (a bad YT_DLP_CMD is not probed)."""
+    return (f"yt-dlp not found: {cmd[0]} cannot start ({err}); "
+            "fix YT_DLP_CMD, or run `pip install yt-dlp`")
 
 
 def _client_args(player_client: str | None) -> list[str]:
@@ -139,11 +211,10 @@ def _client_args(player_client: str | None) -> list[str]:
 
 def fetch_metadata(url: str, timeout: int = 60, player_client: str | None = None) -> dict:
     """Run yt-dlp to get full video metadata as a dict."""
-    if not yt_dlp_available():
-        raise YTFetchError("yt-dlp not on PATH")
+    yt_dlp = _yt_dlp()
     try:
         proc = subprocess.run(
-            ["yt-dlp", "--dump-single-json", "--skip-download", "--no-warnings",
+            [*yt_dlp, "--dump-single-json", "--skip-download", "--no-warnings",
              *_client_args(player_client), url],
             capture_output=True, text=True, timeout=timeout, check=True,
         )
@@ -151,6 +222,8 @@ def fetch_metadata(url: str, timeout: int = 60, player_client: str | None = None
         raise YTFetchError(f"yt-dlp metadata failed: {e.stderr.strip()[:500]}") from e
     except subprocess.TimeoutExpired as e:
         raise YTFetchError(f"yt-dlp metadata timed out after {timeout}s") from e
+    except OSError as e:
+        raise YTFetchError(_cannot_start(yt_dlp, e)) from e
     data = json.loads(proc.stdout)
     # Normalize: ensure `video_id` key exists
     data["video_id"] = data.get("id", "")
@@ -168,12 +241,14 @@ def _try_one_lang(url: str, lang: str, out_template: str, timeout: int, retries:
     """Try to fetch subs for a single language. Returns True on success, False on hard failure.
 
     Retries on HTTP 429 with short backoff; treats "no subs for this lang" as a soft miss (False).
+    A yt-dlp command that cannot start raises YTFetchError: no other language would fare better.
     """
+    yt_dlp = _yt_dlp()
     for attempt in range(retries + 1):
         try:
             subprocess.run(
                 [
-                    "yt-dlp", "--write-subs", "--write-auto-subs",
+                    *yt_dlp, "--write-subs", "--write-auto-subs",
                     "--sub-langs", lang, "--sub-format", "vtt",
                     "--skip-download", "--no-warnings",
                     *_client_args(player_client),
@@ -191,6 +266,8 @@ def _try_one_lang(url: str, lang: str, out_template: str, timeout: int, retries:
             return False
         except subprocess.TimeoutExpired:
             return False
+        except OSError as e:
+            raise YTFetchError(_cannot_start(yt_dlp, e)) from e
     return False
 
 
@@ -201,8 +278,7 @@ def fetch_captions_vtt(url: str, langs: str | tuple[str, ...] = _DEFAULT_LANGS, 
     Iterates per-language so a 429 / missing-subs on one language does not abort the rest.
     Accepts either a comma-separated string (legacy) or a sequence of language codes.
     """
-    if not yt_dlp_available():
-        raise YTFetchError("yt-dlp not on PATH")
+    _yt_dlp()  # fail fast with the install hint
     if isinstance(langs, str):
         lang_list = [x.strip() for x in langs.split(",") if x.strip()]
     else:
@@ -308,8 +384,7 @@ def transcribe_with_whisper(url: str, timeout: int = 1800) -> list[VttCue]:
 
     Requires WHISPER_CPP_BIN and WHISPER_MODEL env vars and ffmpeg on PATH.
     """
-    if not yt_dlp_available():
-        raise YTFetchError("yt-dlp not on PATH")
+    yt_dlp = _yt_dlp()
     if not shutil.which("ffmpeg"):
         raise YTFetchError("ffmpeg not on PATH (required for audio extraction)")
     bin_path = os.environ.get("WHISPER_CPP_BIN")
@@ -326,7 +401,7 @@ def transcribe_with_whisper(url: str, timeout: int = 1800) -> list[VttCue]:
         try:
             subprocess.run(
                 [
-                    "yt-dlp", "-x", "--audio-format", "wav",
+                    *yt_dlp, "-x", "--audio-format", "wav",
                     "--no-warnings",
                     "-o", os.path.join(tmp, "audio.%(ext)s"),
                     url,
@@ -335,6 +410,8 @@ def transcribe_with_whisper(url: str, timeout: int = 1800) -> list[VttCue]:
             )
         except subprocess.CalledProcessError as e:
             raise YTFetchError(f"yt-dlp audio failed: {e.stderr.strip()[:500]}") from e
+        except OSError as e:
+            raise YTFetchError(_cannot_start(yt_dlp, e)) from e
 
         if not Path(audio).exists():
             raise YTFetchError("yt-dlp produced no audio.wav")
@@ -356,7 +433,6 @@ def transcribe_with_whisper(url: str, timeout: int = 1800) -> list[VttCue]:
 
 
 import datetime
-import sys
 import argparse
 
 

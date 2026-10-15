@@ -5,8 +5,8 @@ name: Tests
 #   1. tests/run_tests.py: the integration suite (a throwaway vault through reindex,
 #      lint, gaps, refactor and the curate unit tests).
 #   2. tests/run_skill_tests.py: every skill's own unit tests. Tests that need a tool
-#      the runner does not have (the yt-dlp integration tests in brain-ingest need the
-#      yt-dlp binary and access to YouTube) are skipped, and each skip is listed with
+#      the runner does not have (the yt-dlp integration tests in brain-ingest need
+#      yt-dlp and access to YouTube) are skipped, and each skip is listed with
 #      its reason in the job summary and as a notice, so a skip never reads as a pass.
 #   3. The optional .githooks/pre-commit, through real `git commit` calls: it lets a
 #      commit through on the template's own tree, blocks a note without frontmatter,
