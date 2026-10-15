@@ -11,7 +11,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ],
    "sha256:aa0bd88be224cfd3ddc17ba8a2baa8f9a591ccad36c507a01a3a17eaeeac3b97": [
     11,
@@ -108,7 +113,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ],
    "sha256:bff7f64ad7d332ea9bccb69d22d49e1a651659c134c08f014dfd643b69e9c656": [
     9,
@@ -168,7 +178,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/agents/web-search-modules/chinese-tech.md": {
@@ -223,7 +238,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/agents/web-search-modules/general-web.md": {
@@ -278,7 +298,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/agents/web-search-modules/github-debug.md": {
@@ -333,7 +358,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/agents/web-search-modules/stackoverflow.md": {
@@ -388,7 +418,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/commands/b/compile.md": {
@@ -440,7 +475,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/commands/b/curate.md": {
@@ -492,7 +532,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/commands/b/enhance.md": {
@@ -544,7 +589,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/commands/b/export.md": {
@@ -596,7 +646,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/commands/b/gaps.md": {
@@ -648,7 +703,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/commands/b/import.md": {
@@ -700,7 +760,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/commands/b/ingest.md": {
@@ -752,7 +817,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/commands/b/lint.md": {
@@ -804,7 +874,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/commands/b/onboard.md": {
@@ -856,7 +931,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/commands/b/output.md": {
@@ -908,7 +988,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/commands/b/qa.md": {
@@ -960,7 +1045,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/commands/b/refactor.md": {
@@ -1012,7 +1102,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/commands/b/reindex.md": {
@@ -1064,7 +1159,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/commands/b/research-add-fields.md": {
@@ -1116,7 +1216,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/commands/b/research-add-items.md": {
@@ -1168,7 +1273,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/commands/b/research-deep.md": {
@@ -1220,7 +1330,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/commands/b/research-report.md": {
@@ -1272,7 +1387,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/commands/b/research.md": {
@@ -1324,7 +1444,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/commands/b/upgrade.md": {
@@ -1359,7 +1484,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/commands/compile.md": {
@@ -1612,7 +1742,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/settings.json": {
@@ -1676,7 +1811,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/skills/brain-compile/SKILL.md": {
@@ -1728,7 +1868,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/skills/brain-curate/SKILL.md": {
@@ -1780,7 +1925,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/skills/brain-curate/scripts/curate_links.py": {
@@ -1832,7 +1982,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/skills/brain-curate/scripts/curate_score.py": {
@@ -1884,7 +2039,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/skills/brain-curate/scripts/test_curate_links.py": {
@@ -1936,7 +2096,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/skills/brain-curate/scripts/test_curate_score.py": {
@@ -1988,7 +2153,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/skills/brain-enhance/SKILL.md": {
@@ -2040,7 +2210,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/skills/brain-export/SKILL.md": {
@@ -2092,7 +2267,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/skills/brain-export/scripts/bundle.py": {
@@ -2144,7 +2324,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/skills/brain-export/scripts/privacy_sweep.py": {
@@ -2196,7 +2381,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/skills/brain-export/scripts/test_bundle.py": {
@@ -2248,7 +2438,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/skills/brain-export/scripts/test_privacy_sweep.py": {
@@ -2300,7 +2495,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/skills/brain-gaps/SKILL.md": {
@@ -2352,7 +2552,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/skills/brain-gaps/scripts/gaps.py": {
@@ -2404,7 +2609,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/skills/brain-gaps/scripts/test_gaps.py": {
@@ -2456,7 +2666,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/skills/brain-import/SKILL.md": {
@@ -2508,7 +2723,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/skills/brain-ingest/SKILL.md": {
@@ -2562,7 +2782,14 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61
+   ],
+   "sha256:b004bed9ac339ada0cb709764e50e9bd30289b2a383fd314e35ff93f8bff5382": [
+    62,
+    63,
+    64
    ]
   },
   ".claude/skills/brain-ingest/scripts/.gitignore": {
@@ -2614,7 +2841,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/skills/brain-ingest/scripts/test_yt_fetch.py": {
@@ -2666,10 +2898,30 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61
+   ],
+   "sha256:a6c0f9e9da0309fbcf5f18f2b156e94d6bb59a8938ab791b6230c112d5f259c1": [
+    62,
+    63,
+    64
+   ]
+  },
+  ".claude/skills/brain-ingest/scripts/test_yt_fetch_start.py": {
+   "sha256:3f726aad69e3625339068cf5e9568e5f2465adc22cd7b4fa5ef0dc7506258cd4": [
+    63,
+    64
    ]
   },
   ".claude/skills/brain-ingest/scripts/yt_fetch.py": {
+   "sha256:28329b988b77de1e4001a77256c6aefb1a994a303e64d654886974b21e3ecf13": [
+    62
+   ],
+   "sha256:ddf5336e27e5abd77d21d22c1d5370df4c825ab49ac537bef86dd300c531113b": [
+    63,
+    64
+   ],
    "sha256:ec04ea73e1a4bcffc4c2e3c1ef85b0f1aedec33b5101f90a20c773e5e0c63bbe": [
     11,
     13,
@@ -2718,7 +2970,9 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61
    ]
   },
   ".claude/skills/brain-lint/SKILL.md": {
@@ -2770,7 +3024,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/skills/brain-lint/scripts/lint_links.py": {
@@ -2824,7 +3083,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/skills/brain-lint/scripts/lint_scan.py": {
@@ -2836,7 +3100,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ],
    "sha256:405510ddf408e2d7bd5bd8e5ab57ada2fb0cc0a31435eed9863e5fbd0b0039ac": [
     11,
@@ -2890,7 +3159,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/skills/brain-lint/scripts/test_lint_scan.py": {
@@ -2902,7 +3176,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ],
    "sha256:b5dfc67a101e438d708a877975fdd32cfcbffd2ff85621b2ddb036238cad821e": [
     11,
@@ -2979,7 +3258,14 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61
+   ],
+   "sha256:dfb69cdb2faf511038437d76cabb107dc205937a462b761d9a1e918684d1586a": [
+    62,
+    63,
+    64
    ],
    "sha256:f2bbf821133e2266a507f3351c7946af34c0156393bd27bb1ab3843f8b3b4ebc": [
     11,
@@ -3050,7 +3336,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/skills/brain-onboard/scripts/test_render.py": {
@@ -3102,7 +3393,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/skills/brain-output/SKILL.md": {
@@ -3154,7 +3450,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/skills/brain-qa/SKILL.md": {
@@ -3206,7 +3507,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/skills/brain-refactor/SKILL.md": {
@@ -3258,7 +3564,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/skills/brain-refactor/scripts/refactor.py": {
@@ -3310,7 +3621,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/skills/brain-refactor/scripts/test_refactor.py": {
@@ -3362,7 +3678,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/skills/brain-reindex/SKILL.md": {
@@ -3414,7 +3735,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/skills/brain-reindex/scripts/build_indexes.py": {
@@ -3468,7 +3794,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/skills/brain-research-add-fields/SKILL.md": {
@@ -3520,7 +3851,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/skills/brain-research-add-items/SKILL.md": {
@@ -3572,7 +3908,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/skills/brain-research-deep/SKILL.md": {
@@ -3624,7 +3965,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/skills/brain-research-report/SKILL.md": {
@@ -3676,7 +4022,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/skills/brain-research/SKILL.md": {
@@ -3728,7 +4079,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/skills/brain-research/validate_json.py": {
@@ -3780,7 +4136,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/skills/brain-upgrade/SKILL.md": {
@@ -3815,7 +4176,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ],
    "sha256:acd9ddb7c88cfd345b7d92eaa22b9363cea9eb2734f7ebf6ba081d2453790db9": [
     40,
@@ -3865,7 +4231,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/skills/brain-upgrade/scripts/kbtemplate.py": {
@@ -3904,7 +4275,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ],
    "sha256:9f86ab4722059192a387e92cc223e4ec0079449c6722bb0d59c18498d534b285": [
     24,
@@ -3940,7 +4316,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ],
    "sha256:927bd212da3e6ec744de4b4a78bdf928afecc06c06c36b26a2616a733c881616": [
     22
@@ -3985,7 +4366,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ],
    "sha256:3b43a753b66e5363a2cd74f1fa3375706c3abfa6915f230a8f0eee504cd8cc02": [
     27,
@@ -4033,7 +4419,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ],
    "sha256:e711a8b5665da8f073eedf3c3746db317c2b57b91203e43db082e38dd69dcd74": [
     27,
@@ -4064,7 +4455,12 @@
   ".claude/skills/brain-upgrade/scripts/test_apply.py": {
    "sha256:3b0b97fce61f3c0050f6936faacf021292a9fc0fd119d9b836bf2cef013975a6": [
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ],
    "sha256:3e750c58e052bc6a50ec2264c7425bab888517f8e248699af04f6b6fd97b5e22": [
     23,
@@ -4135,7 +4531,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ],
    "sha256:fc87f930ff41942c911f9f768ee27cbd2c2f319647a360f59bb30a26f510c46d": [
     22,
@@ -4149,7 +4550,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ],
    "sha256:dd98ef6ac76eed07dab9e4dce3e1fed7241bbd937306681d061c56f7577ab74b": [
     23,
@@ -4202,7 +4608,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ],
    "sha256:8f784b236fcda5024c43e8472e2945ce6968ffd677aa71c7f5e506f0bb5057b7": [
     30,
@@ -4270,7 +4681,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/skills/brain-upgrade/scripts/test_stamp.py": {
@@ -4308,7 +4724,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/skills/brain-upgrade/scripts/upgrade.py": {
@@ -4318,7 +4739,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ],
    "sha256:19694d65c809fde83da6f77dc230d6f2b55cb4d95c52f98a1104ecc97a3813b4": [
     43
@@ -4533,7 +4959,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/skills/excalidraw-diagram/README.md": {
@@ -4597,7 +5028,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/skills/excalidraw-diagram/SKILL.md": {
@@ -4661,7 +5097,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/skills/excalidraw-diagram/references/color-palette.md": {
@@ -4725,7 +5166,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/skills/excalidraw-diagram/references/element-templates.md": {
@@ -4789,7 +5235,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/skills/excalidraw-diagram/references/json-schema.md": {
@@ -4853,7 +5304,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/skills/excalidraw-diagram/references/pyproject.toml": {
@@ -4917,7 +5373,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/skills/excalidraw-diagram/references/render_excalidraw.py": {
@@ -4981,7 +5442,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/skills/excalidraw-diagram/references/render_template.html": {
@@ -5045,7 +5511,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".claude/skills/export/SKILL.md": {
@@ -5615,7 +6086,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".gitattributes": {
@@ -5654,7 +6130,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ],
    "sha256:40bc479ec0b2f98d3b5ad1512cd1f80530c3dd6d16e31f251413398268fc7433": [
     0,
@@ -5747,7 +6228,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".github/workflows/kb-maintain.yml": {
@@ -5809,17 +6295,29 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".github/workflows/tests.yml": {
+   "sha256:93a10d5d596e4c28c598d30a59b11eda31b35bdb73606963e2563b44fbe1738b": [
+    62,
+    63,
+    64
+   ],
    "sha256:d5c10ba68f0b540844c301be86b7bda08341ac13477c603c65a17ba9d8f8b6ac": [
     54,
     55,
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61
    ]
   },
   ".gitignore": {
@@ -5887,12 +6385,24 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".kb-manifest.json": {
    "sha256:1c086fe114ff492c3d4182136edfb9569b2a14188bf303a6a10476da9d451db1": [
-    59
+    59,
+    60,
+    61,
+    62,
+    63
+   ],
+   "sha256:26f85a685fc5fe901c9199fd57a76f64623a2207d67272bbd6f6154d5fe9705c": [
+    64
    ],
    "sha256:bda9376e291ed4a86973e9e2541bf1c341b459b874f21d050cc56d9750d2d0e1": [
     21,
@@ -5992,7 +6502,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   ".prettierrc": {
@@ -6056,7 +6571,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   "CHANGELOG.md": {
@@ -6110,8 +6630,14 @@
    "sha256:53ae283fcb5ea10ec6c1a7a252f5f172aa6fe93a933518e81bd47a1f9bc25f4b": [
     22
    ],
+   "sha256:54a7d85c9261b23c0c44143488eacefd8ea09eaf4f835aa1bde6340c68b8d0aa": [
+    64
+   ],
    "sha256:5d4f3a0755a0134e5ea5e82792cc8c073730fe54347be99119c9f44bf27ebc51": [
     8
+   ],
+   "sha256:613ee35e2fbf1adf6b9021cdc7564ca78b1af7cc3d4bcf6354458e5b8e8ba6bb": [
+    62
    ],
    "sha256:6188278252d632d17f56aa4d07c5955d823eff1f77326e15f1cf9b46af74e6a1": [
     56,
@@ -6150,7 +6676,9 @@
     37
    ],
    "sha256:9f30e1abb0aff2539c469a3594ca961eea9a3ec8817ef20556a82df1a542c9a3": [
-    59
+    59,
+    60,
+    61
    ],
    "sha256:c0d9af3fa0ffda75a4fe87edbe83fb7f79c047a3ce31210be73a2a358207110c": [
     43
@@ -6163,6 +6691,9 @@
    ],
    "sha256:ce1342a127f85ecf2fbf0835b756048e20a7d16be73eb12aaf786b36ed2dcb54": [
     23
+   ],
+   "sha256:d4fca1ad9da93e3ed728ffd7f17a20eb66dd7036f58b40b576d595aa428e9b57": [
+    63
    ],
    "sha256:db636dbebaafc072945e3e123ba6c5c48b54f386477a7f4914250260f8e2c8d8": [
     16,
@@ -6187,7 +6718,9 @@
    "sha256:433bac31398bfbdae351ca3248b61bc46b2c7359daabe8504f56bb108f0765a3": [
     57,
     58,
-    59
+    59,
+    60,
+    61
    ],
    "sha256:52e61db45e3c1e74e4c120b9528f62005afd613f53588ae9c22b633eae7c805f": [
     40,
@@ -6217,6 +6750,11 @@
     50,
     51,
     56
+   ],
+   "sha256:b25bafc2c3abcbfeca2eef7f4a3dfb761df1cbdbf2e176f7548b869ed6a06b9c": [
+    62,
+    63,
+    64
    ],
    "sha256:d99ca814de392a4511393f77b2ec6e04e132107136db5b2a94f4d640d530e027": [
     25,
@@ -6268,7 +6806,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ],
    "sha256:ce2013aa73a2e1bdd62ee4c19032c20fbcdd398d9fe99059651e16167b81486e": [
     8,
@@ -6350,7 +6893,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   "dev/build_known_hashes.py": {
@@ -6386,7 +6934,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   "dev/check_manifest.py": {
@@ -6425,7 +6978,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   "dev/release_notes.py": {
@@ -6460,7 +7018,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   "dev/test_check_manifest.py": {
@@ -6494,7 +7057,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ],
    "sha256:3f73d9012f8cc2475f353724af92942d2c9a1713ad8b398f427dc38c7c90ac5e": [
     21,
@@ -6544,7 +7112,8 @@
     56,
     57,
     58,
-    59
+    59,
+    60
    ]
   },
   "openspec/changes/add-template-updates/README.md": {
@@ -6587,7 +7156,8 @@
     56,
     57,
     58,
-    59
+    59,
+    60
    ]
   },
   "openspec/changes/add-template-updates/design.md": {
@@ -6634,7 +7204,8 @@
     56,
     57,
     58,
-    59
+    59,
+    60
    ]
   },
   "openspec/changes/add-template-updates/proposal.md": {
@@ -6676,7 +7247,8 @@
     56,
     57,
     58,
-    59
+    59,
+    60
    ],
    "sha256:dfa0e676c5bfc46715225184b3b7df510d3b316550aa72a419d816640cd5cdee": [
     17
@@ -6688,7 +7260,8 @@
     56,
     57,
     58,
-    59
+    59,
+    60
    ],
    "sha256:258bcdf5d050447206dd3e9040dd83dc816a913ca7356a17d3af53de91de505d": [
     37,
@@ -6775,7 +7348,8 @@
     56,
     57,
     58,
-    59
+    59,
+    60
    ]
   },
   "openspec/changes/add-template-updates/specs/template-adoption/spec.md": {
@@ -6817,7 +7391,8 @@
     56,
     57,
     58,
-    59
+    59,
+    60
    ],
    "sha256:95652ee18506457a50cafc6430f00953906cc66bbabf8611ac6ee2bdc55847ae": [
     17
@@ -6865,7 +7440,8 @@
     56,
     57,
     58,
-    59
+    59,
+    60
    ]
   },
   "openspec/changes/add-template-updates/specs/template-releases/spec.md": {
@@ -6908,7 +7484,8 @@
     56,
     57,
     58,
-    59
+    59,
+    60
    ]
   },
   "openspec/changes/add-template-updates/specs/template-upgrade/spec.md": {
@@ -6953,7 +7530,8 @@
     56,
     57,
     58,
-    59
+    59,
+    60
    ]
   },
   "openspec/changes/add-template-updates/tasks.md": {
@@ -7004,7 +7582,8 @@
     56,
     57,
     58,
-    59
+    59,
+    60
    ],
    "sha256:90ee490ba773f433b7711d72647f2cbe9526ab00849292a55a6106819ef950e4": [
     21
@@ -7057,7 +7636,100 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
+   ]
+  },
+  "openspec/changes/archive/2026-10-13-add-template-updates/.openspec.yaml": {
+   "sha256:010447270992e8e9533b7bbfb4dbdecda78eab560f05c50428c80463aa9e0ec1": [
+    61,
+    62,
+    63,
+    64
+   ]
+  },
+  "openspec/changes/archive/2026-10-13-add-template-updates/README.md": {
+   "sha256:8f8a2ffef8eab1f5c605b5a685e21067f40f6de93e42b62544e23e63b0b421a0": [
+    61,
+    62,
+    63,
+    64
+   ]
+  },
+  "openspec/changes/archive/2026-10-13-add-template-updates/design.md": {
+   "sha256:e2291770349b9acf6240536bbb8a14cf6845b4f98f760bb681d308947973ecae": [
+    61,
+    62,
+    63,
+    64
+   ]
+  },
+  "openspec/changes/archive/2026-10-13-add-template-updates/proposal.md": {
+   "sha256:1a98546022e102bef575c052ef044e57a3d42bcdf87f05d8e7fbe0f4f1b27a9b": [
+    61,
+    62,
+    63,
+    64
+   ]
+  },
+  "openspec/changes/archive/2026-10-13-add-template-updates/review.md": {
+   "sha256:16a81ee2e2023517e71a921e988a93b291a0e1cf4a59d5056da3820075f6be00": [
+    61,
+    62,
+    63,
+    64
+   ]
+  },
+  "openspec/changes/archive/2026-10-13-add-template-updates/specs/instance-stamp/spec.md": {
+   "sha256:c60df7cbd9dfb630bbb546e310c1044c081a8298b126a40b485c032ab50fe127": [
+    61,
+    62,
+    63,
+    64
+   ]
+  },
+  "openspec/changes/archive/2026-10-13-add-template-updates/specs/template-adoption/spec.md": {
+   "sha256:74077b9a789d6cee1624444b17e308867399e3c1224f54fc437dbccc8704e27b": [
+    61,
+    62,
+    63,
+    64
+   ]
+  },
+  "openspec/changes/archive/2026-10-13-add-template-updates/specs/template-manifest/spec.md": {
+   "sha256:eeb0190cd7644292c8b53d5fa9b796f1d8ff399043d414ca276328eb893be6a7": [
+    61,
+    62,
+    63,
+    64
+   ]
+  },
+  "openspec/changes/archive/2026-10-13-add-template-updates/specs/template-releases/spec.md": {
+   "sha256:434fa5944bd09a69d97ddbd5e725d62d6bc17978fe9c344d107927b2c44f8527": [
+    61,
+    62,
+    63,
+    64
+   ]
+  },
+  "openspec/changes/archive/2026-10-13-add-template-updates/specs/template-upgrade/spec.md": {
+   "sha256:b25e4fab4bae851072d03382d53f6fe9852ae5afc7dabd36560dbff5c52660ce": [
+    61,
+    62,
+    63,
+    64
+   ]
+  },
+  "openspec/changes/archive/2026-10-13-add-template-updates/tasks.md": {
+   "sha256:a5618a487d3bdd091e558d1e686eda9b4cac068901d3481c582827003fdf16f2": [
+    61,
+    62,
+    63,
+    64
    ]
   },
   "openspec/config.yaml": {
@@ -7100,7 +7772,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   "openspec/specs/.gitkeep": {
@@ -7143,7 +7820,52 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
+   ]
+  },
+  "openspec/specs/instance-stamp/spec.md": {
+   "sha256:1244cb90d1e1a887f34ed85d536297dfb15153ee557984486bef76edf3ca8909": [
+    61,
+    62,
+    63,
+    64
+   ]
+  },
+  "openspec/specs/template-adoption/spec.md": {
+   "sha256:351c1756106b9c0ebd30fa2637f4271ec20ad30d830cb376390180697b019bbe": [
+    61,
+    62,
+    63,
+    64
+   ]
+  },
+  "openspec/specs/template-manifest/spec.md": {
+   "sha256:2a9888e9f94b9b21f322d5327903a048fa9ed5971054c5c3b68e5abe832f1bd0": [
+    61,
+    62,
+    63,
+    64
+   ]
+  },
+  "openspec/specs/template-releases/spec.md": {
+   "sha256:9627c14bcd756a61dc22296fd9fcb1a2d6a5681fc032daf4ff2bf6a0c74eab47": [
+    61,
+    62,
+    63,
+    64
+   ]
+  },
+  "openspec/specs/template-upgrade/spec.md": {
+   "sha256:742c2efb8414d6503f84b2363474c0c2096551551a306fa09e8fe61415121cd7": [
+    61,
+    62,
+    63,
+    64
    ]
   },
   "package.json": {
@@ -7182,7 +7904,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ],
    "sha256:c37a11ca8f08cc8e9d3b54f14bf3d92de77f3e328835b639d85e9fcbe9e8ac5a": [
     0,
@@ -7273,7 +8000,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   "schema.yml": {
@@ -7337,7 +8069,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   "tests/run_skill_tests.py": {
@@ -7347,7 +8084,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   },
   "tests/run_tests.py": {
@@ -7421,7 +8163,12 @@
     56,
     57,
     58,
-    59
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
    ]
   }
  },
@@ -7433,7 +8180,8 @@
    "date": "2026-06-16",
    "in": [
     "0.1.0",
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7442,7 +8190,8 @@
    "date": "2026-06-16",
    "in": [
     "0.1.0",
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7451,7 +8200,8 @@
    "date": "2026-06-16",
    "in": [
     "0.1.0",
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7460,7 +8210,8 @@
    "date": "2026-07-05",
    "in": [
     "0.1.0",
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7469,7 +8220,8 @@
    "date": "2026-06-25",
    "in": [
     "0.1.0",
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7478,7 +8230,8 @@
    "date": "2026-07-05",
    "in": [
     "0.1.0",
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7487,7 +8240,8 @@
    "date": "2026-07-05",
    "in": [
     "0.1.0",
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7496,7 +8250,8 @@
    "date": "2026-07-07",
    "in": [
     "0.1.0",
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7505,7 +8260,8 @@
    "date": "2026-07-09",
    "in": [
     "0.1.0",
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7514,7 +8270,8 @@
    "date": "2026-07-13",
    "in": [
     "0.1.0",
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7523,7 +8280,8 @@
    "date": "2026-07-13",
    "in": [
     "0.1.0",
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": "0.1.0"
   },
@@ -7531,7 +8289,8 @@
    "commit": "cf89f8b65b7e4f309da2d66e3d763c019df18669",
    "date": "2026-07-23",
    "in": [
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7539,7 +8298,8 @@
    "commit": "578485d6e79a9f1889e6d8889526a8eb22c79711",
    "date": "2026-07-20",
    "in": [
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7547,7 +8307,8 @@
    "commit": "fa7c23848096f722d0cde97a70b7c21a97f0274d",
    "date": "2026-07-24",
    "in": [
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7555,7 +8316,8 @@
    "commit": "5cc542d8db0bf96c1b9abbd3761fc9f5d8e4c59d",
    "date": "2026-08-07",
    "in": [
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7563,7 +8325,8 @@
    "commit": "8f34952c507def094a450d7176a479c88bc01c9f",
    "date": "2026-10-13",
    "in": [
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7571,7 +8334,8 @@
    "commit": "a7905e6d8b13f1906635832e6739e15f038f12fe",
    "date": "2026-10-13",
    "in": [
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7579,7 +8343,8 @@
    "commit": "f4e7edefd3e05cdf5cbf646961dbeac35a375ef1",
    "date": "2026-10-13",
    "in": [
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7587,7 +8352,8 @@
    "commit": "cec6faec970daea4dfe53c92ba23836d260935f6",
    "date": "2026-10-13",
    "in": [
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7595,7 +8361,8 @@
    "commit": "cb9ff5eab526bbcbd3d64e8fa99f425e959da9b8",
    "date": "2026-10-13",
    "in": [
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7603,7 +8370,8 @@
    "commit": "b2b617aea3fc0ecc1ea8419d98002af553b10347",
    "date": "2026-10-13",
    "in": [
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7611,7 +8379,8 @@
    "commit": "266626eeb8d927563ecbf2ae5444add7194e5aee",
    "date": "2026-10-13",
    "in": [
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7619,7 +8388,8 @@
    "commit": "501246707fe540d293c996cabec3a83aee2c01f5",
    "date": "2026-10-13",
    "in": [
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7627,7 +8397,8 @@
    "commit": "a5ea20034b20c5e774c23878e8b98affb69518ec",
    "date": "2026-10-13",
    "in": [
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7635,7 +8406,8 @@
    "commit": "2b640a8befd04495580eafb2ef038a70691f7e56",
    "date": "2026-10-13",
    "in": [
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7643,7 +8415,8 @@
    "commit": "e3e9372ef505283d834594ff44efa8042205264b",
    "date": "2026-10-13",
    "in": [
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7651,7 +8424,8 @@
    "commit": "28b468106892486116d38da0751ab821dea3968d",
    "date": "2026-10-13",
    "in": [
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7659,7 +8433,8 @@
    "commit": "01a96958ab8a066dd3d4b38ee95c49cf6b6df97a",
    "date": "2026-10-13",
    "in": [
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7667,7 +8442,8 @@
    "commit": "0c7eb097997fc440c06493cee0d4aa807f11e3f5",
    "date": "2026-10-13",
    "in": [
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7675,7 +8451,8 @@
    "commit": "cc42d672b08b424026fc7e960b8662aa7000b256",
    "date": "2026-10-13",
    "in": [
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7683,7 +8460,8 @@
    "commit": "76916e3b881ba276562902402336a9c2d9675e44",
    "date": "2026-10-13",
    "in": [
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7691,7 +8469,8 @@
    "commit": "9e6cbeeaf7ea522c0f2a6fe4fa044eed3a4bab02",
    "date": "2026-10-13",
    "in": [
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7699,7 +8478,8 @@
    "commit": "ea6eba5feb9d53361e5cd597c17d708b5870c43e",
    "date": "2026-10-13",
    "in": [
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7707,7 +8487,8 @@
    "commit": "1a46734f7945e73167b33173d9683d0f73cf19d6",
    "date": "2026-10-13",
    "in": [
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7715,7 +8496,8 @@
    "commit": "f4fbbc23ba161c8bb7a921964276461c67c2f109",
    "date": "2026-10-13",
    "in": [
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7723,7 +8505,8 @@
    "commit": "5f8802ef78cfb73f2b23b9f60833873737bee125",
    "date": "2026-10-13",
    "in": [
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7731,7 +8514,8 @@
    "commit": "59d4c190829c3607c67d874ba7d1c7e91b3505b0",
    "date": "2026-10-13",
    "in": [
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7739,7 +8523,8 @@
    "commit": "de6a073eba4b917bcc45a74d0d45dfd8974afe11",
    "date": "2026-10-13",
    "in": [
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7747,7 +8532,8 @@
    "commit": "025c35445602b57150170402a6e717f74efda6cc",
    "date": "2026-10-13",
    "in": [
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7755,7 +8541,8 @@
    "commit": "b9ad8d6843d49ad421dd68fe7b959b2c7b052f7a",
    "date": "2026-10-13",
    "in": [
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7763,7 +8550,8 @@
    "commit": "d15fd75030ed92a4fa809c77064ea1c472612b21",
    "date": "2026-10-13",
    "in": [
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7771,7 +8559,8 @@
    "commit": "e41fff17a214e8b16fa33ffc18d42ec6ad3a684d",
    "date": "2026-10-13",
    "in": [
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7779,7 +8568,8 @@
    "commit": "8efe5f8cbab777d4e22ef0dc319849da446caec8",
    "date": "2026-10-13",
    "in": [
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7787,7 +8577,8 @@
    "commit": "8221a3575030d8926054d2df91535073a0f5ad24",
    "date": "2026-10-13",
    "in": [
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7795,7 +8586,8 @@
    "commit": "9b81b24e5472f58d353d88d2a09c8cb3c1cab0d4",
    "date": "2026-10-13",
    "in": [
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7803,7 +8595,8 @@
    "commit": "5764ae6ea3d99e679122b31606b1ed1706a6a6e5",
    "date": "2026-10-13",
    "in": [
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7811,7 +8604,8 @@
    "commit": "604c2ad4f79fa1c529a2cf72f3a3e41fec6dddca",
    "date": "2026-10-13",
    "in": [
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7819,7 +8613,8 @@
    "commit": "1876d5ceb9f4a13c61db3261f0f82d0124b3860e",
    "date": "2026-10-13",
    "in": [
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7827,7 +8622,8 @@
    "commit": "0d24af3a08a18683ef1dd6b0cd0911ea2075483d",
    "date": "2026-10-13",
    "in": [
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7835,7 +8631,8 @@
    "commit": "06a997bf9b3dcb19e070f95b1f5d5bee48ba3db1",
    "date": "2026-10-13",
    "in": [
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7843,7 +8640,8 @@
    "commit": "bfdee078012902d352da313c6e3a1f1e6e7f8ae5",
    "date": "2026-10-13",
    "in": [
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7851,7 +8649,8 @@
    "commit": "da6cad9cb86d05b2155c7fb3dd6b3b393aa03e80",
    "date": "2026-10-13",
    "in": [
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7859,7 +8658,8 @@
    "commit": "4244ea82e34822587f6578dbe896c2bf1e3c14c3",
    "date": "2026-10-13",
    "in": [
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7867,7 +8667,8 @@
    "commit": "26a668ec576a09bbdc824406d85962440ca69c90",
    "date": "2026-10-13",
    "in": [
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7875,7 +8676,8 @@
    "commit": "4971b62e445de335ccc9c1b1726d0930928a15a8",
    "date": "2026-10-13",
    "in": [
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7883,7 +8685,8 @@
    "commit": "47ea6735fa8d7f9fccaee2ffc778a96ef6826179",
    "date": "2026-10-13",
    "in": [
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7891,7 +8694,8 @@
    "commit": "a9e2d4c131833c010a8acdba3bcf8b4ea4bcc1e3",
    "date": "2026-10-13",
    "in": [
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7899,7 +8703,8 @@
    "commit": "8f08b423a2cb2b9eff4a44cb362de06dbef7910d",
    "date": "2026-10-13",
    "in": [
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
    ],
    "release": null
   },
@@ -7907,17 +8712,60 @@
    "commit": "367ac4add62e86119d06b2f3f7bbabb8e42dce0d",
    "date": "2026-10-13",
    "in": [
-    "0.2.0"
+    "0.2.0",
+    "0.2.1"
+   ],
+   "release": null
+  },
+  {
+   "commit": "bbc1e5563af8023969acc2033713d12907a163a1",
+   "date": "2026-10-13",
+   "in": [
+    "0.2.0",
+    "0.2.1"
+   ],
+   "release": null
+  },
+  {
+   "commit": "00111a9555b1207d04e98cbdbdbff8cd5a20a25a",
+   "date": "2026-10-13",
+   "in": [
+    "0.2.0",
+    "0.2.1"
+   ],
+   "release": "0.2.0"
+  },
+  {
+   "commit": "7bdcfcf14f1b66d01c98efc101267dc095f92b8d",
+   "date": "2026-10-13",
+   "in": [
+    "0.2.1"
+   ],
+   "release": null
+  },
+  {
+   "commit": "7db1df8e5babb8e94b5fcbc34ee934275209d627",
+   "date": "2026-10-15",
+   "in": [
+    "0.2.1"
+   ],
+   "release": null
+  },
+  {
+   "commit": "909d26a81f58583e33851a727bd6a3010d79f89b",
+   "date": "2026-10-15",
+   "in": [
+    "0.2.1"
    ],
    "release": null
   },
   {
    "commit": null,
-   "date": "2026-10-13",
+   "date": "2026-10-15",
    "in": [
-    "0.2.0"
+    "0.2.1"
    ],
-   "release": "0.2.0"
+   "release": "0.2.1"
   }
  ]
 }
