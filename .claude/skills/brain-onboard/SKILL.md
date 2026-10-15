@@ -41,7 +41,9 @@ Collect, in order:
 
 Probe and print a ✅/⚠️ table:
 - `python --version` (required for reindex/lint/render).
-- `yt-dlp --version` (optional — only for YouTube ingest).
+- `yt-dlp --version`, and when that fails `python -m yt_dlp --version` (optional — only
+  for YouTube ingest; either one passing is ✅, because `yt_fetch.py` falls back to the
+  module when the executable is missing or blocked).
 - `ffmpeg -version` (optional — Whisper fallback).
 Warn on missing; do not abort.
 

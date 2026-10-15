@@ -21,7 +21,7 @@ Skipped entirely for files-only invocations.
 
 1. Validate args. Any token matching `^https?://(www\.|m\.)?(youtube\.com|youtu\.be)/` is a YT URL. Any non-empty argument that doesn't match aborts the whole call with a clear error before any work begins.
 2. Verify prerequisites:
-   - `yt-dlp` on PATH (required) — if missing, abort the whole call with install hint.
+   - `yt-dlp` (required). Don't pre-check it with `which`: `yt_fetch.py` finds it itself, trying `$YT_DLP_CMD`, then a `yt-dlp` on PATH that actually starts, then `python -m yt_dlp`. If the script exits 3 with `yt-dlp not found`, abort the whole call with the install hint (`pip install yt-dlp`).
    - `ffmpeg` on PATH (needed only for Whisper fallback).
    - `$WHISPER_CPP_BIN` + `$WHISPER_MODEL` env vars (needed only for Whisper fallback).
 3. For each URL, run:
@@ -136,7 +136,7 @@ If the checklist fails, surface the discrepancy and offer to fix before reportin
 | Failure | Behavior |
 |---|---|
 | Argument is non-empty but not a YT URL | Abort whole `/b:ingest` call before Phase 0; report bad arg. |
-| `yt-dlp` not on PATH | Abort whole call with install hint. |
+| `yt-dlp` not found (`yt_fetch.py` exits 3: `yt-dlp not found`) | Abort whole call with install hint. |
 | Video unavailable / private / removed | Skip that URL, continue rest. Final report flags it. |
 | No captions AND Whisper fallback fails | Skip that URL. Final report names which step failed. |
 | Captions 429 / per-language failure | `yt_fetch.py` iterates languages individually with 15s back-off retry on HTTP 429, so a rate-limited or missing language no longer aborts the whole captions step. |
@@ -146,7 +146,7 @@ If the checklist fails, surface the discrepancy and offer to fix before reportin
 
 ## Prerequisites
 
-- `yt-dlp` on PATH — required for any YT URL.
+- `yt-dlp` — required for any YT URL. `pip install yt-dlp` is enough: when the `yt-dlp` executable is missing or won't start, `yt_fetch.py` runs `python -m yt_dlp` with the interpreter it runs under. That covers Windows Smart App Control, which blocks pip's unsigned `yt-dlp.exe` but lets the signed `python.exe` run. To force a specific command, set `$YT_DLP_CMD` (for example `"C:\Program Files\yt-dlp\yt-dlp.exe"`; double-quote paths with spaces). It is used as given, without the start-up check.
 - `ffmpeg` on PATH — required only when captions are unavailable (Whisper fallback).
 - `$WHISPER_CPP_BIN` + `$WHISPER_MODEL` env vars — required only for Whisper fallback. Default model: `ggml-large-v3.bin`.
 

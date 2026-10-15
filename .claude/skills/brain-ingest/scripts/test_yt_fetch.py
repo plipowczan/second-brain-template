@@ -144,19 +144,125 @@ class TestAssembleSource(unittest.TestCase):
         self.assertIn("- { start: 120, title: \"Main\" }", out)
 
 
-import shutil
+import os
+import sys
+from unittest import mock
+import yt_fetch
 from yt_fetch import yt_dlp_available, fetch_metadata, fetch_captions_vtt, YTFetchError
 
 
-YT_DLP = shutil.which("yt-dlp")
+def _never(*_args):
+    raise AssertionError("must not be called")
 
 
-class TestYtDlpProbes(unittest.TestCase):
-    def test_availability_helper(self):
-        self.assertEqual(yt_dlp_available(), YT_DLP is not None)
+class TestResolveYtDlpCmd(unittest.TestCase):
+    """Which command runs yt-dlp: $YT_DLP_CMD, a working exe on PATH, or python -m yt_dlp."""
+
+    def resolve(self, env=None, exe=None, starts=_never, has_module=False):
+        return yt_fetch.resolve_yt_dlp_cmd(
+            env or {}, which=lambda name: exe, starts=starts, has_module=lambda: has_module,
+        )
+
+    def test_env_override_wins_without_probing(self):
+        self.assertEqual(
+            self.resolve(env={"YT_DLP_CMD": "my-yt-dlp --flag"}, exe="/bin/yt-dlp"),
+            ("my-yt-dlp", "--flag"),
+        )
+
+    def test_env_override_keeps_quoted_path_with_spaces(self):
+        cmd = '"C:\\Program Files\\Python\\python.exe" -m yt_dlp'
+        self.assertEqual(
+            self.resolve(env={"YT_DLP_CMD": cmd}),
+            ("C:\\Program Files\\Python\\python.exe", "-m", "yt_dlp"),
+        )
+
+    def test_blank_env_override_is_ignored(self):
+        self.assertIsNone(self.resolve(env={"YT_DLP_CMD": "  "}))
+
+    def test_exe_on_path_that_starts(self):
+        self.assertEqual(self.resolve(exe="/bin/yt-dlp", starts=lambda cmd: True), ("/bin/yt-dlp",))
+
+    def test_blocked_exe_falls_back_to_module(self):
+        # Windows Smart App Control blocks pip's unsigned yt-dlp.exe; python.exe is signed.
+        self.assertEqual(
+            self.resolve(exe="C:\\Scripts\\yt-dlp.exe", starts=lambda cmd: False, has_module=True),
+            (sys.executable, "-m", "yt_dlp"),
+        )
+
+    def test_module_when_no_exe(self):
+        self.assertEqual(self.resolve(has_module=True), (sys.executable, "-m", "yt_dlp"))
+
+    def test_none_when_nothing_found(self):
+        self.assertIsNone(self.resolve(exe="/bin/yt-dlp", starts=lambda cmd: False))
 
 
-@unittest.skipUnless(YT_DLP, "yt-dlp not on PATH")
+class TestCommandStarts(unittest.TestCase):
+    def test_true_for_command_that_exits_zero(self):
+        self.assertTrue(yt_fetch._starts([sys.executable]))  # runs `python --version`
+
+    def test_false_for_missing_binary(self):
+        missing = os.path.join(tempfile.gettempdir(), "no-such-yt-dlp.exe")
+        self.assertFalse(yt_fetch._starts([missing]))
+
+    def test_false_for_nonzero_exit(self):
+        self.assertFalse(yt_fetch._starts([sys.executable, "-c", "raise SystemExit(1)"]))
+
+
+FAKE_YT_DLP = '''\
+import json, sys
+args = sys.argv[1:]
+if "--dump-single-json" in args:
+    print(json.dumps({"id": "abc12345678", "argv": args}))
+elif "--write-subs" in args:
+    out = args[args.index("-o") + 1]
+    with open(out + ".en.vtt", "w", encoding="utf-8") as f:
+        f.write("WEBVTT\\n\\n00:00:00.000 --> 00:00:01.000\\nhi\\n")
+'''
+
+
+class TestYtDlpCommandWiring(unittest.TestCase):
+    """The fetch functions run the resolved command, not a hardcoded `yt-dlp`."""
+
+    URL = "https://youtu.be/abc12345678"
+
+    def setUp(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        fake = Path(tmp.name) / "fake_yt_dlp.py"
+        fake.write_text(FAKE_YT_DLP, encoding="utf-8")
+        env = mock.patch.dict(os.environ, {"YT_DLP_CMD": f'"{sys.executable}" "{fake}"'})
+        env.start()
+        self.addCleanup(env.stop)
+        yt_fetch.yt_dlp_cmd.cache_clear()
+        self.addCleanup(yt_fetch.yt_dlp_cmd.cache_clear)
+
+    def test_fetch_metadata_runs_resolved_command(self):
+        meta = fetch_metadata(self.URL)
+        self.assertEqual(meta["video_id"], "abc12345678")
+        self.assertIn("--dump-single-json", meta["argv"])
+
+    def test_fetch_captions_runs_resolved_command(self):
+        self.assertTrue(fetch_captions_vtt(self.URL, langs=("en",)).startswith("WEBVTT"))
+
+    def test_command_is_resolved_once_per_process(self):
+        first = yt_fetch.yt_dlp_cmd()
+        os.environ["YT_DLP_CMD"] = "something-else"
+        self.assertEqual(yt_fetch.yt_dlp_cmd(), first)
+
+
+class TestYtDlpMissing(unittest.TestCase):
+    def test_fetch_metadata_names_the_install(self):
+        with mock.patch.object(yt_fetch, "yt_dlp_cmd", return_value=None):
+            with self.assertRaisesRegex(YTFetchError, "pip install yt-dlp"):
+                fetch_metadata("https://youtu.be/abc12345678")
+
+    def test_whisper_audio_names_the_install(self):
+        with mock.patch.object(yt_fetch, "yt_dlp_cmd", return_value=None):
+            with self.assertRaisesRegex(YTFetchError, "pip install yt-dlp"):
+                yt_fetch.transcribe_with_whisper("https://youtu.be/abc12345678")
+
+
+@unittest.skipUnless(yt_dlp_available(), "yt-dlp not available (pip install yt-dlp)")
 class TestYtDlpIntegration(unittest.TestCase):
     URL = "https://www.youtube.com/watch?v=jNQXAC9IVRw"  # "Me at the zoo" — has en captions
 

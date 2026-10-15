@@ -123,7 +123,9 @@ latest release of the template and follow its
 - **Python 3** with **PyYAML** — required for the reindex and lint scripts
   (`pip install -r requirements.txt`).
 - **Node** — optional, only for `npm run format` (Prettier).
-- **yt-dlp** (+ **ffmpeg**) on PATH — optional, only for ingesting YouTube URLs.
+- **yt-dlp** — optional, only for ingesting YouTube URLs. `pip install yt-dlp` is
+  enough; the `yt-dlp` command doesn't have to be on PATH. **ffmpeg** on PATH is needed
+  only for the Whisper fallback, for videos without captions.
 
 ## Adding publishing later
 
