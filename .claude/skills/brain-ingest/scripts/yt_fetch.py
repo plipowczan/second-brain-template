@@ -196,6 +196,12 @@ def _yt_dlp() -> list[str]:
     return list(cmd)
 
 
+def _cannot_start(cmd: list[str], err: OSError) -> str:
+    """Message for a yt-dlp command that does not start (a bad YT_DLP_CMD is not probed)."""
+    return (f"yt-dlp not found: {cmd[0]} cannot start ({err}); "
+            "fix YT_DLP_CMD, or run `pip install yt-dlp`")
+
+
 def _client_args(player_client: str | None) -> list[str]:
     """Return yt-dlp extractor-args for an alternate player client, or []."""
     if not player_client:
@@ -216,6 +222,8 @@ def fetch_metadata(url: str, timeout: int = 60, player_client: str | None = None
         raise YTFetchError(f"yt-dlp metadata failed: {e.stderr.strip()[:500]}") from e
     except subprocess.TimeoutExpired as e:
         raise YTFetchError(f"yt-dlp metadata timed out after {timeout}s") from e
+    except OSError as e:
+        raise YTFetchError(_cannot_start(yt_dlp, e)) from e
     data = json.loads(proc.stdout)
     # Normalize: ensure `video_id` key exists
     data["video_id"] = data.get("id", "")
@@ -233,12 +241,14 @@ def _try_one_lang(url: str, lang: str, out_template: str, timeout: int, retries:
     """Try to fetch subs for a single language. Returns True on success, False on hard failure.
 
     Retries on HTTP 429 with short backoff; treats "no subs for this lang" as a soft miss (False).
+    A yt-dlp command that cannot start raises YTFetchError: no other language would fare better.
     """
+    yt_dlp = _yt_dlp()
     for attempt in range(retries + 1):
         try:
             subprocess.run(
                 [
-                    *_yt_dlp(), "--write-subs", "--write-auto-subs",
+                    *yt_dlp, "--write-subs", "--write-auto-subs",
                     "--sub-langs", lang, "--sub-format", "vtt",
                     "--skip-download", "--no-warnings",
                     *_client_args(player_client),
@@ -256,6 +266,8 @@ def _try_one_lang(url: str, lang: str, out_template: str, timeout: int, retries:
             return False
         except subprocess.TimeoutExpired:
             return False
+        except OSError as e:
+            raise YTFetchError(_cannot_start(yt_dlp, e)) from e
     return False
 
 
@@ -398,6 +410,8 @@ def transcribe_with_whisper(url: str, timeout: int = 1800) -> list[VttCue]:
             )
         except subprocess.CalledProcessError as e:
             raise YTFetchError(f"yt-dlp audio failed: {e.stderr.strip()[:500]}") from e
+        except OSError as e:
+            raise YTFetchError(_cannot_start(yt_dlp, e)) from e
 
         if not Path(audio).exists():
             raise YTFetchError("yt-dlp produced no audio.wav")

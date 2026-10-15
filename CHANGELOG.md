@@ -21,9 +21,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
   and the Whisper audio download all use that command. When none is found, the script
   exits 3 with `yt-dlp not found` and the install hint (`pip install yt-dlp`, or set
   `YT_DLP_CMD`), and `/b:ingest` stops with that hint; it no longer pre-checks `yt-dlp`
-  with `which`. A
-  working `yt-dlp` on PATH is still preferred, so nothing changes where ingest already
-  worked. The `/b:onboard` prerequisite check also accepts `python -m yt_dlp`, and the
+  with `which`. A `$YT_DLP_CMD` that cannot start fails the same way, naming the command,
+  instead of with a traceback. A working `yt-dlp` on PATH is still preferred, so nothing
+  changes where ingest already worked. The `/b:onboard` prerequisite check also accepts `python -m yt_dlp`, and the
   README and the test notes no longer say yt-dlp has to be on PATH.
 
   Existing bases: pick it up with `/b:upgrade`, which updates the `brain-ingest` skill
