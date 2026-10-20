@@ -53,14 +53,22 @@ jobs:
               sys.stdout.reconfigure(encoding="utf-8")
           data = json.loads(pathlib.Path("lint-report.json").read_text(encoding="utf-8"))
           counts = {k: v for k, v in data.get("counts", {}).items() if v}
+          # Classes the scanner names in `warnings` are advisory: listed apart, never issues.
+          advisory = set(data.get("warnings", []))
+          issues = {k: v for k, v in counts.items() if k not in advisory}
+          warnings = {k: v for k, v in counts.items() if k in advisory}
           print("## Vault health\n")
           print(f"- **{data.get('total', 0)} notes** scanned")
-          if counts:
+          if issues:
               print("- Issues:")
-              for k, v in sorted(counts.items(), key=lambda kv: -kv[1]):
+              for k, v in sorted(issues.items(), key=lambda kv: -kv[1]):
                   print(f"  - `{k}`: {v}")
           else:
               print("- No issues found. ✅")
+          if warnings:
+              print("- Warnings:")
+              for k, v in sorted(warnings.items(), key=lambda kv: -kv[1]):
+                  print(f"  - `{k}`: {v}")
           PY
 
       - name: Upload lint report

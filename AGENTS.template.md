@@ -79,6 +79,10 @@ You may also run the deterministic rebuild: `python .claude/skills/brain-reindex
 **Read `content/WRITING_STYLE.md` before writing content.** Core rules live there
 (voice, headings, wikilink conventions, Resources section).
 
+## Limits
+
+**Read `LIMITS.md` before telling {{KB_OWNER}} that the base is sure of anything** — it says where this method fails and what to do.
+
 ## Frontmatter
 
 ```yaml
@@ -90,7 +94,7 @@ openToc: true
 tags: ["tag1", "tag2"]
 type: {{NOTE_TYPES}}
 # Optional agent fields:
-source: "_raw/inbox/filename.md"
+sources: ["_raw/processed/YYYY-MM-DD_filename.md"]  # or source: "<one value>"; URLs and descriptions allowed
 agent-created: true
 agent-reviewed: YYYY-MM-DD
 summary: "One-line description for indexes"

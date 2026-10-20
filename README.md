@@ -104,11 +104,11 @@ latest release of the template and follow its
 | Command | What it does |
 |---------|--------------|
 | `/b:onboard` | Interview + scaffold a fresh knowledge base from the template (personalizes the brain, creates topics, builds indexes). |
-| `/b:ingest` | Turn raw sources (files in `_raw/inbox/`, or YouTube URLs) into wiki notes; updates indexes. |
+| `/b:ingest` | Turn raw sources (files in `_raw/inbox/`, or YouTube URLs) into wiki notes: shows its plan first, updates every note a source is about, marks contradictions instead of overwriting; updates indexes. `--batch` skips the plan. |
 | `/b:compile` | Synthesize a new article from existing notes on a topic. |
 | `/b:enhance` | Improve a single note: fill gaps, add wikilinks, mark reviewed. |
-| `/b:qa` | Answer a question from the vault, citing notes. |
-| `/b:lint` | Audit vault health: frontmatter, broken links, orphans, stubs, stale notes. |
+| `/b:qa` | Answer a question from the vault, citing notes; saves substantive answers with what they rest on and what the vault could not answer (`--no-save` to skip). |
+| `/b:lint` | Audit vault health: frontmatter, broken links, orphans, stubs, stale notes, source paths that lead nowhere, open contradictions; ends with what to fix first. |
 | `/b:output` | Generate a report/summary (reading list, topic map, timeline). |
 | `/b:reindex` | Rebuild `vault-map.md`, `catalog.md`, `graph.md` from all notes. |
 | `/b:refactor` | Rename/move/merge/split notes with automatic wikilink repair. |
@@ -132,6 +132,13 @@ latest release of the template and follow its
 This template omits the Quartz static-site pipeline and the optional `brain-mcp`
 server on purpose. Either can be layered on top of `content/` later without
 changing how the skills work.
+
+## Acknowledgements
+
+The ingest plan, the contradiction callouts, saved answers with their gaps and
+[`LIMITS.md`](LIMITS.md) were inspired by
+[super-brain](https://github.com/superhero-tech/super-brain) by Wojtek Strzałkowski and
+Piotr Kacała (AI Product Heroes, MIT). The text and code here are our own.
 
 ## License
 
