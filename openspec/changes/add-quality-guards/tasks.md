@@ -137,17 +137,17 @@ part of this change.
   `README.md`); the lint warnings for stale source paths, with fixes; `--batch` and
   `--no-save` for non-interactive runs; the credit to super-brain. Verify that
   `python dev/check_manifest.py` passes (no repeated section heading).
-- [ ] 8.2 Run `python tests/run_tests.py` and `python tests/run_skill_tests.py`. Verify
+- [x] 8.2 Run `python tests/run_tests.py` and `python tests/run_skill_tests.py`. Verify
   `ALL PASS` and exit 0, with every skip listed and explained.
-- [ ] 8.3 Run the two workflow commands from the repo root (CONTRIBUTING step 4). Verify
+- [x] 8.3 Run the two workflow commands from the repo root (CONTRIBUTING step 4). Verify
   that `git diff content/_indexes` shows only `updated:` lines, then restore the indexes.
-- [ ] 8.4 Walk through ingest in a scratch base: `git clone . ../kb-quality-test`,
+- [x] 8.4 Walk through ingest in a scratch base: `git clone . ../kb-quality-test`,
   `/b:onboard` there with test answers, two inbox files (one contradicting the example
   note), then `/b:ingest`. Verify one message with the plan, notes with `sources:`
   pointing at existing `_raw/processed/` files, a `> [!contradiction]` marker, and a
   report that lists every changed note. Then run `/b:ingest --batch` on one file: the
   warning comes first and no question is asked.
-- [ ] 8.5 In the same scratch base, verify the following. A substantive `/b:qa` is saved
+- [x] 8.5 In the same scratch base, verify the following. A substantive `/b:qa` is saved
   with a basis section, a gaps section and a matching `gaps:`. A one-line lookup is not
   saved, and the skill says so. `/b:qa --no-save` writes nothing. `/b:lint` below 10
   notes says it is too early. After notes are added to reach 10, the report has a
