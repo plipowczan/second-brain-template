@@ -10,70 +10,70 @@ part of this change.
 
 ## 1. Scanner: source fields and missing source files
 
-- [ ] 1.1 In `lint_scan.py`, collect source values from `source` and `sources`, written as
+- [x] 1.1 In `lint_scan.py`, collect source values from `source` and `sources`, written as
   a scalar, a block list or a flow list, with quotes stripped (design D8). Verify with
   unit tests in `test_lint_scan.py` for each form, and that URLs, wikilinks and free text
   are not treated as paths.
-- [ ] 1.2 Add the `missing_source_file` class: `_raw/` and `content/_raw/` values resolved
+- [x] 1.2 Add the `missing_source_file` class: `_raw/` and `content/_raw/` values resolved
   against the content root; for `_raw/inbox/<name>`, `fix=` when exactly one
   `_raw/processed/*_<name>` exists, `candidates=` when several do, a plain finding when
   none does. Verify with unit tests for one copy, two copies, no copy, an existing path
   (no finding), a `content/_raw/` value, and a missing YouTube archive path (plain
   finding).
-- [ ] 1.3 Add the top-level `warnings` list to the scanner output. Verify with unit tests
+- [x] 1.3 Add the top-level `warnings` list to the scanner output. Verify with unit tests
   that `total`, `issues` and `counts` keep their existing keys, and that a note valid
   under `0.2.1` with `source:` pointing at an existing file yields no finding in any class.
-- [ ] 1.4 Add the `CHANGELOG.md` entry (`Added`, `Fixed` for the stale-path detection).
+- [x] 1.4 Add the `CHANGELOG.md` entry (`Added`: both classes and the warnings list).
   Verify that `python -m unittest` in `.claude/skills/brain-lint/scripts/` passes.
 
 ## 2. Scanner: contradiction markers, and warnings downstream
 
-- [ ] 2.1 Add the `contradiction` class (design D7): one finding per note with its marker
+- [x] 2.1 Add the `contradiction` class (design D7): one finding per note with its marker
   count, case-insensitive, markers inside fenced code blocks ignored, and the class
   included in `warnings`. Verify with unit tests for two markers (count 2), an uppercase
   type, a marker that appears only in a code block (no finding), and a note without
   markers.
-- [ ] 2.2 In `.github/workflows/kb-maintain.yml`, print the classes named in `warnings`
+- [x] 2.2 In `.github/workflows/kb-maintain.yml`, print the classes named in `warnings`
   under a "Warnings" heading, apart from "Issues". Verify by running the summary snippet
   locally on a scanner report that has both kinds. Then run `build_indexes.py` and
   `lint_scan.py` from the repo root and check that `git diff content/_indexes` shows only
   `updated:` lines.
-- [ ] 2.3 Extend `tests/run_tests.py`: a throwaway-vault note citing a missing
+- [x] 2.3 Extend `tests/run_tests.py`: a throwaway-vault note citing a missing
   `_raw/inbox/` file with one archived copy is reported with its `fix=`, `warnings` names
   both new classes, and `missing_frontmatter` and `schema_violation` stay at 0, so the
   unchanged pre-commit hook would let the commit through. Verify `ALL PASS`.
-- [ ] 2.4 Add the `CHANGELOG.md` entry for 2.1 and 2.2. Verify that
+- [x] 2.4 Add the `CHANGELOG.md` entry for 2.1 and 2.2. Verify that
   `python tests/run_skill_tests.py` exits 0.
 
 ## 3. Answer gaps in `gaps.py`
 
-- [ ] 3.1 Add `--answers` (default `content/_outputs/answers`) and the `answer_gaps` key
+- [x] 3.1 Add `--answers` (default `content/_outputs/answers`) and the `answer_gaps` key
   (design D9). Verify with unit tests in `test_gaps.py`: answers with `gaps: 2`, `gaps: 0`
   and no `gaps:` list only the first; ordering is newest first; a missing folder gives
   `[]`; the existing keys are unchanged.
-- [ ] 3.2 In `brain-gaps/SKILL.md`, add the answers with open gaps to the to-build list.
+- [x] 3.2 In `brain-gaps/SKILL.md`, add the answers with open gaps to the to-build list.
   Verify that the workflow step names `answer_gaps`, and that the gaps call in
   `tests/run_tests.py` still passes.
-- [ ] 3.3 Add the `CHANGELOG.md` entry. Verify that `python -m unittest` in
+- [x] 3.3 Add the `CHANGELOG.md` entry. Verify that `python -m unittest` in
   `.claude/skills/brain-gaps/scripts/` passes.
 
 ## 4. Limits file and instruction pointers
 
-- [ ] 4.1 Write `LIMITS.md` in our own words (design D2): the five failure modes from the
+- [x] 4.1 Write `LIMITS.md` in our own words (design D2): the five failure modes from the
   `method-limits` spec and the point that a tidy base is not a correct one, each with
   actions for the owner and for the agent. Verify that each failure mode is followed by
   at least one action.
-- [ ] 4.2 Add `LIMITS.md` to the owned list in `.kb-manifest.json`, and to the owned row
+- [x] 4.2 Add `LIMITS.md` to the owned list in `.kb-manifest.json`, and to the owned row
   of the "What ships" table in `CONTRIBUTING.md`. Verify that `python dev/check_manifest.py`
   passes and that the manifest classifies `LIMITS.md` as owned.
 - [ ] 4.3 Check delivery: in a scratch clone of the `v0.2.1` tag, run `upgrade.py plan`
   with this repository as the source and `--ref` set to the branch head. Verify that the
   plan lists `LIMITS.md` as an addition.
-- [ ] 4.4 In `AGENTS.template.md`, add the one-line pointer to `LIMITS.md` and change the
+- [x] 4.4 In `AGENTS.template.md`, add the one-line pointer to `LIMITS.md` and change the
   frontmatter example to `sources:` with a `_raw/processed/` path (design D1). Verify by
   rendering the file with `brain-onboard/scripts/render.py` and a temporary values file:
   the output mentions `LIMITS.md` and holds no unresolved `{{`.
-- [ ] 4.5 Add the `CHANGELOG.md` entry. Verify `ALL PASS`.
+- [x] 4.5 Add the `CHANGELOG.md` entry. Verify `ALL PASS`.
 
 ## 5. `brain-ingest`
 

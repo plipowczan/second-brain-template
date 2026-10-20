@@ -3,7 +3,10 @@
 ## Context
 
 See `proposal.md` for the reasons. The scope, and decisions D1 to D4 below, come from the
-maintainer's brief for PL-549 (2026-10-19). Facts checked on 2026-10-19 that shape the
+maintainer's brief for PL-549 (2026-10-19). The maintainer accepted this design on
+2026-10-20, confirming D4 (`Changed`, not BREAKING), the separate warnings in the
+`kb-maintain` summary (D8), the credit in `README.md` and `CHANGELOG.md` (D11), and
+clusters as separate notes in batch mode (D5). Facts checked on 2026-10-19 that shape the
 approach:
 
 - **How a change reaches a base.** `.kb-manifest.json` sorts files into classes.

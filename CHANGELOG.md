@@ -5,6 +5,47 @@ who have cloned the template and want to pull improvements into their own base.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are ISO (UTC).
 
+## [Unreleased]
+
+### Added
+- **Lint finds source paths that lead nowhere, and proposes the fix.** Until now nothing
+  checked the `source:` a note points to, and ingest left many of them pointing at
+  `_raw/inbox/` after it had archived the file. `lint_scan.py` now reads `source:` and
+  the new `sources:` list (a single value, a block list or `["a", "b"]`) and reports
+  every `_raw/` path that does not exist, in the new `missing_source_file` class. When a
+  missing `_raw/inbox/<name>` has exactly one archived copy `_raw/processed/<date>_<name>`,
+  the finding carries `fix=<that path>`, ready to paste; with several copies it lists
+  them as `candidates=` and proposes none. URLs, wikilinks and free-text sources such as
+  "Call with the vendor" are not paths and are skipped.
+- **Lint lists notes with open contradictions.** The new `contradiction` class names
+  every note that carries a `> [!contradiction]` callout, with the number of callouts.
+  Examples of the callout inside a code block do not count.
+- **Both new classes are warnings.** The scanner's JSON gains a `warnings` list naming
+  them. They do not block the optional pre-commit hook, which still blocks only on
+  missing frontmatter and schema violations, and the weekly `kb-maintain` summary lists
+  them under "Warnings", apart from "Issues". Every existing class and field of the
+  scanner's output is unchanged, so scripts that read it keep working.
+- **`/b:gaps` lists the questions your vault could not answer.** `gaps.py` gains
+  `answer_gaps`: every saved answer in `content/_outputs/answers/` whose `gaps:` count is
+  above zero, newest first, with its title, date and count (`--answers DIR` points it
+  elsewhere). The `brain-gaps` skill adds them to its to-build list. Answers saved before
+  this release have no `gaps:` field and are skipped.
+- **`LIMITS.md`: where this method fails, and what to do about it.** A new file in the
+  root of your base names five failure modes and, for each, what you and the agent do:
+  errors that compound when answers are filed back into notes, citations that look like
+  proof, the context ceiling, the cost of every operation, and the whole base being one
+  model's reading of your sources. It ends with the reminder that a tidy base is not a
+  correct one. `/b:qa` and `/b:lint` read it before they say the base is sure of
+  anything. It is a template file: upgrades keep it current and keep your own additions.
+
+### Changed
+- **`AGENTS.md` points to `LIMITS.md` and shows `sources:`.** The instruction template
+  gets a short "Limits" section, and its frontmatter example now shows
+  `sources: ["_raw/processed/YYYY-MM-DD_filename.md"]` instead of an inbox path: the old
+  example is where many stale `_raw/inbox/` source paths came from. Only new bases and
+  bases that re-render an unedited `AGENTS.md` get this. Every rule it points to also
+  lives in the skills, so an edited `AGENTS.md` misses nothing.
+
 ## [0.2.1] - 2026-10-15
 
 ### Fixed

@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 """Vault health scanner. Walks content/ topic folders, parses frontmatter, reports
 issues. If a schema.yml is present in the working directory, the allowed types are
-its keys and each type's `required` fields are enforced (schema_violation)."""
+its keys and each type's `required` fields are enforced (schema_violation).
+
+The classes named in WARNINGS (also printed as the report's `warnings` list) are
+advisory: a `_raw/` source path that does not exist, and contradiction callouts left
+for the owner to resolve. They never block a commit."""
 import os
 import re
 import sys
@@ -15,6 +19,9 @@ EXCLUDE_FILES = {"WRITING_STYLE.md", "WRITING_STYLE_ANALYSIS.md", "_index.md"}
 DEFAULT_TYPES = {"basic-note", "book-note", "knowledge-note", "tool",
                  "compiled-note", "answer-note", "quote", "quote-note", "dailyjournal"}
 TODAY = date.today()
+WARNINGS = ["missing_source_file", "contradiction"]
+CONTRADICTION = re.compile(r'^\s*>\s*\[!contradiction\]', re.I)
+FENCE = re.compile(r'^\s*(```|~~~)')
 
 
 def parse_fm(text):
@@ -79,6 +86,95 @@ def schema_violations(fm, ntype, schema):
     return [field for field in spec.get("required", []) if not fm.get(field)]
 
 
+def _unquote(value):
+    value = value.strip()
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
+        return value[1:-1]
+    return value
+
+
+def _flow_items(raw):
+    """Items of a flow-style YAML list (`["a", "b"]`); a plain scalar is one item."""
+    raw = raw.strip()
+    if not (raw.startswith("[") and raw.endswith("]")):
+        return [raw]
+    items, cur, quote = [], "", None
+    for ch in raw[1:-1]:
+        if quote:
+            cur += ch
+            if ch == quote:
+                quote = None
+        elif ch in "\"'":
+            quote = ch
+            cur += ch
+        elif ch == ",":
+            items.append(cur)
+            cur = ""
+        else:
+            cur += ch
+    items.append(cur)
+    return [i.strip() for i in items if i.strip()]
+
+
+def source_values(fm):
+    """Values of `source` and `sources`, written as a scalar, a block list or a flow list."""
+    out = []
+    for key in ("source", "sources"):
+        val = fm.get(key)
+        if not val:
+            continue
+        items = val if isinstance(val, list) else _flow_items(val)
+        out.extend(v for v in (_unquote(i) for i in items) if v)
+    return out
+
+
+def missing_sources(fm, root, processed_cache):
+    """One detail string per `_raw/` source path that does not exist under root. URLs,
+    wikilinks and free-text sources are not paths and are skipped. For a missing
+    `_raw/inbox/<name>`, archived copies `_raw/processed/*_<name>` are offered as the fix."""
+    out = []
+    for value in source_values(fm):
+        norm = value.replace("\\", "/")
+        prefix = "content/" if norm.startswith("content/") else ""
+        rel = norm[len(prefix):]
+        if not rel.startswith("_raw/"):
+            continue
+        if os.path.exists(os.path.join(root, *rel.split("/"))):
+            continue
+        detail = f"source={value}"
+        if rel.startswith("_raw/inbox/"):
+            if "names" not in processed_cache:
+                proc = os.path.join(root, "_raw", "processed")
+                processed_cache["names"] = sorted(
+                    f for f in os.listdir(proc)
+                    if os.path.isfile(os.path.join(proc, f))) if os.path.isdir(proc) else []
+            name = rel.rsplit("/", 1)[1]
+            found = [f"{prefix}_raw/processed/{f}" for f in processed_cache["names"]
+                     if f.endswith("_" + name)]
+            if len(found) == 1:
+                detail += f", fix={found[0]}"
+            elif found:
+                detail += ", candidates=" + "|".join(found)
+        out.append(detail)
+    return out
+
+
+def contradiction_count(body):
+    """Number of `> [!contradiction]` callouts, ignoring fenced code blocks."""
+    count, fence = 0, None
+    for line in body.splitlines():
+        m = FENCE.match(line)
+        if m:
+            if fence is None:
+                fence = m.group(1)
+            elif m.group(1) == fence:
+                fence = None
+            continue
+        if fence is None and CONTRADICTION.match(line):
+            count += 1
+    return count
+
+
 def scan(root=ROOT, schema=None):
     schema = schema or {}
     allowed = set(schema) if schema else set(DEFAULT_TYPES)
@@ -110,11 +206,16 @@ def scan(root=ROOT, schema=None):
 
     keys = ["missing_frontmatter", "missing_title", "missing_date", "missing_tags",
             "missing_type", "missing_summary", "bad_type", "stub", "todo", "stale",
-            "title_filename_mismatch", "schema_violation"]
+            "title_filename_mismatch", "schema_violation"] + WARNINGS
     issues = {k: [] for k in keys}
+    processed_cache = {}
 
     for n in notes:
         fm, p, body = n["fm"], n["path"], n["body"]
+        markers = contradiction_count(body)
+        if markers:
+            issues["contradiction"].append(
+                f"{p} ({markers} marker{'' if markers == 1 else 's'})")
         if not n["has_fm"]:
             issues["missing_frontmatter"].append(p)
             continue
@@ -155,9 +256,12 @@ def scan(root=ROOT, schema=None):
             missing = schema_violations(fm, t, schema)
             if missing:
                 issues["schema_violation"].append(f"{p} (type={t} missing={','.join(missing)})")
+        for detail in missing_sources(fm, root, processed_cache):
+            issues["missing_source_file"].append(f"{p} ({detail})")
 
     return {"total": len(notes), "issues": issues,
-            "counts": {k: len(v) for k, v in issues.items()}}
+            "counts": {k: len(v) for k, v in issues.items()},
+            "warnings": list(WARNINGS)}
 
 
 def main():
