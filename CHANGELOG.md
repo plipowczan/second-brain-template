@@ -29,12 +29,14 @@ present, add `--batch` or `--no-save` (see below).
 - **Lint finds source paths that lead nowhere, and proposes the fix.** Until now nothing
   checked the `source:` a note points to, and ingest left many of them pointing at
   `_raw/inbox/` after it had archived the file. `lint_scan.py` now reads `source:` and
-  the new `sources:` list (a single value, a block list or `["a", "b"]`, with or without
-  a trailing `# comment`) and reports every `_raw/` path that does not exist, in the new
-  `missing_source_file` class. When a missing `_raw/inbox/<name>` has exactly one
-  archived copy `_raw/processed/<date>_<name>`, the finding carries `fix=<that path>`,
-  ready to paste; with several copies it lists them as `candidates=` and proposes none. URLs, wikilinks and free-text sources such as
-  "Call with the vendor" are not paths and are skipped.
+  the new `sources:` list (a single value, a block list or `["a", "b"]`, on one line or
+  several, with or without `# comments`) and reports every `_raw/` path that does not
+  exist, in the new `missing_source_file` class. When a missing `_raw/inbox/<name>` has
+  exactly one archived copy `_raw/processed/<date>_<name>`, the finding carries
+  `fix=<that path>`, ready to paste; with several copies (a copy ingest numbered because
+  the name was taken, such as `2026-10-20_talk-2.md`, counts) it lists them as
+  `candidates=` and proposes none. URLs, wikilinks and free-text sources such as "Call
+  with the vendor" are not paths and are skipped.
 - **Lint lists notes with open contradictions.** The new `contradiction` class names
   every note that carries a `> [!contradiction]` callout, with the number of callouts.
   Examples of the callout inside a code block do not count, also in a block opened with

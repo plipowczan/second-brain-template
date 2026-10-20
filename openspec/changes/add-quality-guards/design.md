@@ -182,12 +182,14 @@ to letter case, outside fenced code blocks. It reports `"<path> (<n> markers)"` 
 ### D8. Source checks and the warning list
 
 - **Reading.** The scanner collects values from `source` and `sources`, whether written
-  as a scalar, a block list or a flow list. A small flow-list reader is added: the
-  current parser keeps `["a", "b"]` as a raw string. It strips quotes. Only values that
+  as a scalar, a block list or a flow list, on one line or several. A small flow-list
+  reader is added: the current parser keeps `["a", "b"]` as a raw string. It strips quotes. Only values that
   start with `_raw/` or `content/_raw/` are checked, against the content root. URLs
   (`scheme://`), wikilinks and free text are skipped.
 - **Fix.** For `_raw/inbox/<name>`, it globs `_raw/processed/*_<name>` (top level, where
-  ingest archives). One match gives `fix=<path>`. Several give `candidates=<a>|<b>`. None
+  ingest archives), and also `*_<stem>-<n>.<ext>`, the name ingest gives an archive whose
+  name is taken, so a second copy never leaves the first looking unique. One match gives
+  `fix=<path>`. Several give `candidates=<a>|<b>`. None
   gives the plain finding. Class `missing_source_file`, strings such as
   `"content/T/X.md (source=_raw/inbox/talk.md, fix=_raw/processed/2026-07-02_talk.md)"`,
   one string per missing path.

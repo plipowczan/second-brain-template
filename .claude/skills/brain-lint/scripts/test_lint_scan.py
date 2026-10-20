@@ -94,6 +94,32 @@ class TestBlockStyleFrontmatter(unittest.TestCase):
         self.assertEqual(fm["title"], '"X"')
         self.assertEqual(fm["type"], "book-note")
 
+    def test_blank_and_comment_lines_do_not_end_a_block_list(self):
+        fm, _ = lint_scan.parse_fm(
+            '---\ntags:\n  - book\n\n  # older tag\n  - learning\ntype: book-note\n---\n')
+        self.assertEqual(fm["tags"], ["book", "learning"])
+        self.assertEqual(fm["type"], "book-note")
+        fm, _ = lint_scan.parse_fm('---\ntags:  # below\n\n- book\n---\n')
+        self.assertEqual(fm["tags"], ["book"])
+
+    def test_blank_line_after_a_scalar_still_ends_the_key(self):
+        fm, _ = lint_scan.parse_fm('---\ntitle: "X"\n\n  - stray\ntype: book-note\n---\n')
+        self.assertEqual(fm["title"], '"X"')
+        self.assertEqual(fm["type"], "book-note")
+
+    def test_multiline_flow_list_is_joined(self):
+        fm, _ = lint_scan.parse_fm(
+            '---\ntags: [\n  book,  # first\n\n  learning\n]\ntype: book-note\n---\n')
+        self.assertEqual(fm["tags"], "[ book, learning ]")
+        self.assertEqual(fm["type"], "book-note")
+
+    def test_unclosed_bracket_does_not_swallow_later_keys(self):
+        fm, _ = lint_scan.parse_fm(
+            '---\ntitle: [WIP Note\ndate: 2026-01-01\ntype: book-note\n---\n')
+        self.assertEqual(fm["title"], "[WIP Note")
+        self.assertEqual(fm["date"], "2026-01-01")
+        self.assertEqual(fm["type"], "book-note")
+
     def test_scan_does_not_flag_indentless_tags(self):
         with tempfile.TemporaryDirectory() as d:
             c = Path(d) / "content" / "T"
@@ -135,6 +161,20 @@ class TestSourceValues(unittest.TestCase):
             ["_raw/processed/a.md", "https://x.io/p"])
         self.assertEqual(
             self.values('---\nsources:  # list\n- _raw/a.md  # first\n- _raw/b.md\n---\n'),
+            ["_raw/a.md", "_raw/b.md"])
+
+    def test_multiline_flow_list(self):
+        self.assertEqual(
+            self.values('---\nsources: [  # two\n  "_raw/processed/a.md",\n\n'
+                        '  # the post\n  https://x.io/p#frag,\n]\ntype: tool\n---\n'),
+            ["_raw/processed/a.md", "https://x.io/p#frag"])
+        self.assertEqual(
+            self.values("---\nsources: [\n  'Call, [draft]',\n  _raw/a.md]\n---\n"),
+            ["Call, [draft]", "_raw/a.md"])
+
+    def test_block_list_with_blank_and_comment_lines(self):
+        self.assertEqual(
+            self.values('---\nsources:\n  - _raw/a.md\n\n  # later\n  - "_raw/b.md"\n---\n'),
             ["_raw/a.md", "_raw/b.md"])
 
     def test_flow_list_with_comma_inside_quotes(self):
@@ -201,6 +241,18 @@ class TestMissingSourceFile(unittest.TestCase):
                       "_raw/processed/2026-08-10_talk.md", finding)
         self.assertNotIn("fix=", finding)
 
+    def test_collision_suffixed_archive_is_a_candidate(self):
+        # Ingest archives a second talk.md of the same day as 2026-10-20_talk-2.md.
+        res = self.scan(['source: "_raw/inbox/talk.md"'],
+                        processed=["2026-10-20_talk.md", "2026-10-20_talk-2.md",
+                                   "2026-10-20_talk-final.md", "2026-10-20_talk-2.txt"])
+        [finding] = res["issues"]["missing_source_file"]
+        self.assertIn("candidates=_raw/processed/2026-10-20_talk-2.md|"
+                      "_raw/processed/2026-10-20_talk.md", finding)
+        self.assertNotIn("fix=", finding)
+        self.assertNotIn("talk-final", finding)
+        self.assertNotIn("talk-2.txt", finding)
+
     def test_no_copy_plain_finding(self):
         res = self.scan(['source: "_raw/inbox/talk.md"'], processed=["2026-07-02_other.md"])
         [finding] = res["issues"]["missing_source_file"]
@@ -245,6 +297,17 @@ class TestMissingSourceFile(unittest.TestCase):
         details = [f.split(" (", 1)[1] for f in res["issues"]["missing_source_file"]]
         self.assertEqual(sorted(details), [
             "source=_raw/inbox/talk.md, fix=_raw/processed/2026-07-02_talk.md)",
+            "source=_raw/processed/missing.md)"])
+
+    def test_multiline_and_interrupted_source_lists_are_checked(self):
+        res = self.scan(['sources: [', '  "_raw/processed/missing.md",', '  "_raw/inbox/talk.md"',
+                         ']', 'source:', '  - _raw/processed/ok.md', '', '  # second',
+                         '  - _raw/processed/gone.md'],
+                        processed=["2026-07-02_talk.md", "ok.md"])
+        details = [f.split(" (", 1)[1] for f in res["issues"]["missing_source_file"]]
+        self.assertEqual(sorted(details), [
+            "source=_raw/inbox/talk.md, fix=_raw/processed/2026-07-02_talk.md)",
+            "source=_raw/processed/gone.md)",
             "source=_raw/processed/missing.md)"])
 
     def test_one_finding_per_missing_path(self):

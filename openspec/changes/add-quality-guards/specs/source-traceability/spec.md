@@ -64,7 +64,8 @@ is not a `_raw/` path.
 ### Requirement: Lint proposes the fix for a moved inbox file
 
 For a missing `_raw/inbox/<name>` path, the scanner SHALL look for files in
-`_raw/processed/` whose names end in `_<name>`. When exactly one exists, the report SHALL
+`_raw/processed/` whose names end in `_<name>`, or in `_<stem>-<n>.<ext>`: the unique name
+ingest gives an archive whose name is taken. When exactly one exists, the report SHALL
 give its path as the replacement. When several exist, it SHALL list them all and propose
 none. When none exists, it SHALL report the missing path without a fix.
 
@@ -74,6 +75,10 @@ none. When none exists, it SHALL report the missing path without a fix.
 
 #### Scenario: Two archived copies
 - **WHEN** both `_raw/processed/2026-07-02_talk.md` and `_raw/processed/2026-08-10_talk.md` exist
+- **THEN** the report lists both paths and proposes no replacement
+
+#### Scenario: Copy archived under a numbered name
+- **WHEN** both `_raw/processed/2026-10-20_talk.md` and `_raw/processed/2026-10-20_talk-2.md` exist
 - **THEN** the report lists both paths and proposes no replacement
 
 ### Requirement: Missing source paths are a warning in this version

@@ -22,6 +22,7 @@ TODAY = date.today()
 WARNINGS = ["missing_source_file", "contradiction"]
 CONTRADICTION = re.compile(r'^\s*>\s*\[!contradiction\]', re.I)
 FENCE = re.compile(r'^\s*(`{3,}|~{3,})(.*)$')
+KEY = re.compile(r'^([A-Za-z0-9_-]+):\s*(.*)$')
 
 
 def parse_fm(text):
@@ -34,7 +35,18 @@ def parse_fm(text):
     body = text[end + 4:]
     fm = {}
     last_key = None
-    for line in fm_raw.splitlines():
+    lines = fm_raw.splitlines()
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        i += 1
+        if not line.strip() or line.lstrip().startswith("#"):
+            # YAML ignores blank and comment lines, so they do not end a block list. After
+            # a scalar value they end the key as before, so no scalar turns into a list.
+            cur = fm.get(last_key) if last_key is not None else None
+            if not (isinstance(cur, list) or (cur is not None and not _strip_comment(cur))):
+                last_key = None
+            continue
         item = re.match(r'^(\s*)-\s+(.*)$', line)
         if item and last_key is not None:
             cur = fm.get(last_key, "")
@@ -43,17 +55,47 @@ def parse_fm(text):
             # unindented item belongs to the key only when that key has no value yet.
             if item.group(1) or isinstance(cur, list) or not _strip_comment(cur):
                 if not isinstance(cur, list):
-                    cur = [] if cur in ("", None) else [cur]
+                    cur = [] if not _strip_comment(cur or "") else [cur]
                     fm[last_key] = cur
                 cur.append(item.group(2).strip())
                 continue
-        m = re.match(r'^([A-Za-z0-9_-]+):\s*(.*)$', line)
+        m = KEY.match(line)
         if m:
             fm[m.group(1)] = m.group(2).strip()
             last_key = m.group(1)
+            joined, used = _flow_continuation(m.group(2), lines[i:])
+            if used:
+                fm[m.group(1)] = joined
+                i += used
         else:
             last_key = None
     return fm, body
+
+
+def _flow_continuation(value, rest):
+    """A flow list that spans lines (`sources: [` ... `]`): return the list joined onto
+    one line, comments removed, and the number of following lines it took. Return
+    (None, 0) when the value opens no list, or when the list does not close before the
+    next unindented key, so a stray `[` never swallows the keys after it."""
+    parts = [_strip_comment(value)]
+    if not parts[0].startswith("[") or _flow_depth(parts[0]) <= 0:
+        return None, 0
+    for n, line in enumerate(rest, 1):
+        if re.match(r'^[A-Za-z0-9_-]+:(\s|$)', line):
+            return None, 0
+        parts.append(_strip_comment(line))
+        joined = " ".join(p for p in parts if p)
+        if _flow_depth(joined) <= 0:
+            return joined, n
+    return None, 0
+
+
+def _flow_depth(raw):
+    """Open `[` minus closing `]`, outside quoted strings."""
+    depth = 0
+    for _, ch in _unquoted(raw):
+        depth += (ch == "[") - (ch == "]")
+    return depth
 
 
 def get_date(fm):
@@ -167,7 +209,9 @@ def source_values(fm):
 def missing_sources(fm, root, processed_cache):
     """One detail string per `_raw/` source path that does not exist under root. URLs,
     wikilinks and free-text sources are not paths and are skipped. For a missing
-    `_raw/inbox/<name>`, archived copies `_raw/processed/*_<name>` are offered as the fix."""
+    `_raw/inbox/<name>`, archived copies `_raw/processed/*_<name>` are offered as the fix,
+    together with `*_<stem>-<n>.<ext>`, the name ingest gives an archive whose name is
+    taken: such a file means a second `<name>` went through the inbox."""
     out = []
     for value in source_values(fm):
         norm = value.replace("\\", "/")
@@ -185,8 +229,10 @@ def missing_sources(fm, root, processed_cache):
                     f for f in os.listdir(proc)
                     if os.path.isfile(os.path.join(proc, f))) if os.path.isdir(proc) else []
             name = rel.rsplit("/", 1)[1]
+            stem, ext = os.path.splitext(name)
+            copy = re.compile(r'_' + re.escape(stem) + r'(-\d+)?' + re.escape(ext) + r'$')
             found = [f"{prefix}_raw/processed/{f}" for f in processed_cache["names"]
-                     if f.endswith("_" + name)]
+                     if copy.search(f)]
             if len(found) == 1:
                 detail += f", fix={found[0]}"
             elif found:
