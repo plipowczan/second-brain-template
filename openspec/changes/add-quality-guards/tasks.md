@@ -153,5 +153,6 @@ part of this change.
   notes says it is too early. After notes are added to reach 10, the report has a
   warnings section, a fix-first list, and the caveat when it is clean. Delete the
   scratch base afterwards.
-- [ ] 8.6 Push, mark the PR ready, run `/ss:review-loop <PR> add-quality-guards`, and get
-  CI green on Linux and Windows. The merge is the maintainer's.
+- [x] 8.6 Push, mark the PR ready, run `/ss:review-loop <PR> add-quality-guards`, and get
+  CI green on Linux and Windows. The merge is the maintainer's: it is not part of this task
+  and stays open, with the sign-off issue, for the maintainer.
