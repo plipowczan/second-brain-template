@@ -7,6 +7,24 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
 
 ## [Unreleased]
 
+A quality package for what the agent writes into your base. Ingest now shows its plan
+before writing and updates every note a source touches. Contradictions are marked, not
+overwritten. Source paths can be checked, Q&A keeps its answers and their gaps, and a
+new `LIMITS.md` says where the method fails. The ideas came from
+[super-brain](https://github.com/superhero-tech/super-brain) by AI Product Heroes (MIT);
+the text and code are our own.
+
+Existing bases: run `/b:upgrade`. It brings the updated skills (`brain-ingest`,
+`brain-qa`, `brain-lint`, `brain-enhance`, `brain-compile`, `brain-gaps`,
+`brain-curate`), the scanners and their tests, the `kb-maintain` workflow, and the new
+`LIMITS.md`. It does not change your `AGENTS.md` unless the file is unedited and you ask
+for a re-render. Every rule also lives in the skills, so an edited `AGENTS.md` misses
+nothing. It never touches your note templates in `content/templates/`, your `README.md`
+or any note. After the upgrade, run `/b:lint`. Notes whose `source:` still points at
+`_raw/inbox/` show up as warnings, most of them with a ready `fix=` path. Fix them when
+it suits you; nothing is blocked. If you run `/b:ingest` or `/b:qa` without a person
+present, add `--batch` or `--no-save` (see below).
+
 ### Added
 - **Lint finds source paths that lead nowhere, and proposes the fix.** Until now nothing
   checked the `source:` a note points to, and ingest left many of them pointing at
@@ -39,12 +57,69 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
   anything. It is a template file: upgrades keep it current and keep your own additions.
 
 ### Changed
+- **`/b:ingest` shows its plan before it writes, and updates every note a source is
+  about.** Ingest used to write first and ask only about clusters. Now it reads every
+  source, maps it against your notes and sends one message per run. For each source it
+  gives what the source claims in one sentence, the notes it will create, the existing
+  notes it will add to and what each gains, and the claims in your base the source
+  contradicts. The cluster question comes in the same message, so ingest still asks at
+  most once. Reply OK, correct the reading or a note to leave alone, or cancel. A source
+  no longer turns into one summary note: it gets a main note, and every existing note it
+  adds to gets the new material, the source reference and a link to the main note and
+  back. The report lists every note each source touched, and says why when only one
+  changed. Contradictions are marked with a `> [!contradiction]` callout next to the
+  earlier claim, which is never overwritten: you decide which claim holds.
+  `/b:ingest --batch` skips the question, says up front that batch notes come out
+  thinner because nobody corrects the reading, and keeps clustered sources as separate
+  notes. **If you run ingest without a person present** (a script, `claude -p`), it now
+  stops at the plan and writes nothing: add `--batch` to such runs.
+- **`/b:qa` saves substantive answers by default, with what they rest on and what your
+  vault could not answer.** It used to offer to save, so most answers were lost when the
+  session ended, and with them the questions your notes could not answer. Every
+  substantive answer is now saved to `content/_outputs/answers/YYYY-MM-DD_<topic>.md`
+  (an `answer-note`, never overwriting an earlier one), and the skill tells you the path.
+  The note has a section listing the notes the answer rests on and marking what is
+  inference, and a section of gaps: each part of the question your vault could not
+  answer, including contradictions it could not resolve. The headings follow your
+  base's language, and the number of gaps goes in a `gaps:` field, which `/b:gaps`
+  reads. A one-line lookup is not saved, and the skill says so. When a note carries a
+  `> [!contradiction]` callout, the answer shows both claims. Before it says your vault
+  is sure of anything, the skill reads `LIMITS.md` and names the limits that apply.
+  Promoting an answer with `/b:compile` or filing it back with `/b:enhance` is still
+  only offered. **To answer without writing,** pass `--no-save` or ask not to save. A
+  tool that queries your base without a person present should always pass `--no-save`,
+  or every question leaves a file behind.
+- **`/b:lint` says when it is too early, and every finding comes with a next step.**
+  Below 10 notes the skill says a lint would only find noise, gives the count and stops
+  without a report. Above that, every finding names the note and what to do: the edit or
+  the skill to run, such as the replacement for a stale source path. Warnings are
+  listed apart from issues, and the report ends with a "Fix first" list ordered by what
+  each fix unblocks. First come notes hidden from the other checks, then single fixes
+  that clear many findings, then the rest. A clean report now says that it means the
+  vault is in order, not that its content is true, and points to `LIMITS.md`.
+- **`/b:enhance` and `/b:compile` mark contradictions instead of smoothing them over.**
+  When material conflicts with what a note claims, both skills keep the earlier claim,
+  add a `> [!contradiction]` callout with both claims and their sources, and list it in
+  their summary. Enhance leaves an existing callout alone until you decide which claim
+  holds. Both record raw source files in `source:` or `sources:`, and `/b:curate` reads
+  tool URLs from either field.
 - **`AGENTS.md` points to `LIMITS.md` and shows `sources:`.** The instruction template
   gets a short "Limits" section, and its frontmatter example now shows
   `sources: ["_raw/processed/YYYY-MM-DD_filename.md"]` instead of an inbox path: the old
   example is where many stale `_raw/inbox/` source paths came from. Only new bases and
   bases that re-render an unedited `AGENTS.md` get this. Every rule it points to also
   lives in the skills, so an edited `AGENTS.md` misses nothing.
+
+### Fixed
+- **Ingest records where the source file really ends up.** Ingest moved each inbox file
+  to `_raw/processed/YYYY-MM-DD_<name>` but left the note's `source:` pointing at
+  `_raw/inbox/<name>`. It corrected the path only for YouTube, so for files the reference
+  led nowhere. Ingest now chooses the archive name first (with `-2`, `-3` when the name
+  is taken) and writes that path into every note the source touches. A note that gains a
+  second source gets a `sources:` list, with its earlier `source:` first. Before
+  reporting, ingest checks that every path it wrote exists. Paths written by earlier
+  versions are not rewritten: `/b:lint` lists them, with the fix where one archived copy
+  exists.
 
 ## [0.2.1] - 2026-10-15
 

@@ -66,7 +66,7 @@ part of this change.
 - [x] 4.2 Add `LIMITS.md` to the owned list in `.kb-manifest.json`, and to the owned row
   of the "What ships" table in `CONTRIBUTING.md`. Verify that `python dev/check_manifest.py`
   passes and that the manifest classifies `LIMITS.md` as owned.
-- [ ] 4.3 Check delivery: in a scratch clone of the `v0.2.1` tag, run `upgrade.py plan`
+- [x] 4.3 Check delivery: in a scratch clone of the `v0.2.1` tag, run `upgrade.py plan`
   with this repository as the source and `--ref` set to the branch head. Verify that the
   plan lists `LIMITS.md` as an addition.
 - [x] 4.4 In `AGENTS.template.md`, add the one-line pointer to `LIMITS.md` and change the
@@ -77,29 +77,29 @@ part of this change.
 
 ## 5. `brain-ingest`
 
-- [ ] 5.1 Phase 0: accept `--batch` next to YouTube URLs, and keep aborting on any other
+- [x] 5.1 Phase 0: accept `--batch` next to YouTube URLs, and keep aborting on any other
   argument. Update the failure table. Verify by reading the step against the `ingest-plan`
   spec requirement on the flag.
-- [ ] 5.2 Phase 1: read each source in full, build the coverage map (design D6), check it
+- [x] 5.2 Phase 1: read each source in full, build the coverage map (design D6), check it
   for contradictions, and send one message that holds the cluster options and one plan
   block per source; then wait. Cover cancellation and batch mode (the warning first,
   clusters as separate notes, no question). Verify by reading against every requirement
   of the `ingest-plan` spec.
-- [ ] 5.3 Phase 2: write the main note and the additions to existing notes, each with its
+- [x] 5.3 Phase 2: write the main note and the additions to existing notes, each with its
   source and a link in both directions; mark contradictions without overwriting; convert
   `source:` to `sources:` on a second source; choose the unique archive name before
   writing, and write the final `_raw/processed/` path for file sources. Verify by reading
   against the `ingest-coverage` and `source-traceability` specs and the writing rule of
   `contradiction-markers`.
-- [ ] 5.4 Phase 3: check that every `_raw/` path written exists, and report per source
+- [x] 5.4 Phase 3: check that every `_raw/` path written exists, and report per source
   the main note, every changed note, the markers added and, when only one note changed,
   why; batch runs end with the table. Verify by reading against the report requirements.
-- [ ] 5.5 Add the `CHANGELOG.md` entries (`Changed`: the plan before writing and
+- [x] 5.5 Add the `CHANGELOG.md` entries (`Changed`: the plan before writing and
   `--batch`; `Fixed`: the final source path for file sources). Verify `ALL PASS`.
 
 ## 6. `brain-qa`
 
-- [ ] 6.1 Rewrite steps 5 and 6: save substantive answers by default with the path stated;
+- [x] 6.1 Rewrite steps 5 and 6: save substantive answers by default with the path stated;
   do not save one-line lookups, and say so; `--no-save` or a request in words writes
   nothing and says so; on a name collision, a new name; a basis section and a gaps
   section in the base's language, and `gaps:` in the frontmatter; both sides of a
@@ -108,30 +108,30 @@ part of this change.
   `.claude/commands/b/qa.md` (mention `--no-save`). Verify by reading against the
   `answer-capture` spec, the Q&A requirement of `contradiction-markers`, and the
   certainty requirement of `method-limits`.
-- [ ] 6.2 Add the `CHANGELOG.md` entry (`Changed`: answers saved by default, with the
+- [x] 6.2 Add the `CHANGELOG.md` entry (`Changed`: answers saved by default, with the
   `--no-save` note for non-interactive callers). Verify `ALL PASS`.
 
 ## 7. Other skills and the product page
 
-- [ ] 7.1 `brain-lint/SKILL.md`: stop below 10 notes using the scanner's `total`; one note
+- [x] 7.1 `brain-lint/SKILL.md`: stop below 10 notes using the scanner's `total`; one note
   and one next step per finding; a warnings section for `missing_source_file` (with the
   fix) and `contradiction`; the fix-first list in the order of the `lint-report` spec;
   the clean-report caveat and the `LIMITS.md` rule; the scripts section names the new
   classes. Update the `description`. Verify by reading against the `lint-report` spec.
-- [ ] 7.2 `brain-enhance` and `brain-compile`: mark contradictions and never overwrite;
+- [x] 7.2 `brain-enhance` and `brain-compile`: mark contradictions and never overwrite;
   list markers in the report; enhance keeps a marker until the owner decides; raw-source
   citations go in `source:` or `sources:`. Verify by reading against the
   `contradiction-markers` spec.
-- [ ] 7.3 `brain-curate/SKILL.md`: read tool URLs from `source:` or `sources:`. Verify that
+- [x] 7.3 `brain-curate/SKILL.md`: read tool URLs from `source:` or `sources:`. Verify that
   the Phase 2 text names both fields.
-- [ ] 7.4 `README.md`: an "Acknowledgements" line crediting super-brain (MIT, link), and
+- [x] 7.4 `README.md`: an "Acknowledgements" line crediting super-brain (MIT, link), and
   updated `/b:ingest`, `/b:qa` and `/b:lint` rows in the skills table. Verify that the
   links resolve.
-- [ ] 7.5 Add the `CHANGELOG.md` entries for 7.1 to 7.3. Verify `ALL PASS`.
+- [x] 7.5 Add the `CHANGELOG.md` entries for 7.1 to 7.3. Verify `ALL PASS`.
 
 ## 8. Integration checks and review
 
-- [ ] 8.1 Finish the `[Unreleased]` entry: an "Existing bases" paragraph covering what
+- [x] 8.1 Finish the `[Unreleased]` entry: an "Existing bases" paragraph covering what
   `/b:upgrade` brings (skills, scripts, `LIMITS.md`, the workflow summary); what it does
   not bring (a rendered `AGENTS.md` unless unedited and re-rendered, `content/templates/`,
   `README.md`); the lint warnings for stale source paths, with fixes; `--batch` and
