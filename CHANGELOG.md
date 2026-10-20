@@ -37,7 +37,8 @@ present, add `--batch` or `--no-save` (see below).
   "Call with the vendor" are not paths and are skipped.
 - **Lint lists notes with open contradictions.** The new `contradiction` class names
   every note that carries a `> [!contradiction]` callout, with the number of callouts.
-  Examples of the callout inside a code block do not count.
+  Examples of the callout inside a code block do not count, also in a block opened with
+  four backticks to show triple-backtick Markdown.
 - **Both new classes are warnings.** The scanner's JSON gains a `warnings` list naming
   them. They do not block the optional pre-commit hook, which still blocks only on
   missing frontmatter and schema violations, and the weekly `kb-maintain` summary lists
@@ -111,6 +112,13 @@ present, add `--batch` or `--no-save` (see below).
   lives in the skills, so an edited `AGENTS.md` misses nothing.
 
 ### Fixed
+- **Lint reads lists written without indentation.** `lint_scan.py` read a YAML list only
+  when its items were indented (`tags:` then `  - book`). Items written at the start of
+  the line (`tags:` then `- book`) are valid YAML, what PyYAML writes, and how
+  `build_indexes.py` already read them, but the scanner saw an empty field: such a note
+  was reported for missing tags, or for a schema violation that blocks the optional
+  pre-commit hook, and its `sources:` list was never checked. Both forms are now read
+  the same way. A note can only lose findings from this.
 - **Ingest records where the source file really ends up.** Ingest moved each inbox file
   to `_raw/processed/YYYY-MM-DD_<name>` but left the note's `source:` pointing at
   `_raw/inbox/<name>`. It corrected the path only for YouTube, so for files the reference

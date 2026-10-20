@@ -82,6 +82,29 @@ class TestBlockStyleFrontmatter(unittest.TestCase):
             res = lint_scan.scan(str(Path(d) / "content"))
             self.assertEqual(res["issues"]["missing_tags"], [])
 
+    def test_parse_fm_collects_indentless_block_list(self):
+        # Valid YAML, and what PyYAML's default dump writes (build_indexes.py reads it).
+        fm, _ = lint_scan.parse_fm(
+            '---\ntitle: "X"\ntags:\n- book\n- learning\ntype: book-note\n---\nbody\n')
+        self.assertEqual(fm["tags"], ["book", "learning"])
+        self.assertEqual(fm["type"], "book-note")
+
+    def test_indentless_item_after_a_scalar_value_is_not_joined_to_it(self):
+        fm, _ = lint_scan.parse_fm('---\ntitle: "X"\n- stray\ntype: book-note\n---\n')
+        self.assertEqual(fm["title"], '"X"')
+        self.assertEqual(fm["type"], "book-note")
+
+    def test_scan_does_not_flag_indentless_tags(self):
+        with tempfile.TemporaryDirectory() as d:
+            c = Path(d) / "content" / "T"
+            c.mkdir(parents=True)
+            (c / "Block.md").write_text(
+                '---\ntitle: "Block"\ndate: 2026-01-01\ntype: book-note\n'
+                'tags:\n- book\n- learning\nsummary: "s"\n---\n# Block\n' + ("x " * 200),
+                encoding="utf-8")
+            res = lint_scan.scan(str(Path(d) / "content"))
+            self.assertEqual(res["issues"]["missing_tags"], [])
+
 
 def note(fm_lines, body="x " * 150):
     return "---\n" + "\n".join(fm_lines) + "\n---\n# N\n" + body
@@ -105,6 +128,14 @@ class TestSourceValues(unittest.TestCase):
         self.assertEqual(
             self.values('---\nsources:\n  - "_raw/processed/a.md"\n  - https://x.io/p\n---\n'),
             ["_raw/processed/a.md", "https://x.io/p"])
+
+    def test_indentless_block_list(self):
+        self.assertEqual(
+            self.values('---\nsources:\n- "_raw/processed/a.md"\n- https://x.io/p\n---\n'),
+            ["_raw/processed/a.md", "https://x.io/p"])
+        self.assertEqual(
+            self.values('---\nsources:  # list\n- _raw/a.md  # first\n- _raw/b.md\n---\n'),
+            ["_raw/a.md", "_raw/b.md"])
 
     def test_flow_list_with_comma_inside_quotes(self):
         self.assertEqual(
@@ -208,6 +239,14 @@ class TestMissingSourceFile(unittest.TestCase):
             "source=_raw/inbox/talk.md, fix=_raw/processed/2026-07-02_talk.md)",
             "source=_raw/processed/missing.md)"])
 
+    def test_indentless_source_list_is_checked(self):
+        res = self.scan(['sources:', '- _raw/processed/missing.md', '- "_raw/inbox/talk.md"'],
+                        processed=["2026-07-02_talk.md"])
+        details = [f.split(" (", 1)[1] for f in res["issues"]["missing_source_file"]]
+        self.assertEqual(sorted(details), [
+            "source=_raw/inbox/talk.md, fix=_raw/processed/2026-07-02_talk.md)",
+            "source=_raw/processed/missing.md)"])
+
     def test_one_finding_per_missing_path(self):
         res = self.scan(['sources: ["_raw/inbox/a.md", "_raw/inbox/b.md", "_raw/inbox/ok.md"]'],
                         existing=["_raw/inbox/ok.md"])
@@ -239,6 +278,19 @@ class TestContradiction(unittest.TestCase):
 
     def test_note_without_marker(self):
         res = self.scan("> [!note] Just a note\n")
+        self.assertEqual(res["issues"]["contradiction"], [])
+
+    def test_longer_fence_holds_shorter_fence_examples(self):
+        # A ```` block showing ``` Markdown: the inner ``` lines do not close it, and a
+        # real marker after the block is still counted.
+        res = self.scan("````markdown\n```\n> [!contradiction] Example\n> Earlier: a\n```\n"
+                        "> [!contradiction] Another example\n````\n\n"
+                        "> [!contradiction] Real\n> Earlier: a\n> New: b\n")
+        [finding] = res["issues"]["contradiction"]
+        self.assertTrue(finding.endswith("(1 marker)"))
+
+    def test_fence_closes_only_on_same_char_without_info(self):
+        res = self.scan("```markdown\n~~~\n```python\n> [!contradiction] Example\n```\n")
         self.assertEqual(res["issues"]["contradiction"], [])
 
 

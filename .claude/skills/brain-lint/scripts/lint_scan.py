@@ -21,7 +21,7 @@ DEFAULT_TYPES = {"basic-note", "book-note", "knowledge-note", "tool",
 TODAY = date.today()
 WARNINGS = ["missing_source_file", "contradiction"]
 CONTRADICTION = re.compile(r'^\s*>\s*\[!contradiction\]', re.I)
-FENCE = re.compile(r'^\s*(```|~~~)')
+FENCE = re.compile(r'^\s*(`{3,}|~{3,})(.*)$')
 
 
 def parse_fm(text):
@@ -35,15 +35,18 @@ def parse_fm(text):
     fm = {}
     last_key = None
     for line in fm_raw.splitlines():
-        item = re.match(r'^\s+-\s+(.*)$', line)
+        item = re.match(r'^(\s*)-\s+(.*)$', line)
         if item and last_key is not None:
-            # block-style YAML list item (e.g. `tags:` followed by `  - book`)
             cur = fm.get(last_key, "")
-            if not isinstance(cur, list):
-                cur = [] if cur in ("", None) else [cur]
-                fm[last_key] = cur
-            cur.append(item.group(1).strip())
-            continue
+            # Block-style YAML list item: `tags:` followed by `  - book`, or by `- book`
+            # without indentation (valid YAML, and what PyYAML's dump writes). An
+            # unindented item belongs to the key only when that key has no value yet.
+            if item.group(1) or isinstance(cur, list) or not _strip_comment(cur):
+                if not isinstance(cur, list):
+                    cur = [] if cur in ("", None) else [cur]
+                    fm[last_key] = cur
+                cur.append(item.group(2).strip())
+                continue
         m = re.match(r'^([A-Za-z0-9_-]+):\s*(.*)$', line)
         if m:
             fm[m.group(1)] = m.group(2).strip()
@@ -193,18 +196,21 @@ def missing_sources(fm, root, processed_cache):
 
 
 def contradiction_count(body):
-    """Number of `> [!contradiction]` callouts, ignoring fenced code blocks."""
+    """Number of `> [!contradiction]` callouts, ignoring fenced code blocks. As in
+    CommonMark, a fence closes only on a line of the same character, at least as long as
+    the opening run and with nothing after it, so a ```` block can show ``` examples."""
     count, fence = 0, None
     for line in body.splitlines():
         m = FENCE.match(line)
-        if m:
-            if fence is None:
+        if fence is None:
+            if m:
                 fence = m.group(1)
-            elif m.group(1) == fence:
-                fence = None
-            continue
-        if fence is None and CONTRADICTION.match(line):
-            count += 1
+                continue
+            if CONTRADICTION.match(line):
+                count += 1
+        elif (m and m.group(1)[0] == fence[0] and len(m.group(1)) >= len(fence)
+              and not m.group(2).strip()):
+            fence = None
     return count
 
 
