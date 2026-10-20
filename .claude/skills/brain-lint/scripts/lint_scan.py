@@ -89,8 +89,45 @@ def schema_violations(fm, ntype, schema):
 def _unquote(value):
     value = value.strip()
     if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
-        return value[1:-1]
+        inner = value[1:-1]
+        return inner.replace("''", "'") if value[0] == "'" else inner
     return value
+
+
+def _unquoted(raw):
+    """Yield (index, char) for each character of a YAML scalar or flow list that is not
+    inside a quoted string. A quote opens a string only where a scalar starts (at the
+    beginning, or after `[` or `,`), so the apostrophe in `Bob's call` stays literal."""
+    quote, at_start, i = None, True, 0
+    while i < len(raw):
+        ch = raw[i]
+        if quote:
+            if quote == '"' and ch == "\\":
+                i += 2
+                continue
+            if ch == quote:
+                if quote == "'" and raw[i + 1:i + 2] == "'":
+                    i += 2
+                    continue
+                quote = None
+        elif at_start and ch in "\"'":
+            quote, at_start = ch, False
+        else:
+            yield i, ch
+            if ch in "[,":
+                at_start = True
+            elif not ch.isspace():
+                at_start = False
+        i += 1
+
+
+def _strip_comment(raw):
+    """Drop a trailing YAML comment: a `#` at the start or after whitespace, outside a
+    quoted string. `https://x.io/a#b` keeps its fragment."""
+    for i, ch in _unquoted(raw):
+        if ch == "#" and (i == 0 or raw[i - 1].isspace()):
+            return raw[:i].strip()
+    return raw.strip()
 
 
 def _flow_items(raw):
@@ -98,32 +135,28 @@ def _flow_items(raw):
     raw = raw.strip()
     if not (raw.startswith("[") and raw.endswith("]")):
         return [raw]
-    items, cur, quote = [], "", None
-    for ch in raw[1:-1]:
-        if quote:
-            cur += ch
-            if ch == quote:
-                quote = None
-        elif ch in "\"'":
-            quote = ch
-            cur += ch
-        elif ch == ",":
-            items.append(cur)
-            cur = ""
-        else:
-            cur += ch
-    items.append(cur)
+    inner = raw[1:-1]
+    items, last = [], 0
+    for i, ch in _unquoted(inner):
+        if ch == ",":
+            items.append(inner[last:i])
+            last = i + 1
+    items.append(inner[last:])
     return [i.strip() for i in items if i.strip()]
 
 
 def source_values(fm):
-    """Values of `source` and `sources`, written as a scalar, a block list or a flow list."""
+    """Values of `source` and `sources`, written as a scalar, a block list or a flow list,
+    with trailing YAML comments removed."""
     out = []
     for key in ("source", "sources"):
         val = fm.get(key)
         if not val:
             continue
-        items = val if isinstance(val, list) else _flow_items(val)
+        if isinstance(val, list):
+            items = [_strip_comment(i) for i in val]
+        else:
+            items = _flow_items(_strip_comment(val))
         out.extend(v for v in (_unquote(i) for i in items) if v)
     return out
 

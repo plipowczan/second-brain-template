@@ -116,6 +116,31 @@ class TestSourceValues(unittest.TestCase):
             self.values("---\nsource: _raw/a.md\nsources: [_raw/b.md]\n---\n"),
             ["_raw/a.md", "_raw/b.md"])
 
+    def test_trailing_comments_are_removed(self):
+        # The AGENTS.template.md frontmatter example writes a commented flow list.
+        self.assertEqual(
+            self.values('---\nsources: ["_raw/processed/a.md"]  # or source: "<one>"\n---\n'),
+            ["_raw/processed/a.md"])
+        self.assertEqual(self.values('---\nsource: "_raw/inbox/a.md" # moved\n---\n'),
+                         ["_raw/inbox/a.md"])
+        self.assertEqual(self.values("---\nsource: _raw/inbox/a.md # moved\n---\n"),
+                         ["_raw/inbox/a.md"])
+        self.assertEqual(
+            self.values('---\nsources:  # list\n  - "_raw/a.md"  # first\n  - _raw/b.md\n---\n'),
+            ["_raw/a.md", "_raw/b.md"])
+        self.assertEqual(self.values("---\nsource: # none yet\n---\n"), [])
+
+    def test_hash_that_is_not_a_comment_is_kept(self):
+        self.assertEqual(
+            self.values("---\nsources: [\"_raw/a #1.md\", https://x.io/p#frag, 'Q&A #2']\n---\n"),
+            ["_raw/a #1.md", "https://x.io/p#frag", "Q&A #2"])
+
+    def test_apostrophe_inside_plain_scalar(self):
+        self.assertEqual(
+            self.values("---\nsources: [Bob's call, _raw/a.md]  # two\n---\n"),
+            ["Bob's call", "_raw/a.md"])
+        self.assertEqual(self.values("---\nsource: 'Bob''s call'\n---\n"), ["Bob's call"])
+
 
 class TestMissingSourceFile(unittest.TestCase):
     def scan(self, fm_extra, processed=(), existing=()):
@@ -173,6 +198,15 @@ class TestMissingSourceFile(unittest.TestCase):
         res = self.scan(['sources:', '  - "https://example.com/post"', '  - "[[Other Note]]"',
                          '  - "Call with the vendor"'])
         self.assertEqual(res["issues"]["missing_source_file"], [])
+
+    def test_commented_source_fields_are_checked(self):
+        res = self.scan(['sources: ["_raw/processed/missing.md"]  # source archive',
+                         'source: "_raw/inbox/talk.md" # moved'],
+                        processed=["2026-07-02_talk.md"])
+        details = [f.split(" (", 1)[1] for f in res["issues"]["missing_source_file"]]
+        self.assertEqual(sorted(details), [
+            "source=_raw/inbox/talk.md, fix=_raw/processed/2026-07-02_talk.md)",
+            "source=_raw/processed/missing.md)"])
 
     def test_one_finding_per_missing_path(self):
         res = self.scan(['sources: ["_raw/inbox/a.md", "_raw/inbox/b.md", "_raw/inbox/ok.md"]'],
