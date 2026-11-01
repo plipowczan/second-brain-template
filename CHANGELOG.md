@@ -5,6 +5,38 @@ who have cloned the template and want to pull improvements into their own base.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are ISO (UTC).
 
+## [Unreleased]
+
+### Fixed
+- **YouTube ingest finds the captions of videos with dubbed audio.** A video with dubbed
+  audio tracks has an auto-caption transcript per dub, and yt-dlp lists every one of
+  them, machine-translated, under the plain language code. Asking for `en` downloaded the
+  last of those: for one video, its Ukrainian dub translated back into English. YouTube
+  usually refuses such translations with `HTTP 429`, and every other language failed the
+  same way, so `/b:ingest` stopped with `No captions and whisper.cpp not configured`
+  although English captions existed. `yt_fetch.py` now picks the languages from the
+  video's metadata. For each preferred language (`en`, `en-US`, `en-GB`, `pl`) it takes
+  manual subtitles first, then the original-language transcript (`en-orig`), then the
+  plain code as before. The video's own original language (`de-orig` for a German video)
+  is tried last when none of those matched. Videos with only plain `en` captions are
+  fetched as before.
+
+  Existing bases: pick it up with `/b:upgrade`, which updates the `brain-ingest` skill
+  (`scripts/yt_fetch.py` and its tests). Nothing else is needed.
+- **YouTube transcripts no longer repeat every line.** Auto-captions roll: each caption
+  shows the previous line again above the new one. `yt_fetch.py` joined both, so the
+  archived transcript of an auto-captioned video had every line two or three times
+  (`[0:01] A`, `[0:01] A B`, `[0:03] B`, …). It now keeps each line once, at the time it
+  starts. Two smaller faults in the same parser are fixed too: HTML entities are decoded
+  (`S&amp;P` is now `S&P`), and a line that opens a caption block, such as the first line
+  of the video, gets its own start time instead of the time it ends. Manual subtitles
+  come out as before.
+
+  Existing bases: `/b:upgrade` brings the fix (the same files as above). Transcripts
+  already in `content/_raw/processed/` keep their repeated lines; the notes written from
+  them are not affected. For a clean copy, re-run `yt_fetch.py <url> --out-dir <a temp
+  folder>` and replace the transcript below the archive's frontmatter.
+
 ## [0.2.1] - 2026-10-15
 
 ### Fixed
