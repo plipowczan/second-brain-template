@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Tests for dev/check_manifest.py. Run: python -m unittest -v (from dev/)."""
 
+import json
 import re
 import shutil
 import subprocess
@@ -19,6 +20,8 @@ def git(cwd, *args):
 
 
 class CheckManifestTest(unittest.TestCase):
+    HOOK = ".githooks/pre-commit"
+
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.repo = Path(self.tmp.name) / "copy"
@@ -33,6 +36,8 @@ class CheckManifestTest(unittest.TestCase):
                 shutil.copyfile(src, dst)
         git(self.repo, "init", "-q")
         git(self.repo, "add", "-A")
+        # A copy lost the modes, and on Windows `git add` never had them.
+        git(self.repo, "update-index", "--chmod=+x", "--", self.HOOK)
 
     def tearDown(self):
         self.tmp.cleanup()
@@ -74,6 +79,28 @@ class CheckManifestTest(unittest.TestCase):
         self.assertEqual(r.returncode, 1)
         self.assertIn("version:", r.stdout)
         self.assertIn('package.json: remove the "version" field', r.stdout)
+
+    def test_listed_but_not_tracked_as_executable(self):
+        git(self.repo, "update-index", "--chmod=-x", "--", self.HOOK)
+        r = self.check()
+        self.assertEqual(r.returncode, 1)
+        self.assertIn(f"executable: {self.HOOK} is listed", r.stdout)
+        self.assertIn("--chmod=+x", r.stdout)
+
+    def test_tracked_as_executable_but_not_listed(self):
+        git(self.repo, "update-index", "--chmod=+x", "--", "schema.yml")
+        r = self.check()
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("executable: schema.yml is tracked as executable but not listed", r.stdout)
+
+    def test_listed_path_that_is_not_tracked(self):
+        man = self.repo / ".kb-manifest.json"
+        data = json.loads(man.read_text(encoding="utf-8"))
+        data["executable"].append(".githooks/gone")
+        man.write_text(json.dumps(data), encoding="utf-8")
+        r = self.check()
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("executable: .githooks/gone is listed", r.stdout)
 
 
 if __name__ == "__main__":

@@ -154,14 +154,39 @@ class RerenderTest(ApplyCase):
         self.assertEqual(entry["output_hash"], kt.content_hash(text.encode()))
         self.assertEqual(entry["template_hash"], kt.content_hash(self.NEW.encode()))
 
+    def not_breaking(self):
+        return fx.changelog("0.3.0", "0.2.0").replace("**BREAKING: change in 0.3.0**", "a change")
+
     def test_not_requested_is_not_written(self):
         before = (self.base / "AGENTS.md").read_bytes()
-        self.plan({"AGENTS.template.md": self.NEW})
+        self.plan({"AGENTS.template.md": self.NEW, "CHANGELOG.md": self.not_breaking()})
         code, out, err = self.apply()
         self.assertEqual(code, 0, err)
         self.assertEqual((self.base / "AGENTS.md").read_bytes(), before)
         self.assertNotEqual(self.stamp()["rendered"]["AGENTS.md"]["template_hash"],
                             kt.content_hash(self.NEW.encode()))
+
+    def test_breaking_release_rewrites_agents_and_leaves_the_rest(self):
+        style = (self.base / kt.WRITING_STYLE).read_bytes()
+        claude = (self.base / "CLAUDE.md").read_bytes()
+        self.plan({"AGENTS.template.md": self.NEW, "CLAUDE.template.md": "@AGENTS.md\n\nnew\n",
+                   "content/WRITING_STYLE.template.md": "Language: {{PRIMARY_LANGUAGE}}\n\nnew\n"})
+        notes = self.content()
+        code, out, err = self.apply()
+        self.assertEqual(code, 0, err)
+        self.assertIn("New section.", (self.base / "AGENTS.md").read_text(encoding="utf-8"))
+        self.assertEqual((self.base / kt.WRITING_STYLE).read_bytes(), style)
+        self.assertEqual((self.base / "CLAUDE.md").read_bytes(), claude)
+        self.assertEqual(self.content(), notes)
+        self.assertEqual(self.stamp()["rendered"]["AGENTS.md"]["template_hash"],
+                         kt.content_hash(self.NEW.encode()))
+
+    def test_breaking_release_owner_declines(self):
+        before = (self.base / "AGENTS.md").read_bytes()
+        self.plan({"AGENTS.template.md": self.NEW})
+        code, out, err = self.apply({"rerender": []})
+        self.assertEqual(code, 0, err)
+        self.assertEqual((self.base / "AGENTS.md").read_bytes(), before)
 
     def test_hand_edited_file_is_never_written(self):
         fx.write_tree(self.base, {"AGENTS.md": b"# mine\n"})
