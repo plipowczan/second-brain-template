@@ -81,6 +81,13 @@ The manifest's `exclude` list names files that never ship, even when they sit in
 source directory: caches, `.claude/settings.local.json`, and an instance's own
 `.kb-template.json` and `.kb-onboard.json`.
 
+The manifest's `executable` list names the files that ship with the executable bit, and it
+is the only place `brain-upgrade` reads that bit from: a folder, a rebuilt zip or a checkout
+on Windows cannot carry a mode, and the upgrade must not depend on how the release reached
+the base. A new executable file needs both `git update-index --chmod=+x -- <path>` and an
+entry in the list; `dev/check_manifest.py` fails when the two differ. The list cannot name
+a note or anything else that belongs to the base.
+
 - **No rendered `CLAUDE.md` or `AGENTS.md` here.** They exist only in an instance.
   `/b:onboard` recognises a fresh clone by `CLAUDE.template.md`, and Claude Code reads an
   `AGENTS.md` on its own, so a rendered file here would either confuse onboarding or load
@@ -101,8 +108,9 @@ source directory: caches, `.claude/settings.local.json`, and an instance's own
 
 - `dev/check_manifest.py` — the release check: every tracked file has a class, the
   manifest version equals the newest `## [X.Y.Z]` in `CHANGELOG.md`, `package.json` has
-  no `version`, and no section heading repeats within one version. `tests/run_tests.py`
-  runs it.
+  no `version`, no section heading repeats within one version, and the manifest's
+  `executable` list matches the files tracked as executable, both ways.
+  `tests/run_tests.py` runs it.
 - `dev/build_known_hashes.py` — regenerates `.claude/skills/brain-upgrade/known-hashes.json`,
   the history index adoption uses: every hash each owned- and author-class file has had
   in every commit reachable from HEAD, with the releases each state belongs to.
@@ -161,9 +169,12 @@ every session afterwards. Before that engine runs, the skill shows the owner the
 repository, version, tag, commit and download URL from the base's own copy of the engine
 (`upgrade.py fetch`) and asks for consent. Only an HTTPS download from GitHub counts as
 verified: a folder, a zip or a local clone (yours included, whatever its origin remote)
-only claims where it comes from, so `fetch` unpacks it only with
+only claims where it comes from, so `fetch` and `plan` take it only with
 `--allow-repository <the repository it claims>`, and a repository other than the stamp's
-needs the same consent. Releases are not signed: a deliberate decision
+needs the same consent. The archive `fetch` saved counts as such a file too, because a
+record kept next to it could be planted. So the default path runs `plan --to <version>`,
+which downloads the release again, and the skill compares the commit it reports with the
+one the owner agreed to. Releases are not signed: a deliberate decision
 (2026-10-13). So keep this repository's release process (above) and its tags clean:
 whatever is tagged here runs in every base that upgrades to it.
 

@@ -178,6 +178,13 @@ def _has_yt_dlp_module() -> bool:
     return importlib.util.find_spec("yt_dlp") is not None
 
 
+# Runs the yt_dlp module with the current directory out of the search path. The ingest runs
+# inside the owner's base, where `python -m yt_dlp` would prefer a yt_dlp.py lying around in
+# that folder over the installed package. Python's own -P does this too, but only from 3.11.
+_RUN_MODULE = ("import runpy, sys; sys.path[:] = filter(None, sys.path); "
+               "runpy.run_module('yt_dlp', run_name='__main__', alter_sys=True)")
+
+
 def resolve_yt_dlp_cmd(
     env: Mapping[str, str],
     *,
@@ -190,7 +197,7 @@ def resolve_yt_dlp_cmd(
     Order: $YT_DLP_CMD (used as given, not probed); a `yt-dlp` on PATH that actually
     starts; the yt_dlp module under this interpreter. The middle check matters on
     Windows, where Smart App Control blocks pip's unsigned yt-dlp.exe while the
-    signed python.exe runs `-m yt_dlp` fine.
+    signed python.exe runs the module fine.
     """
     raw = env.get("YT_DLP_CMD", "").strip()
     if raw:
@@ -199,7 +206,7 @@ def resolve_yt_dlp_cmd(
     if exe and starts([exe]):
         return (exe,)
     if has_module():
-        return (sys.executable, "-m", "yt_dlp")
+        return (sys.executable, "-c", _RUN_MODULE)
     return None
 
 
@@ -530,6 +537,9 @@ def fetch_to_archive(
 def process_url(url: str, out_dir: Path, player_client: str | None = None) -> FetchResult:
     """End-to-end: URL → archived source file. Raises YTFetchError on failure."""
     video_id = normalize_url(url)
+    # The checked id is all that reaches yt-dlp: on the pasted URL it would pick its own
+    # video from `?v=A&v=B` or `/redirect?q=...&v=...`, and walk a whole `&list=`.
+    url = f"https://www.youtube.com/watch?v={video_id}"
     meta = fetch_metadata(url, player_client=player_client)
     meta["video_id"] = video_id
 

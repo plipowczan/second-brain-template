@@ -192,6 +192,7 @@ class TestAssembleSource(unittest.TestCase):
 
 
 import os
+import subprocess
 import sys
 from unittest import mock
 import yt_fetch
@@ -203,7 +204,7 @@ def _never(*_args):
 
 
 class TestResolveYtDlpCmd(unittest.TestCase):
-    """Which command runs yt-dlp: $YT_DLP_CMD, a working exe on PATH, or python -m yt_dlp."""
+    """Which command runs yt-dlp: $YT_DLP_CMD, a working exe on PATH, or the yt_dlp module."""
 
     def resolve(self, env=None, exe=None, starts=_never, has_module=False):
         return yt_fetch.resolve_yt_dlp_cmd(
@@ -233,14 +234,42 @@ class TestResolveYtDlpCmd(unittest.TestCase):
         # Windows Smart App Control blocks pip's unsigned yt-dlp.exe; python.exe is signed.
         self.assertEqual(
             self.resolve(exe="C:\\Scripts\\yt-dlp.exe", starts=lambda cmd: False, has_module=True),
-            (sys.executable, "-m", "yt_dlp"),
+            (sys.executable, "-c", yt_fetch._RUN_MODULE),
         )
 
     def test_module_when_no_exe(self):
-        self.assertEqual(self.resolve(has_module=True), (sys.executable, "-m", "yt_dlp"))
+        self.assertEqual(self.resolve(has_module=True), (sys.executable, "-c", yt_fetch._RUN_MODULE))
 
     def test_none_when_nothing_found(self):
         self.assertIsNone(self.resolve(exe="/bin/yt-dlp", starts=lambda cmd: False))
+
+
+class TestModuleFallbackRunsTheInstalledPackage(unittest.TestCase):
+    """The ingest runs inside the owner's base: a yt_dlp.py lying there must not run."""
+
+    def run_fallback(self, cwd, env=None):
+        cmd = yt_fetch.resolve_yt_dlp_cmd({}, which=lambda name: None, has_module=lambda: True)
+        return subprocess.run([*cmd, "--version"], cwd=cwd, env=env, capture_output=True, text=True)
+
+    def test_a_planted_module_does_not_run(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            marker = Path(tmp) / "ran"
+            (Path(tmp) / "yt_dlp.py").write_text("open('ran', 'w').close()\n", encoding="utf-8")
+            subprocess.run([sys.executable, "-m", "yt_dlp", "--version"], cwd=tmp,
+                           capture_output=True)
+            self.assertTrue(marker.exists(), "python -m is the case this test guards against")
+            marker.unlink()
+            self.run_fallback(tmp)
+            self.assertFalse(marker.exists())
+
+    def test_the_package_runs_with_its_arguments(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            pkg = Path(tmp) / "site" / "yt_dlp"
+            pkg.mkdir(parents=True)
+            (pkg / "__init__.py").write_text("", encoding="utf-8")
+            (pkg / "__main__.py").write_text("import sys\nprint(sys.argv[1:])\n", encoding="utf-8")
+            done = self.run_fallback(tmp, {**os.environ, "PYTHONPATH": str(pkg.parent)})
+            self.assertEqual(done.stdout.strip(), "['--version']", done.stderr)
 
 
 class TestCommandStarts(unittest.TestCase):
@@ -337,6 +366,8 @@ class TestCaptionLangs(unittest.TestCase):
 FAKE_DUBBED_YT_DLP = '''\
 import json, os, sys
 args = sys.argv[1:]
+with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "urls.log"), "a") as f:
+    f.write(args[-1] + " ")
 if "--dump-single-json" in args:
     track = [{"ext": "vtt", "url": "https://example.invalid/sub"}]
     print(json.dumps({
@@ -372,6 +403,36 @@ class TestProcessUrlDubbedVideo(unittest.TestCase):
             self.assertEqual((Path(tmp) / "langs.log").read_text().split(), ["en-orig"])
             body = result.archive_path.read_text(encoding="utf-8").split("# Dubbed\n", 1)[1]
             self.assertEqual(body, "\n[0:00] hello there\n[0:02] general kenobi\n")
+
+
+class TestProcessUrlSendsTheCheckedId(unittest.TestCase):
+    """yt-dlp gets a URL built from the id that was checked, not the pasted one."""
+
+    CANONICAL = "https://www.youtube.com/watch?v=abc12345678"
+
+    def test_every_call_gets_the_canonical_url(self):
+        for pasted in ("https://www.youtube.com/watch?v=abc12345678&v=zzzzzzzzzzz",
+                       "https://www.youtube.com/watch?v=abc12345678&list=PL123&index=2",
+                       "https://youtu.be/abc12345678?si=shared"):
+            with self.subTest(pasted), tempfile.TemporaryDirectory() as tmp:
+                fake = Path(tmp) / "fake_yt_dlp.py"
+                fake.write_text(FAKE_DUBBED_YT_DLP, encoding="utf-8")
+                self.addCleanup(yt_fetch.yt_dlp_cmd.cache_clear)
+                with mock.patch.dict(os.environ, {"YT_DLP_CMD": f'"{sys.executable}" "{fake}"'}):
+                    yt_fetch.yt_dlp_cmd.cache_clear()
+                    yt_fetch.process_url(pasted, Path(tmp) / "out")
+                urls = (Path(tmp) / "urls.log").read_text().split()
+                self.assertEqual(set(urls), {self.CANONICAL})
+
+    def test_whisper_gets_it_too(self):
+        meta = {"id": "abc12345678", "subtitles": {}, "automatic_captions": {}}
+        with mock.patch.object(yt_fetch, "fetch_metadata", return_value=meta), \
+                mock.patch.object(yt_fetch, "fetch_captions_vtt", return_value=None), \
+                mock.patch.object(yt_fetch, "whisper_available", return_value=True), \
+                mock.patch.object(yt_fetch, "transcribe_with_whisper", return_value=[]) as whisper:
+            with self.assertRaises(yt_fetch.YTFetchError):
+                yt_fetch.process_url(self.CANONICAL + "&list=PL123", Path("unused"))
+        whisper.assert_called_once_with(self.CANONICAL)
 
 
 class TestYtDlpMissing(unittest.TestCase):

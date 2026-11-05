@@ -154,6 +154,40 @@ class RemovedTest(PlannerCase):
         self.assertEqual((a["kind"], a["selected"]), ("delete", False))
         self.assertIn("edited", a["warning"])
 
+    def test_edited_file_at_a_renamed_path_is_named(self):
+        old, new = ".claude/skills/demo/SKILL.md", ".claude/skills/brain-demo/SKILL.md"
+        self.edit(old, "my own skill\n")
+        plan = self.plan(changes={old: None, new: "---\nname: brain-demo\n---\n"})
+        self.assertEqual(plan["info"]["renamed"], [{"path": old, "to": new}])
+        a = self.by_path(plan)
+        self.assertEqual((a[old]["kind"], a[old]["selected"]), ("delete", False))
+        self.assertEqual((a[new]["kind"], a[new]["selected"]), ("add", True))
+        self.assertIn("Renamed by the template", planner.summary(plan))
+        self.assertIn(f"{old} -> {new}", planner.summary(plan))
+
+    def test_an_inserted_folder_is_a_rename_too(self):
+        old, new = ".claude/commands/lint.md", ".claude/commands/b/lint.md"
+        self.assertEqual(planner.renamed_to(old, [new]), new)
+
+    def test_only_a_renamed_edit_is_named(self):
+        old, new = ".claude/skills/demo/SKILL.md", ".claude/skills/brain-demo/SKILL.md"
+        plan = self.plan(changes={old: None, new: "x\n"})  # not edited: it just moves
+        self.assertEqual(plan["info"]["renamed"], [])
+        self.assertNotIn("Renamed by the template", planner.summary(plan))
+
+    def test_look_alike_paths_are_not_renames(self):
+        old = ".claude/skills/lint/SKILL.md"
+        for other in (".claude/skills/lint/README.md",       # another file name
+                      ".claude/skills/lintish/SKILL.md",     # no "prefix-"
+                      ".claude/skills/a/lint/x/SKILL.md",    # two folders inserted
+                      ".claude/agents/brain-lint/SKILL.md"):  # two folders changed
+            self.assertIsNone(planner.renamed_to(old, [other]), other)
+
+    def test_a_removed_file_with_no_new_name_is_not_named(self):
+        self.edit(".claude/hooks/hook.py", "print('my hook')\n")
+        plan = self.plan(changes={".claude/hooks/hook.py": None})
+        self.assertEqual(plan["info"]["renamed"], [])
+
     def test_already_gone(self):
         (self.base / ".claude/hooks/hook.py").unlink()
         p = self.plan(changes={".claude/hooks/hook.py": None})
@@ -174,10 +208,36 @@ class RenderedTest(PlannerCase):
                          ("writable", True, True, True))
 
     def test_not_requested_only_reports(self):
-        p = self.plan(changes={"AGENTS.template.md": self.NEW_AGENTS})
+        p = self.plan("0.2.1", changes={"AGENTS.template.md": self.NEW_AGENTS})
         e = self.rendered(p)["AGENTS.md"]
         self.assertEqual((e["requested"], e["template_changed"]), (False, True))
         self.assertIn("re-render on request", planner.summary(p))
+
+    def test_breaking_entry_requests_agents_only(self):
+        changes = {"AGENTS.template.md": self.NEW_AGENTS, "CLAUDE.template.md": "@AGENTS.md\n\nnew\n",
+                   "content/WRITING_STYLE.template.md": "Language: {{PRIMARY_LANGUAGE}}\n\nnew\n"}
+        p = self.plan("0.3.0", changes=changes)  # the fixture's 0.3.0 is marked BREAKING
+        e = self.rendered(p)
+        self.assertEqual({k: v["requested"] for k, v in e.items()},
+                         {"AGENTS.md": True, "CLAUDE.md": False, kt.WRITING_STYLE: False})
+        self.assertEqual(e["AGENTS.md"]["status"], "writable")
+        self.assertIn("this update has a BREAKING entry", planner.summary(p))
+
+    def test_breaking_entry_leaves_an_edited_file_a_proposal(self):
+        self.edit("AGENTS.md", "# Test KB\n\nmy notes\n")
+        e = self.rendered(self.plan("0.3.0", changes={"AGENTS.template.md": self.NEW_AGENTS}))["AGENTS.md"]
+        self.assertEqual((e["requested"], e["status"], e["writable"]), (True, "edited", False))
+
+    def test_no_breaking_entry_in_the_range(self):
+        cl = fx.changelog("0.3.0", "0.2.0").replace("**BREAKING: change in 0.3.0**", "a change")
+        p = self.plan("0.3.0", changes={"AGENTS.template.md": self.NEW_AGENTS, "CHANGELOG.md": cl})
+        self.assertFalse(self.rendered(p)["AGENTS.md"]["requested"])
+
+    def test_rerender_requests_all_three(self):
+        changes = {"AGENTS.template.md": self.NEW_AGENTS}
+        e = self.rendered(self.plan("0.3.0", changes=changes, rerender=True))
+        self.assertTrue(all(v["requested"] for v in e.values()))
+        self.assertFalse(any(v["by_default"] for v in e.values()))
 
     def test_hand_edited_is_a_proposal(self):
         self.edit("AGENTS.md", "# Test KB\n\nmy notes\n")

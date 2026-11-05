@@ -36,8 +36,10 @@ it reports where the source comes from before any code from the source runs.
    `SOURCE=<folder or zip>` (a zip carries the release commit).
 2. **No source named:** download the latest release (or `--to X.Y.Z`):
    `python .claude/skills/brain-upgrade/scripts/upgrade.py fetch [--to X.Y.Z]`.
-   `SOURCE=<source.archive>`. Tell the owner the archive path: passing it as the source
-   later works offline.
+   `VERSION=<provenance.version>`. There is no `SOURCE`: in Phase 3 the engine downloads
+   this same release itself, and only such a download counts as verified. Tell the owner
+   the archive path (`source.archive`): they can name it as a source later, offline, and
+   then it is a zip like any other, which needs their yes in step 5.
 3. `fetch` stops when there is no network. Say so, and ask for a release `.zip` or a
    local clone. Nothing has changed.
 4. If `engine_exists` is false, the source is older than `0.2.0` and cannot upgrade a
@@ -59,7 +61,7 @@ it reports where the source comes from before any code from the source runs.
      (`claimed_repository`) and commit, and nothing proves them; say exactly that.
 
    Only if the owner accepts it, run `fetch` again with `--allow-repository <the
-   repository it names>`, and pass the same option to `plan` in Phase 3.
+   repository it names>`, and use the named source with the same option in Phase 3.
 
    Ask: *"Run the upgrade tool from this source?"* Only an explicit yes goes on; anything
    else ends here, with nothing run and nothing changed.
@@ -76,15 +78,21 @@ A base that does not have this skill yet: see **Bootstrap** below.
 ## Phase 3 — Plan (the dry run)
 
 ```bash
-python ENGINE plan --instance . --source SOURCE            # upgrade
-python ENGINE plan --instance . --source SOURCE --adopt    # adoption
+python ENGINE plan --instance . --to VERSION            # upgrade
+python ENGINE plan --instance . --to VERSION --adopt    # adoption
 ```
 
-Add `--allow-repository <repository>` only when the owner agreed to switch repository in
-Phase 1.
+The engine downloads `VERSION` itself and verifies it. The summary names the commit: if
+it is not the commit the owner saw in Phase 1, stop and say so.
 
-Add `--rerender` when the owner wants `CLAUDE.md`, `AGENTS.md` and
-`content/WRITING_STYLE.md` refreshed from the new templates. Add `--diff <path>` or
+For a source the owner named and accepted in Phase 1, replace `--to VERSION` with
+`--source SOURCE --allow-repository <repository>`. A folder, a zip or a clone without
+that option is refused, the archive `fetch` saved included.
+
+When the version range has a **BREAKING** entry, an untouched `AGENTS.md` is re-rendered
+by default, because the agent reads it in every session. Add `--rerender` when the owner
+wants all of `CLAUDE.md`, `AGENTS.md` and `content/WRITING_STYLE.md` refreshed from the
+new templates. Add `--diff <path>` or
 `--diff all` to see changes; the plan is read-only, so re-running it is safe. An
 adoption that is offline and needs an older release stops and names it; ask for that
 release's `.zip` and add `--base <zip>`.
@@ -105,8 +113,17 @@ Show the owner, in one message:
    - each **CONFLICT** (changed in the template and in this base): keep, overwrite or
      merge;
    - **restore?** rows (files the owner deleted): default stays deleted;
-   - unchecked **delete** rows (edited files the template removed): default keep;
-   - instruction files: re-render untouched ones? (default no);
+   - unchecked **delete** rows (edited files the template removed): default keep. When
+     the summary's **Renamed by the template** section names the file, say that its
+     edits stay at the old name and do not move to the new one: the owner carries them
+     over by hand, and the skill at the old name stays in use until they do;
+   - **Executable bit** rows (files the template ships as executable): default yes, and
+     on a `keep (yours)` file only the bit changes, the owner's text stays. Declining
+     keeps the file as it is, and the row comes back at the next upgrade. A git hook
+     that was skipped until now starts to run;
+   - instruction files: re-render untouched ones? (default no, except `AGENTS.md` when
+     the plan says it will be re-rendered: there the default is yes; an edited file is
+     only a proposal either way);
    - **QUESTION** lines: a value for each new placeholder.
 5. Seeded changes (starter content and `README.md` upstream) as information only.
 
@@ -121,13 +138,16 @@ Write the decisions to a JSON file outside the base:
 {
   "actions": {"path/of/file": true, "other/file": false, "conflicting/file": "merge"},
   "rerender": ["AGENTS.md"],
+  "executable": true,
   "values": {"NEW_PLACEHOLDER": "the owner's answer"}
 }
 ```
 
 Selectable rows take `true`/`false`; conflicts take `"keep"`, `"overwrite"` or
 `"merge"`; rows you leave out keep their default. `rerender` is a list of paths or
-`true` for all; `values` are saved to `.kb-onboard.json`.
+`true` for all, and when you leave it out the plan's default holds (`"rerender": []`
+keeps `AGENTS.md` as it is); `executable` is `true`, `false` or a list of paths, and
+left out it means yes; `values` are saved to `.kb-onboard.json`.
 
 ```bash
 python ENGINE apply --plan PLAN --decisions DECISIONS
@@ -159,6 +179,8 @@ Without git it reports the backup folder instead.
 Then:
 
 - walk the owner through each **BREAKING** entry's migration steps;
+- when an entry renamed commands, remind the owner that their `README.md` still shows the
+  old names: it is theirs, and the engine never writes it;
 - run what the entries ask for, typically `/b:reindex`;
 - after an adoption, offer the upgrade cycle (Phase 3 without `--adopt`).
 
@@ -180,9 +202,15 @@ engine directly against the base:
    version, tag, commit and where it came from, as in Phase 1 step 5, and ask for an
    explicit yes. No yes, stop.
 3. Unpack it outside the base and follow **that copy** of this file, with
-   `ENGINE=<unpacked>/.claude/skills/brain-upgrade/scripts/upgrade.py` and
-   `SOURCE=<zip or clone>`, starting at Phase 2 (`--adopt`).
-4. The adoption commit brings this skill into the base; later upgrades start at Phase 1.
+   `ENGINE=<unpacked>/.claude/skills/brain-upgrade/scripts/upgrade.py`, starting at
+   Phase 2 (`--adopt`). A release you downloaded takes the default lines of Phase 3 with
+   `VERSION=<the version from step 2>`: the zip only supplied the engine. A zip or clone
+   the owner gave you, for example offline, takes `SOURCE=<zip or clone>`, and their yes
+   from step 2 is the `--allow-repository <repository>` of Phase 3.
+4. When the nearest release R is `0.2.0` or newer, the adoption commit brings this skill
+   into the base, and later upgrades start at Phase 1. With an older R it does not: the
+   skill arrives with the upgrade commit, so run that cycle straight after the adoption,
+   with the same `ENGINE`.
 
 ## What you trust
 
@@ -197,5 +225,14 @@ anything from the source runs, the dry run, and one reviewable commit.
 
 Every step is a command the agent runs for the owner. In tools without native
 `/slash` commands, ask: *"follow `.claude/skills/brain-upgrade/SKILL.md`"*. Without git,
-the backup folder is the way back; with git, `git revert` of the upgrade commit (or of
-the adoption commit) undoes it.
+the backup folder is the way back; with git, `git revert` undoes it.
+
+To undo both the upgrade and the adoption before it, revert the newest commit first:
+the upgrade, then the adoption. Reverting the adoption alone runs into conflicts,
+because the upgrade changed the same files. An adoption that added `.kb-onboard.json`
+removes it again when reverted, although `.gitignore` still names it, so the file does
+not show in `git status`. Get it back with:
+
+```bash
+git restore --source=<adoption commit> -- .kb-onboard.json
+```
