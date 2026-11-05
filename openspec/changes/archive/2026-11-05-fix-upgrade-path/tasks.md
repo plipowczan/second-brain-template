@@ -45,6 +45,6 @@ Paweł accepted `design.md` on 2026-11-04.
 - [x] 7.1 `CHANGELOG.md` under `[Unreleased]`, with an "Existing bases" paragraph per entry, and no capitalised breaking marker in a first line
 - [x] 7.2 `python tests/run_tests.py`, `python tests/run_skill_tests.py`, `openspec validate fix-upgrade-path --strict`
 - [x] 7.3 Reproduce bug 12 on a base built from `v0.1.0`, in a scratch folder, before and after
-- [ ] 7.4 Push the branch, open the PR, `Tests` green on Ubuntu and Windows
+- [x] 7.4 Push the branch, open the PR, `Tests` green on Ubuntu and Windows
 - [x] 7.5 Run the Codex review, record it in `review.md`, act on what holds up
-- [ ] 7.6 Report per the brief: PR number, tests on both systems, D1 and D3, `yt_fetch.py`, what stayed unverified, and the proposal to close PR #2
+- [x] 7.6 Report per the brief: PR number, tests on both systems, D1 and D3, `yt_fetch.py`, what stayed unverified, and the proposal to close PR #2
