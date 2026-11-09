@@ -26,7 +26,7 @@ A source does not become one summary note. It becomes a main note plus an additi
 The rest of Phase 0 is skipped entirely when there are no URLs.
 
 2. Verify prerequisites:
-   - `yt-dlp` (required). Don't pre-check it with `which`: `yt_fetch.py` finds it itself, trying `$YT_DLP_CMD`, then a `yt-dlp` on PATH that actually starts, then `python -m yt_dlp`. If the script exits 3 with `yt-dlp not found`, abort the whole call with the install hint (`pip install yt-dlp`).
+   - `yt-dlp` (required). Don't pre-check it with `which`: `yt_fetch.py` finds it itself, trying `$YT_DLP_CMD`, then a `yt-dlp` on PATH that actually starts, then the `yt_dlp` module under Python. If the script exits 3 with `yt-dlp not found`, abort the whole call with the install hint (`pip install yt-dlp`).
    - `ffmpeg` on PATH (needed only for Whisper fallback).
    - `$WHISPER_CPP_BIN` + `$WHISPER_MODEL` env vars (needed only for Whisper fallback).
 3. For each URL, run:
@@ -203,7 +203,7 @@ If the checklist fails, surface the discrepancy and offer to fix before reportin
 
 ## Prerequisites
 
-- `yt-dlp` — required for any YT URL. `pip install yt-dlp` is enough: when the `yt-dlp` executable is missing or won't start, `yt_fetch.py` runs `python -m yt_dlp` with the interpreter it runs under. That covers Windows Smart App Control, which blocks pip's unsigned `yt-dlp.exe` but lets the signed `python.exe` run. To force a specific command, set `$YT_DLP_CMD` (for example `"C:\Program Files\yt-dlp\yt-dlp.exe"`; double-quote paths with spaces). It is used as given, without the start-up check.
+- `yt-dlp` — required for any YT URL. `pip install yt-dlp` is enough: when the `yt-dlp` executable is missing or won't start, `yt_fetch.py` runs the `yt_dlp` module with the interpreter it runs under, leaving the current folder out of the search. That covers Windows Smart App Control, which blocks pip's unsigned `yt-dlp.exe` but lets the signed `python.exe` run. To force a specific command, set `$YT_DLP_CMD` (for example `"C:\Program Files\yt-dlp\yt-dlp.exe"`; double-quote paths with spaces). It is used as given, without the start-up check.
 - `ffmpeg` on PATH — required only when captions are unavailable (Whisper fallback).
 - `$WHISPER_CPP_BIN` + `$WHISPER_MODEL` env vars — required only for Whisper fallback. Default model: `ggml-large-v3.bin`.
 

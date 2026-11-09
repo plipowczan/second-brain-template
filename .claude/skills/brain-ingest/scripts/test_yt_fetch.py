@@ -63,6 +63,53 @@ Today we're talking about Python.
     def test_empty_vtt_returns_empty(self):
         self.assertEqual(parse_vtt("WEBVTT\n\n"), [])
 
+    # YouTube auto-captions roll: each cue repeats the previous line above the new one, a
+    # 10 ms cue holds only the finished line, and a lone space fills the empty slot.
+    ROLLING = "\n".join([
+        "WEBVTT", "Kind: captions", "Language: en", "",
+        "00:00:00.000 --> 00:00:03.510 align:start position:0%",
+        " ",
+        "Right<00:00:00.440><c> now,</c><00:00:01.120><c> six</c><00:00:02.960><c> stocks</c>",
+        "",
+        "00:00:03.510 --> 00:00:03.520 align:start position:0%",
+        "Right now, six stocks",
+        " ",
+        "",
+        "00:00:03.520 --> 00:00:05.950 align:start position:0%",
+        "Right now, six stocks",
+        "are<00:00:03.640><c> in</c><00:00:03.720><c> a</c><00:00:04.040><c> bear</c>",
+        "",
+        "00:00:05.950 --> 00:00:05.960 align:start position:0%",
+        "are in a bear",
+        " ",
+        "",
+        "00:00:05.960 --> 00:00:07.950 align:start position:0%",
+        "are in a bear",
+        "market.<00:00:06.160><c> The</c><00:00:06.320><c> S&amp;P</c><00:00:06.900><c> 500</c>",
+        "",
+    ])
+
+    def test_rolling_auto_captions_keep_each_line_once(self):
+        self.assertEqual(parse_vtt(self.ROLLING), [
+            VttCue(start=0.0, text="Right now, six stocks"),
+            VttCue(start=3.52, text="are in a bear"),
+            VttCue(start=5.96, text="market. The S&P 500"),  # entity decoded
+        ])
+
+    def test_two_line_cue_kept_whole(self):
+        vtt = ("WEBVTT\n\n00:00:01.000 --> 00:00:04.000\nHello and welcome\nto the show.\n\n"
+               "00:00:04.000 --> 00:00:06.000\nLet's start.\n")
+        self.assertEqual(parse_vtt(vtt), [
+            VttCue(start=1.0, text="Hello and welcome to the show."),
+            VttCue(start=4.0, text="Let's start."),
+        ])
+
+    def test_consecutive_identical_cues_coalesce(self):
+        vtt = ("WEBVTT\n\n00:00:01.000 --> 00:00:02.000\nSame line\n\n"
+               "00:00:02.000 --> 00:00:03.000\nSame line\n\n"
+               "00:00:03.000 --> 00:00:04.000\nNext line\n")
+        self.assertEqual([c.text for c in parse_vtt(vtt)], ["Same line", "Next line"])
+
     def test_format_seconds_to_mmss(self):
         from yt_fetch import format_timestamp
         self.assertEqual(format_timestamp(0), "0:00")
@@ -145,6 +192,7 @@ class TestAssembleSource(unittest.TestCase):
 
 
 import os
+import subprocess
 import sys
 from unittest import mock
 import yt_fetch
@@ -156,7 +204,7 @@ def _never(*_args):
 
 
 class TestResolveYtDlpCmd(unittest.TestCase):
-    """Which command runs yt-dlp: $YT_DLP_CMD, a working exe on PATH, or python -m yt_dlp."""
+    """Which command runs yt-dlp: $YT_DLP_CMD, a working exe on PATH, or the yt_dlp module."""
 
     def resolve(self, env=None, exe=None, starts=_never, has_module=False):
         return yt_fetch.resolve_yt_dlp_cmd(
@@ -186,14 +234,42 @@ class TestResolveYtDlpCmd(unittest.TestCase):
         # Windows Smart App Control blocks pip's unsigned yt-dlp.exe; python.exe is signed.
         self.assertEqual(
             self.resolve(exe="C:\\Scripts\\yt-dlp.exe", starts=lambda cmd: False, has_module=True),
-            (sys.executable, "-m", "yt_dlp"),
+            (sys.executable, "-c", yt_fetch._RUN_MODULE),
         )
 
     def test_module_when_no_exe(self):
-        self.assertEqual(self.resolve(has_module=True), (sys.executable, "-m", "yt_dlp"))
+        self.assertEqual(self.resolve(has_module=True), (sys.executable, "-c", yt_fetch._RUN_MODULE))
 
     def test_none_when_nothing_found(self):
         self.assertIsNone(self.resolve(exe="/bin/yt-dlp", starts=lambda cmd: False))
+
+
+class TestModuleFallbackRunsTheInstalledPackage(unittest.TestCase):
+    """The ingest runs inside the owner's base: a yt_dlp.py lying there must not run."""
+
+    def run_fallback(self, cwd, env=None):
+        cmd = yt_fetch.resolve_yt_dlp_cmd({}, which=lambda name: None, has_module=lambda: True)
+        return subprocess.run([*cmd, "--version"], cwd=cwd, env=env, capture_output=True, text=True)
+
+    def test_a_planted_module_does_not_run(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            marker = Path(tmp) / "ran"
+            (Path(tmp) / "yt_dlp.py").write_text("open('ran', 'w').close()\n", encoding="utf-8")
+            subprocess.run([sys.executable, "-m", "yt_dlp", "--version"], cwd=tmp,
+                           capture_output=True)
+            self.assertTrue(marker.exists(), "python -m is the case this test guards against")
+            marker.unlink()
+            self.run_fallback(tmp)
+            self.assertFalse(marker.exists())
+
+    def test_the_package_runs_with_its_arguments(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            pkg = Path(tmp) / "site" / "yt_dlp"
+            pkg.mkdir(parents=True)
+            (pkg / "__init__.py").write_text("", encoding="utf-8")
+            (pkg / "__main__.py").write_text("import sys\nprint(sys.argv[1:])\n", encoding="utf-8")
+            done = self.run_fallback(tmp, {**os.environ, "PYTHONPATH": str(pkg.parent)})
+            self.assertEqual(done.stdout.strip(), "['--version']", done.stderr)
 
 
 class TestCommandStarts(unittest.TestCase):
@@ -248,6 +324,115 @@ class TestYtDlpCommandWiring(unittest.TestCase):
         first = yt_fetch.yt_dlp_cmd()
         os.environ["YT_DLP_CMD"] = "something-else"
         self.assertEqual(yt_fetch.yt_dlp_cmd(), first)
+
+
+from yt_fetch import caption_langs
+
+
+class TestCaptionLangs(unittest.TestCase):
+    """Which --sub-langs to try, best first, from the video's caption lists."""
+
+    TRACK = [{"ext": "vtt", "url": "https://example.invalid/sub"}]
+
+    def langs(self, manual=(), auto=(), language=None):
+        return caption_langs({
+            "language": language,
+            "subtitles": {k: self.TRACK for k in manual},
+            "automatic_captions": {k: self.TRACK for k in auto},
+        })
+
+    def test_dubbed_video_uses_original_track(self):
+        # An ASR track per dub: plain `en` is a machine translation of another dub (HTTP 429).
+        auto = ["en", "en-orig", "pl", "pl-orig", "uk", "uk-orig"]
+        self.assertEqual(self.langs(auto=auto, language="en-US"), ["en-orig", "pl-orig"])
+
+    def test_manual_subtitles_win_over_auto_captions(self):
+        self.assertEqual(self.langs(manual=["en"], auto=["en", "en-orig"]), ["en"])
+
+    def test_auto_captions_without_orig_label(self):
+        self.assertEqual(self.langs(auto=["en"]), ["en"])
+
+    def test_original_language_outside_preferences_comes_last(self):
+        self.assertEqual(self.langs(auto=["en", "de", "de-orig"], language="de"),
+                         ["en", "de-orig"])
+
+    def test_no_captions(self):
+        self.assertEqual(self.langs(language="en"), [])
+
+    def test_metadata_without_caption_lists_keeps_defaults(self):
+        self.assertEqual(caption_langs({"language": "en"}), list(yt_fetch._DEFAULT_LANGS))
+
+
+FAKE_DUBBED_YT_DLP = '''\
+import json, os, sys
+args = sys.argv[1:]
+with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "urls.log"), "a") as f:
+    f.write(args[-1] + " ")
+if "--dump-single-json" in args:
+    track = [{"ext": "vtt", "url": "https://example.invalid/sub"}]
+    print(json.dumps({
+        "id": "abc12345678", "title": "Dubbed", "channel": "Chan", "duration": 4,
+        "upload_date": "20261031", "language": "en-US",
+        "webpage_url": "https://www.youtube.com/watch?v=abc12345678", "subtitles": {},
+        "automatic_captions": {k: track for k in ("en", "en-orig", "uk", "uk-orig")},
+    }))
+elif "--write-subs" in args:
+    lang = args[args.index("--sub-langs") + 1]
+    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "langs.log"), "a") as f:
+        f.write(lang + "\\n")
+    if lang != "en-orig":
+        sys.exit("ERROR: Unable to download video subtitles for " + repr(lang))
+    with open(args[args.index("-o") + 1] + ".en-orig.vtt", "w", encoding="utf-8") as f:
+        f.write("WEBVTT\\n\\n00:00:00.000 --> 00:00:02.000\\n \\nhello<00:00:01.000><c> there</c>\\n\\n"
+                "00:00:02.000 --> 00:00:02.010\\nhello there\\n \\n\\n"
+                "00:00:02.010 --> 00:00:04.000\\nhello there\\ngeneral<00:00:03.000><c> kenobi</c>\\n")
+'''
+
+
+class TestProcessUrlDubbedVideo(unittest.TestCase):
+    """End to end on a fake yt-dlp: a dubbed video's original track, each line once."""
+
+    def test_archive_from_original_track_without_repeats(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            fake = Path(tmp) / "fake_yt_dlp.py"
+            fake.write_text(FAKE_DUBBED_YT_DLP, encoding="utf-8")
+            self.addCleanup(yt_fetch.yt_dlp_cmd.cache_clear)
+            with mock.patch.dict(os.environ, {"YT_DLP_CMD": f'"{sys.executable}" "{fake}"'}):
+                yt_fetch.yt_dlp_cmd.cache_clear()
+                result = yt_fetch.process_url("https://youtu.be/abc12345678", Path(tmp) / "out")
+            self.assertEqual((Path(tmp) / "langs.log").read_text().split(), ["en-orig"])
+            body = result.archive_path.read_text(encoding="utf-8").split("# Dubbed\n", 1)[1]
+            self.assertEqual(body, "\n[0:00] hello there\n[0:02] general kenobi\n")
+
+
+class TestProcessUrlSendsTheCheckedId(unittest.TestCase):
+    """yt-dlp gets a URL built from the id that was checked, not the pasted one."""
+
+    CANONICAL = "https://www.youtube.com/watch?v=abc12345678"
+
+    def test_every_call_gets_the_canonical_url(self):
+        for pasted in ("https://www.youtube.com/watch?v=abc12345678&v=zzzzzzzzzzz",
+                       "https://www.youtube.com/watch?v=abc12345678&list=PL123&index=2",
+                       "https://youtu.be/abc12345678?si=shared"):
+            with self.subTest(pasted), tempfile.TemporaryDirectory() as tmp:
+                fake = Path(tmp) / "fake_yt_dlp.py"
+                fake.write_text(FAKE_DUBBED_YT_DLP, encoding="utf-8")
+                self.addCleanup(yt_fetch.yt_dlp_cmd.cache_clear)
+                with mock.patch.dict(os.environ, {"YT_DLP_CMD": f'"{sys.executable}" "{fake}"'}):
+                    yt_fetch.yt_dlp_cmd.cache_clear()
+                    yt_fetch.process_url(pasted, Path(tmp) / "out")
+                urls = (Path(tmp) / "urls.log").read_text().split()
+                self.assertEqual(set(urls), {self.CANONICAL})
+
+    def test_whisper_gets_it_too(self):
+        meta = {"id": "abc12345678", "subtitles": {}, "automatic_captions": {}}
+        with mock.patch.object(yt_fetch, "fetch_metadata", return_value=meta), \
+                mock.patch.object(yt_fetch, "fetch_captions_vtt", return_value=None), \
+                mock.patch.object(yt_fetch, "whisper_available", return_value=True), \
+                mock.patch.object(yt_fetch, "transcribe_with_whisper", return_value=[]) as whisper:
+            with self.assertRaises(yt_fetch.YTFetchError):
+                yt_fetch.process_url(self.CANONICAL + "&list=PL123", Path("unused"))
+        whisper.assert_called_once_with(self.CANONICAL)
 
 
 class TestYtDlpMissing(unittest.TestCase):

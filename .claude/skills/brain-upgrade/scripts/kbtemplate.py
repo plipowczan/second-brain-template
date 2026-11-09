@@ -20,6 +20,7 @@ import json
 import os
 import re
 import shutil
+import stat
 import subprocess
 import unicodedata
 from pathlib import Path
@@ -198,6 +199,34 @@ def is_binary(data: bytes) -> bool:
     return b"\0" in data
 
 
+# --- the executable bit --------------------------------------------------------------
+# The bit is not content, so it stays out of the hashes. A file on Windows has none:
+# there git's record of the mode is the only truth.
+
+MODE_EXECUTABLE = "100755"
+
+
+def file_bits(path: Path) -> int | None:
+    """The permission bits of a file on Linux and macOS; None where there is nothing to
+    keep or set (Windows, or no such file)."""
+    if os.name != "posix":
+        return None
+    try:
+        return stat.S_IMODE(os.stat(path).st_mode)
+    except FileNotFoundError:
+        return None
+
+
+def set_bits(path: Path, bits: int | None) -> None:
+    if bits is not None and file_bits(path) != bits:
+        os.chmod(path, bits)
+
+
+def with_executable(bits: int | None) -> int | None:
+    """`bits` plus execute for whoever may read, the way `chmod +x` honours a umask."""
+    return None if bits is None else bits | (bits & 0o444) >> 2
+
+
 # --- globs and the manifest ----------------------------------------------------------
 
 _GLOB_CACHE: dict[str, re.Pattern] = {}
@@ -254,10 +283,18 @@ class Manifest:
         self.owned = list(classes.get("owned", []))
         self.seeded = list(classes.get("seeded", []))
         self.exclude = list(data.get("exclude", []))
+        self.executable = data.get("executable", [])
         self.render_sources = {src: out for out, src in self.rendered.items()}
         for p in self.author + self.owned + self.seeded + self.exclude:
             check_pattern(p, MANIFEST)
         check_paths(list(self.rendered) + list(self.render_sources), f"{MANIFEST} rendered")
+        if not isinstance(self.executable, list):
+            raise TemplateError(f"{MANIFEST}: executable must be a list of paths. Nothing was changed.")
+        check_paths(self.executable, f"{MANIFEST} executable")
+        for p in self.executable:
+            if protected(p):
+                raise TemplateError(f"{MANIFEST}: {p!r} belongs to the base, so it cannot be "
+                                    "listed as executable. Nothing was changed.")
         for out in self.rendered:
             if protected(out) and out != WRITING_STYLE:
                 raise TemplateError(f"{MANIFEST}: rendered output {out!r} belongs to the base; "
@@ -487,6 +524,19 @@ def head_commit(root: Path) -> str | None:
 def tracked_files(root: Path) -> list[str]:
     out = git(root, "ls-files", "-z").stdout
     return sorted(p for p in out.split("\0") if p)
+
+
+def head_modes(root: Path, paths) -> dict[str, str]:
+    """path -> git mode in HEAD, for the paths HEAD holds."""
+    paths = list(paths)
+    if not paths or head_commit(root) is None:
+        return {}
+    modes = {}
+    listing = git(root, "ls-tree", "-z", "HEAD", "--", *paths).stdout
+    for rec in filter(None, listing.split("\0")):
+        meta, path = rec.split("\t", 1)
+        modes[path] = meta.split(" ")[0]
+    return modes
 
 
 # --- the history index ---------------------------------------------------------------

@@ -186,7 +186,7 @@ def stale_paths(plan: dict, instance: Path) -> list[str]:
         stale.append(kt.STAMP)
     if kt.file_hash(instance / kt.ONBOARD_VALUES) != plan["onboard_before"]:
         stale.append(kt.ONBOARD_VALUES)
-    for item in plan["actions"] + plan["rendered"]:
+    for item in plan["actions"] + plan["rendered"] + plan["modes"]:
         if planner.local(instance, item["path"]) != item["L"]:
             stale.append(item["path"])
     return sorted(set(stale))
@@ -228,27 +228,38 @@ def target_of(instance: Path, rel: str, role: str) -> Path:
 
 
 def _write(path: Path, data: bytes) -> None:
-    """Replace a file in one step: write a sibling temp file, then rename it over."""
+    """Replace a file in one step: write a sibling temp file, then rename it over. The
+    new file keeps the permission bits of the one it replaces, its executable bit first
+    of all."""
     tmp = path.with_name(path.name + ".kb-upgrade-tmp")
+    bits = kt.file_bits(path)
     try:
         tmp.write_bytes(data)
+        kt.set_bits(tmp, bits)
         os.replace(tmp, path)
     finally:
         if tmp.exists():
             tmp.unlink()
 
 
+def _make_executable(path: Path) -> None:
+    kt.set_bits(path, kt.with_executable(kt.file_bits(path)))
+
+
 def _unlink(path: Path) -> None:
     path.unlink()
 
 
+UNCHANGED = object()  # a mutation that sets the executable bit and leaves the content
+
+
 def resolve_mutations(instance: Path, mutations: list) -> list:
-    """(path, bytes | None, role, expected hash) -> (path, target, bytes | None, expected
-    hash), every target checked. The expected hash is what the dry run read (None: the
-    file did not exist)."""
+    """(path, bytes | None | UNCHANGED, role, expected hash, executable) -> (path, target,
+    bytes | None | UNCHANGED, expected hash, executable), every target checked. The
+    expected hash is what the dry run read (None: the file did not exist)."""
     kt.check_paths([m[0] for m in mutations], "apply")
-    return [(rel, target_of(instance, rel, role), data, expected)
-            for rel, data, role, expected in mutations]
+    return [(rel, target_of(instance, rel, role), data, expected, executable)
+            for rel, data, role, expected, executable in mutations]
 
 
 class ChangedDuringApply(Exception):
@@ -288,48 +299,55 @@ def _current(target: Path) -> bytes | None:
 
 
 def transaction(instance: Path, items: list, finish=None, backup: Path | None = None) -> None:
-    """Apply (path, target, bytes | None for delete, expected hash) in order, all or
-    nothing, then run `finish()` (recording the plan as applied) as the last step.
+    """Apply (path, target, bytes | None for delete | UNCHANGED, expected hash, executable)
+    in order, all or nothing, then run `finish()` (recording the plan as applied) as the
+    last step.
 
     Right before each step it checks the target again: no link or junction on its path
     (folders made on the way included), and its current content still has the hash the
     dry run read. That same read is the step's preimage in the rollback journal, next to
-    its postimage: the exact bytes apply writes, or None for a deletion.
+    its postimage: the exact bytes apply writes, or None for a deletion. The journal also
+    holds the file's permission bits, because a step can change those alone.
 
     On any failure, `finish()` included, each journaled target is put back only while it
     still holds what apply left there: a file something else changed in the meantime is
     left alone and reported. Created folders are removed when empty. Then it raises.
     """
     root = instance.resolve()
-    journal: list[tuple[str, Path, bytes | None, bytes | None]] = []
+    journal: list[tuple[str, Path, bytes | None, bytes | None, int | None]] = []
     created: list[Path] = []
     failed_rel = "?"
     try:
-        for rel, target, data, expected in items:
+        for rel, target, data, expected, executable in items:
             failed_rel = rel
             recheck(root, rel, target)
             before = _current(target)
             if (kt.content_hash(before) if before is not None else None) != expected:
                 raise ChangedDuringApply(f"{rel} changed while the update was running")
-            journal.append((rel, target, before, data))
+            journal.append((rel, target, before, before if data is UNCHANGED else data,
+                            kt.file_bits(target)))
             if data is None:
                 if before is not None:
                     _unlink(target)
                 continue
-            make_parents(root, target, created)
-            recheck(root, rel, target)
-            _write(target, data)
+            if data is not UNCHANGED:
+                make_parents(root, target, created)
+                recheck(root, rel, target)
+                _write(target, data)
+            if executable:
+                _make_executable(target)
         failed_rel = "recording the plan as applied"
         if finish is not None:
             finish()
     except BaseException as e:
         problems, left = [], []
-        for rel, target, before, after in reversed(journal):
+        for rel, target, before, after, bits in reversed(journal):
             try:
                 if kt.link_in_path(root, rel):  # never restore through a link
                     raise OSError("its path is now a link or junction")
                 now = _current(target)
                 if now == before:
+                    kt.set_bits(target, bits)  # a step may have changed nothing else
                     continue  # this step never happened, or is already undone
                 if now != after:
                     left.append(rel)  # changed by something else after apply wrote it
@@ -339,6 +357,7 @@ def transaction(instance: Path, items: list, finish=None, backup: Path | None = 
                 else:
                     target.parent.mkdir(parents=True, exist_ok=True)
                     _write(target, before)
+                    kt.set_bits(target, bits)
             except BaseException as err:  # keep going: restore as much as possible
                 problems.append(f"{rel} ({err})")
         for d in reversed(created):
@@ -459,6 +478,11 @@ def cmd_apply(args) -> int:
         renders.append((e, out))
 
     blobs = {a["path"]: verified(plan, f"src/{a['path']}", a["S"]) for a in writes}
+    # The executable bit: a file a row covers follows the owner's answer to that row, and
+    # any other listed file that gets written has the bit by definition.
+    chosen_bits = planner.chosen_modes(plan, decisions.get("executable"))
+    declined = {m["path"] for m in plan["modes"]} - chosen_bits
+    wants_bit = set(plan["executable"]) - declined
     s = plan["stamp"]
     rendered = dict(s["rendered"])
     for e, out in renders:
@@ -467,15 +491,19 @@ def cmd_apply(args) -> int:
     stamp = kt.make_stamp(s["repository"], s["version"], s["commit"], s["files"], rendered,
                           s.get("seeded"))
     # Each mutation carries the hash its target had at the dry run (None: absent).
-    mutations = [(a["path"], blobs[a["path"]], "action", a["L"]) for a in writes]
-    mutations += [(a["path"], None, "action", a["L"]) for a in deletes]
-    mutations += [(e["path"], out, "render", e["L"]) for e, out in renders]
+    mutations = [(a["path"], blobs[a["path"]], "action", a["L"], a["path"] in wants_bit)
+                 for a in writes]
+    mutations += [(a["path"], None, "action", a["L"], False) for a in deletes]
+    touched = {a["path"] for a in writes + deletes}
+    mutations += [(m["path"], UNCHANGED, "action", m["L"], True) for m in plan["modes"]
+                  if m["path"] in chosen_bits and m["path"] not in touched]
+    mutations += [(e["path"], out, "render", e["L"], False) for e, out in renders]
     if new_values:
         values = planner.read_values(instance) or {}
         values.update(new_values)
-        mutations.append((kt.ONBOARD_VALUES, kt.dump_json(values), "own", plan["onboard_before"]))
+        mutations.append((kt.ONBOARD_VALUES, kt.dump_json(values), "own", plan["onboard_before"], False))
     # Last: it names the new version.
-    mutations.append((kt.STAMP, kt.dump_json(stamp), "own", plan["stamp_before"]))
+    mutations.append((kt.STAMP, kt.dump_json(stamp), "own", plan["stamp_before"], False))
     # Every target is checked here, before the dirty check, the backup or any write.
     items = resolve_mutations(instance, mutations)
     for a in merges:
@@ -495,7 +523,7 @@ def cmd_apply(args) -> int:
     if not plan["git"]:
         when = kt.utc_now().replace(":", "").replace("-", "")
         backup = instance.resolve() / kt.BACKUP_DIR / f"{plan['to_version']}-{when}"
-        for rel, target, _, _ in items:
+        for rel, target, *_ in items:
             if target.is_file():
                 dst = backup / rel
                 dst.parent.mkdir(parents=True, exist_ok=True)
@@ -506,12 +534,17 @@ def cmd_apply(args) -> int:
         "written": sorted(a["path"] for a in writes) + sorted(e["path"] for e, _ in renders),
         "deleted": sorted(a["path"] for a in deletes),
         "merge": sorted(a["path"] for a in merges),
+        # Paths whose bit apply set, written or not: the commit records them as executable.
+        "executable": sorted(rel for rel, *_, executable in items if executable),
         "onboard_values": bool(new_values),
         "backup": str(backup) if backup else None,
         # What apply left at each path it wrote or deleted (None: absent), the stamp and
-        # .kb-onboard.json included. commit checks these before it commits anything.
-        "postimage": {rel: kt.content_hash(data) if data is not None else None
-                      for rel, _, data, _ in items},
+        # .kb-onboard.json included. commit checks these before it commits anything. A
+        # file waiting for a merge is the owner's to change, so it is not held to a hash.
+        "postimage": {rel: expected if data is UNCHANGED
+                      else kt.content_hash(data) if data is not None else None
+                      for rel, _, data, expected, _ in items
+                      if rel not in {a["path"] for a in merges}},
     }
 
     def record_applied():
@@ -521,7 +554,7 @@ def cmd_apply(args) -> int:
 
     transaction(instance, items, finish=record_applied, backup=backup)
     plan["applied"] = applied
-    for rel, target, data, _ in items:
+    for rel, target, data, *_ in items:
         if data is None:
             remove_empty_dirs(instance, target.parent)
     ap = plan["applied"]
@@ -531,6 +564,8 @@ def cmd_apply(args) -> int:
         say(f"  wrote   {p}")
     for p in ap["deleted"]:
         say(f"  deleted {p}")
+    for p in ap["executable"]:
+        say(f"  executable {p}")
     if ap["merge"]:
         say("Waiting for a merge with the owner (the file is unchanged so far): "
             + ", ".join(ap["merge"]))
@@ -573,6 +608,7 @@ def cmd_commit(args) -> int:
     body = (f"Source: {src['kind']} {src['location']}"
             + (f" ({src['commit']})" if src.get("commit") else "")
             + f"\n{len(applied['written'])} written, {len(applied['deleted'])} deleted"
+            + (f", made executable: {', '.join(applied['executable'])}" if applied["executable"] else "")
             + (f", merged by hand: {', '.join(merges)}" if merges else ""))
 
     # The commit is built in a temporary index (HEAD plus exactly these contents), so the
@@ -580,7 +616,7 @@ def cmd_commit(args) -> int:
     # stays out of it.
     index = sources.private_dir() / "index"
     try:
-        if not build_commit_index(instance, index, contents):
+        if not build_commit_index(instance, index, contents, applied["executable"]):
             say("Nothing to commit.")
             return 0
         refuse_if_changed(expected, read_for_commit(instance, list(expected)))
@@ -621,17 +657,14 @@ def refuse_if_changed(expected: dict, contents: dict) -> None:
             "and commit it yourself, then run commit again.")
 
 
-def build_commit_index(instance: Path, index: Path, contents: dict) -> bool:
-    """Fill a temporary index with HEAD plus `contents` (bytes, or None to remove).
-    Returns False when that equals HEAD."""
+def build_commit_index(instance: Path, index: Path, contents: dict, executable=()) -> bool:
+    """Fill a temporary index with HEAD plus `contents` (bytes, or None to remove). A path
+    in `executable` gets that mode, and every other path keeps the mode HEAD has. Returns
+    False when that equals HEAD."""
     has_head = kt.head_commit(instance) is not None
     kt.git(instance, "read-tree", *(["HEAD"] if has_head else ["--empty"]), index=index)
-    modes = {}
-    if has_head:
-        listing = kt.git(instance, "ls-tree", "-z", "HEAD", "--", *contents).stdout
-        for rec in filter(None, listing.split("\0")):
-            meta, path = rec.split("\t", 1)
-            modes[path] = meta.split(" ")[0]
+    modes = kt.head_modes(instance, contents)
+    modes.update((rel, kt.MODE_EXECUTABLE) for rel in executable)
     for rel, data in contents.items():
         if data is None:
             kt.git(instance, "update-index", "--force-remove", "--", rel, index=index)
@@ -777,13 +810,26 @@ def check_repository(prov: dict, allowed: str | None, nothing: str = NOT_RUN) ->
             f"--allow-repository {prov['repository']}.")
 
 
+def verified_route(prov: dict) -> str:
+    """How to get the release a source claims to be as a download this engine verifies
+    itself, when it claims the repository this base follows. A base on 0.2.x needs this
+    line: its older SKILL.md passes the archive `fetch` saved as --source, and the file
+    on disk proves nothing, whoever saved it."""
+    repo = prov["base_repository"] or kt.DEFAULT_REPOSITORY
+    claimed = prov["claimed_repository"]
+    if not claimed or not same_repo(claimed, repo):
+        return ""
+    return (f" To have this release verified instead, drop --source and add --to "
+            f"{prov['version']}: the engine then downloads it from {repo} over HTTPS itself.")
+
+
 def check_verified(prov: dict, allowed: str | None, nothing: str = NOT_RUN) -> None:
     """The gate for anything but a verified download (a folder, a zip, a local clone):
     its claims are all there is, so the owner has to accept the repository it claims."""
     if prov["verified"] is None and not allows(allowed, prov["claimed_repository"]):
         raise kt.TemplateError(
-            f"{provenance_warnings(prov)[-1]} {nothing} If the owner trusts it, run again "
-            f"with --allow-repository {prov['claimed_repository']}.")
+            f"{provenance_warnings(prov)[-1]} {nothing}{verified_route(prov)} If the owner "
+            f"trusts it, run again with --allow-repository {prov['claimed_repository']}.")
 
 
 def check_repository_args(args) -> None:

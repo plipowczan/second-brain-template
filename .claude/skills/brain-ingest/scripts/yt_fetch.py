@@ -37,6 +37,7 @@ def normalize_url(url: str) -> str:
     return candidate
 
 
+import html
 from dataclasses import dataclass
 
 
@@ -54,12 +55,29 @@ def _vtt_time_to_seconds(h: str, m: str, s: str, ms: str) -> float:
     return int(h) * 3600 + int(m) * 60 + int(s) + int(ms) / 1000.0
 
 
+def _vtt_line(raw: str) -> str:
+    """One cue line as plain text: tags stripped, entities decoded, whitespace collapsed."""
+    return " ".join(html.unescape(_VTT_TAG_RE.sub("", raw)).split())
+
+
+def _repeated_lines(prev: list[str], cur: list[str]) -> int:
+    """How many leading lines of `cur` repeat the trailing lines of `prev`."""
+    for n in range(min(len(prev), len(cur)), 0, -1):
+        if prev[-n:] == cur[:n]:
+            return n
+    return 0
+
+
 def parse_vtt(vtt_text: str) -> list[VttCue]:
     """Parse WebVTT into a list of cues. Strips styling tags and timing tags.
 
-    Coalesces consecutive identical-text cues (YouTube auto-captions emit many).
+    YouTube auto-captions roll: each cue repeats the previous cue's last line above the
+    new one, with a 10 ms cue between them that holds only the finished line. Lines a cue
+    repeats from the cue before it are dropped, so each line appears once, at the cue
+    that introduced it; consecutive identical cues coalesce the same way.
     """
     cues: list[VttCue] = []
+    prev: list[str] = []
     lines = vtt_text.splitlines()
     i = 0
     while i < len(lines):
@@ -70,12 +88,19 @@ def parse_vtt(vtt_text: str) -> list[VttCue]:
         start = _vtt_time_to_seconds(*m.groups())
         i += 1
         text_parts: list[str] = []
-        while i < len(lines) and lines[i].strip():
-            text_parts.append(_VTT_TAG_RE.sub("", lines[i]).strip())
+        # A cue ends at an empty line. Rolling cues pad their empty slot with a lone space,
+        # so a whitespace-only line is part of the cue, not its end.
+        while i < len(lines) and lines[i] and not _VTT_TIME_RE.match(lines[i]):
+            part = _vtt_line(lines[i])
+            if part:
+                text_parts.append(part)
             i += 1
-        text = " ".join(p for p in text_parts if p)
-        if text and (not cues or cues[-1].text != text):
-            cues.append(VttCue(start=start, text=text))
+        if not text_parts:
+            continue
+        new = text_parts[_repeated_lines(prev, text_parts):]
+        prev = text_parts
+        if new:
+            cues.append(VttCue(start=start, text=" ".join(new)))
     return cues
 
 
@@ -153,6 +178,13 @@ def _has_yt_dlp_module() -> bool:
     return importlib.util.find_spec("yt_dlp") is not None
 
 
+# Runs the yt_dlp module with the current directory out of the search path. The ingest runs
+# inside the owner's base, where `python -m yt_dlp` would prefer a yt_dlp.py lying around in
+# that folder over the installed package. Python's own -P does this too, but only from 3.11.
+_RUN_MODULE = ("import runpy, sys; sys.path[:] = filter(None, sys.path); "
+               "runpy.run_module('yt_dlp', run_name='__main__', alter_sys=True)")
+
+
 def resolve_yt_dlp_cmd(
     env: Mapping[str, str],
     *,
@@ -165,7 +197,7 @@ def resolve_yt_dlp_cmd(
     Order: $YT_DLP_CMD (used as given, not probed); a `yt-dlp` on PATH that actually
     starts; the yt_dlp module under this interpreter. The middle check matters on
     Windows, where Smart App Control blocks pip's unsigned yt-dlp.exe while the
-    signed python.exe runs `-m yt_dlp` fine.
+    signed python.exe runs the module fine.
     """
     raw = env.get("YT_DLP_CMD", "").strip()
     if raw:
@@ -174,7 +206,7 @@ def resolve_yt_dlp_cmd(
     if exe and starts([exe]):
         return (exe,)
     if has_module():
-        return (sys.executable, "-m", "yt_dlp")
+        return (sys.executable, "-c", _RUN_MODULE)
     return None
 
 
@@ -234,6 +266,37 @@ import time
 
 
 _DEFAULT_LANGS = ("en", "en-US", "en-GB", "pl")
+
+
+def caption_langs(meta: Mapping, preferred: tuple[str, ...] = _DEFAULT_LANGS) -> list[str]:
+    """Return the --sub-langs to try for this video, best first, from its metadata.
+
+    Per preferred language: its manual subtitles, else its original-language auto-captions
+    (`<lang>-orig`), else plain `<lang>`. A video with dubbed audio has an ASR track per
+    dub, and yt-dlp files all of them, translated, under plain `<lang>` and downloads the
+    last one: a machine translation (`tlang`) of another dub, which YouTube refuses with
+    HTTP 429. The video's own `<language>-orig` track comes last when no preferred
+    language matched it. Metadata without caption lists keeps `preferred` as is.
+    """
+    if "subtitles" not in meta and "automatic_captions" not in meta:
+        return list(preferred)
+    manual = meta.get("subtitles") or {}
+    auto = meta.get("automatic_captions") or {}
+    langs: list[str] = []
+    for lang in preferred:
+        if lang in manual:
+            langs.append(lang)
+        elif f"{lang}-orig" in auto:
+            langs.append(f"{lang}-orig")
+        elif lang in auto:
+            langs.append(lang)
+    language = meta.get("language")
+    if language:  # "en-US" -> "en-US-orig", then "en-orig"
+        orig = next((o for o in (f"{language}-orig", f"{language.split('-')[0]}-orig")
+                     if o in auto), None)
+        if orig and orig not in langs:
+            langs.append(orig)
+    return langs
 
 
 def _try_one_lang(url: str, lang: str, out_template: str, timeout: int, retries: int = 2,
@@ -474,10 +537,13 @@ def fetch_to_archive(
 def process_url(url: str, out_dir: Path, player_client: str | None = None) -> FetchResult:
     """End-to-end: URL → archived source file. Raises YTFetchError on failure."""
     video_id = normalize_url(url)
+    # The checked id is all that reaches yt-dlp: on the pasted URL it would pick its own
+    # video from `?v=A&v=B` or `/redirect?q=...&v=...`, and walk a whole `&list=`.
+    url = f"https://www.youtube.com/watch?v={video_id}"
     meta = fetch_metadata(url, player_client=player_client)
     meta["video_id"] = video_id
 
-    vtt = fetch_captions_vtt(url, player_client=player_client)
+    vtt = fetch_captions_vtt(url, langs=caption_langs(meta), player_client=player_client)
     if vtt:
         cues = parse_vtt(vtt)
         transcription = "captions"

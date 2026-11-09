@@ -671,8 +671,8 @@ class CommitGuardTest(SafetyCase):
     def test_change_between_the_checks_and_the_commit(self):
         real = upgrade.build_commit_index
 
-        def racing(instance, index, contents):
-            result = real(instance, index, contents)
+        def racing(*args):
+            result = real(*args)
             (self.base / self.HOOK).write_text("print('late edit')\n", encoding="utf-8")
             return result
         before = self.git_state()

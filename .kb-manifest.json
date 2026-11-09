@@ -38,6 +38,9 @@
       "README.md"
     ]
   },
+  "executable": [
+    ".githooks/pre-commit"
+  ],
   "exclude": [
     "**/__pycache__/**",
     "**/*.pyc",

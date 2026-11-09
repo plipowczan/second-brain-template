@@ -12,8 +12,7 @@ human alike.
 
 The trick that makes it scale without embeddings or a vector DB: **index-first
 reads**. The agent starts from a navigation map and opens only the relevant
-notes, keeping context up to ~28× smaller per query — good for ~500 sources on
-plain markdown alone.
+notes, keeping context up to ~28× smaller per query, on plain markdown alone.
 
 Live instance: **[brain.lipowczan.pl](https://brain.lipowczan.pl)**.
 
@@ -45,6 +44,9 @@ answer questions, lint for quality, and keep navigation indexes current.
 
 > Prefer to set things up by hand? You can skip `/b:onboard`, rename the
 > `*.template.md` files yourself, and edit the `{{PLACEHOLDERS}}` directly.
+
+Want a step-by-step guide? There's a course that walks through setting this up
+from scratch: [lipowczan.pl/llm-wiki/kurs](https://lipowczan.pl/llm-wiki/kurs).
 
 ## Works beyond Claude Code
 
@@ -98,6 +100,10 @@ nearest release, and writes the stamp, in its own commit. The upgrade follows as
 second commit. Such a base has no `/b:upgrade` yet, so ask your agent to *"download the
 latest release of the template and follow its
 `.claude/skills/brain-upgrade/SKILL.md` to adopt this base"*.
+
+To undo both, revert the upgrade first and the adoption second. If the adoption added
+`.kb-onboard.json`, reverting it also removes the file from your disk; bring it back with
+`git restore --source=<adoption commit> -- .kb-onboard.json`.
 
 ## Skills
 

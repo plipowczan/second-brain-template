@@ -19,6 +19,7 @@ import kbtemplate as kt
 import sources
 
 RENDER_PY = ".claude/skills/brain-onboard/scripts/render.py"
+AGENTS = "AGENTS.md"
 
 
 # --- small helpers -------------------------------------------------------------------
@@ -119,12 +120,14 @@ def action(path, kind, *, B=None, S=None, L=None, selected=None, note="", warnin
 # --- rendered files ------------------------------------------------------------------
 
 def plan_rendered(instance: Path, manifest: kt.Manifest, new_files: dict[str, bytes],
-                  previous: dict, requested: bool, *, adopt_files: dict | None = None):
+                  previous: dict, requested: bool, *, adopt_files: dict | None = None,
+                  by_default: tuple = ()):
     """Entries for CLAUDE.md, AGENTS.md and content/WRITING_STYLE.md.
 
     `new_files` is the tree whose templates would be rendered now (the source).
     `previous` holds the stamp's rendered entries (upgrade). For an adoption,
     `adopt_files` is release R's tree: the stamp entry is decided against R's rendering.
+    `by_default` names the outputs requested even though the owner did not ask.
     Returns (entries, payload {key: bytes}, questions).
     """
     values = read_values(instance)
@@ -133,7 +136,8 @@ def plan_rendered(instance: Path, manifest: kt.Manifest, new_files: dict[str, by
     for out, template in sorted(manifest.rendered.items()):
         tpl = new_files.get(template)
         L = local(instance, out)
-        e = {"path": out, "template": template, "L": L, "requested": requested,
+        e = {"path": out, "template": template, "L": L, "requested": requested or out in by_default,
+             "by_default": out in by_default and not requested,
              "S_template": kt.content_hash(tpl) if tpl is not None else None,
              "rendered": None, "missing": [], "status": None, "entry": None}
         prev = previous.get(out)
@@ -220,6 +224,46 @@ def author_leftovers(instance: Path, source: sources.Source, index: kt.HistoryIn
     return actions, kept
 
 
+# --- the executable bit --------------------------------------------------------------
+
+def plan_executable(plan: dict, instance: Path, manifest: kt.Manifest, shipped) -> None:
+    """Fill plan["executable"] (the listed files this version ships, which get the bit
+    whenever they are written) and plan["modes"] (one row per such file that lacks it).
+
+    The current bit is the mode in HEAD when git tracks the file, because that is what
+    the commit changes and on Windows it is all there is; otherwise it is the file's own
+    bit on Linux and macOS. Rows sit outside plan["actions"]: a file's content action
+    means what it always meant, and the bit is asked apart from it."""
+    plan["executable"] = sorted(p for p in manifest.executable if p in shipped)
+    head = kt.head_modes(instance, plan["executable"]) if plan["git"] else {}
+    edited = {a["path"] for a in plan["actions"] if a["kind"] in ("keep", "conflict")}
+    for p in plan["executable"]:
+        L = local(instance, p)
+        if L is None:
+            continue
+        mode, bits = head.get(p), kt.file_bits(instance / p)
+        if mode == kt.MODE_EXECUTABLE or (mode is None and (bits is None or bits & 0o100)):
+            continue
+        plan["modes"].append({
+            "path": p, "L": L, "selected": True,
+            "note": "your text stays, only the bit changes" if p in edited else ""})
+
+
+def chosen_modes(plan: dict, decision) -> set[str]:
+    """The rows of plan["modes"] to apply: `decision` is the "executable" key of the
+    decisions, true, false or a list of paths; left out, every selected row."""
+    rows = {m["path"] for m in plan["modes"]}
+    if decision is None:
+        return {m["path"] for m in plan["modes"] if m["selected"]}
+    if isinstance(decision, bool):
+        return rows if decision else set()
+    unknown = sorted(set(decision) - rows)
+    if unknown:
+        raise kt.TemplateError("decisions name executable paths that are not in the plan: "
+                               + ", ".join(unknown))
+    return set(decision)
+
+
 # --- the plan ------------------------------------------------------------------------
 
 def base_plan(instance: Path, mode: str, source: sources.Source) -> dict:
@@ -239,9 +283,11 @@ def base_plan(instance: Path, mode: str, source: sources.Source) -> dict:
         "up_to_date": False,
         "changelog": [],
         "actions": [],
+        "executable": [],
+        "modes": [],
         "rendered": [],
         "questions": [],
-        "info": {"uptodate": 0, "seeded": [], "ignored": [], "author_kept": []},
+        "info": {"uptodate": 0, "seeded": [], "ignored": [], "author_kept": [], "renamed": []},
         "warnings": list(source.warnings),
         "git": kt.is_git_root(instance),
         "track_onboard": False,
@@ -262,8 +308,13 @@ def check_invariants(plan: dict) -> None:
         if kt.protected(e["path"]) and e["path"] != kt.WRITING_STYLE:
             raise kt.TemplateError(f"refusing to plan a re-render of {e['path']}. "
                                    "Nothing was changed.")
-    kt.check_paths([a["path"] for a in plan["actions"]] + [e["path"] for e in plan["rendered"]],
-                   "the plan")
+    executable = plan["executable"] + [m["path"] for m in plan["modes"]]
+    for p in executable:
+        if kt.protected(p):
+            raise kt.TemplateError(f"refusing to change the mode of {p}: notes, README.md and "
+                                   "brain-upgrade's own files belong to the base. Nothing was changed.")
+    kt.check_paths([a["path"] for a in plan["actions"]] + [e["path"] for e in plan["rendered"]]
+                   + executable, "the plan")
 
 
 def finish(plan: dict, instance: Path, payload: dict) -> dict:
@@ -289,7 +340,31 @@ def write_paths(plan: dict) -> list[str]:
     """Every path apply might write or delete under this plan."""
     paths = [a["path"] for a in plan["actions"] if a["kind"] != "keep"]
     paths += [e["path"] for e in plan["rendered"] if e["writable"]]
+    paths += [m["path"] for m in plan["modes"]]
     return sorted(set(paths))
+
+
+def has_breaking(changelog: list[dict]) -> bool:
+    return any(e["breaking"] for block in changelog for s in block["sections"] for e in s["entries"])
+
+
+def renamed_to(old: str, candidates) -> str | None:
+    """`old`'s new name among `candidates`: the same file name, with one folder that
+    gained a prefix (skills/lint/ -> skills/brain-lint/) or one inserted folder
+    (commands/lint.md -> commands/b/lint.md). A guess that only produces a line in the
+    summary, and never changes what is written."""
+    a = old.split("/")
+    for new in candidates:
+        b = new.split("/")
+        if a[-1] != b[-1]:
+            continue
+        if len(b) == len(a) + 1 and any(b[:i] + b[i + 1:] == a for i in range(len(a))):
+            return new
+        if len(b) == len(a):
+            changed = [(s, t) for s, t in zip(a, b) if s != t]
+            if len(changed) == 1 and changed[0][1].endswith("-" + changed[0][0]):
+                return new
+    return None
 
 
 def plan_upgrade(instance: Path, source: sources.Source, *, rerender: bool = False) -> dict:
@@ -311,6 +386,7 @@ def plan_upgrade(instance: Path, source: sources.Source, *, rerender: bool = Fal
     S_owned = source.owned()
     B = stamp["files"]
     payload: dict = {}
+    new_paths = sorted(set(S_owned) - set(B))
     for p in sorted(set(S_owned) | set(B)):
         S, b, L = S_owned.get(p), B.get(p), local(instance, p)
         if S is not None:
@@ -343,6 +419,9 @@ def plan_upgrade(instance: Path, source: sources.Source, *, rerender: bool = Fal
                 plan["actions"].append(action(
                     p, "delete", B=b, L=L, selected=False, note="removed from the template",
                     warning="edited in this base: kept unless you select the deletion"))
+                to = renamed_to(p, new_paths)
+                if to:
+                    plan["info"]["renamed"].append({"path": p, "to": to})
 
     leftovers, kept = author_leftovers(instance, source, source.index)
     plan["actions"] += leftovers
@@ -350,8 +429,12 @@ def plan_upgrade(instance: Path, source: sources.Source, *, rerender: bool = Fal
     plan["info"]["seeded"] = seeded_info(source, stamp.get("seeded"))
     plan["info"]["ignored"] = source.by_class()[None]
 
-    entries, rpayload, questions = plan_rendered(instance, source.manifest, source.files,
-                                                 stamp["rendered"], rerender)
+    # The agent reads AGENTS.md in every session, so after a breaking release an untouched
+    # copy follows without being asked. content/WRITING_STYLE.md stays on request: notes
+    # are never touched unless the owner says so.
+    entries, rpayload, questions = plan_rendered(
+        instance, source.manifest, source.files, stamp["rendered"], rerender,
+        by_default=(AGENTS,) if has_breaking(plan["changelog"]) else ())
     payload.update(rpayload)
     plan["rendered"], plan["questions"] = entries, questions
     plan["render_py"] = kt.content_hash(rpayload["render.py"]) if "render.py" in rpayload else None
@@ -364,8 +447,9 @@ def plan_upgrade(instance: Path, source: sources.Source, *, rerender: bool = Fal
         "seeded": {p: source.hash(p) for p in source.by_class()["seeded"]},
         "rendered": {e["path"]: e["entry"] for e in entries if e["entry"]},
     }
+    plan_executable(plan, instance, source.manifest, S_owned)
     pending = [a for a in plan["actions"] if a["kind"] != "keep"]
-    plan["up_to_date"] = (source.version == stamp["version"] and not pending
+    plan["up_to_date"] = (source.version == stamp["version"] and not pending and not plan["modes"]
                           and not any(e["requested"] and e["writable"] for e in entries))
     return finish(plan, instance, payload)
 
@@ -500,6 +584,9 @@ def plan_adopt(instance: Path, source: sources.Source, *, base: str | None = Non
     leftovers, kept = author_leftovers(instance, source, index)
     plan["actions"] += leftovers
     plan["info"]["author_kept"] = kept
+    # The list of the source, also for an older R: the mode only ever moves forward, and
+    # an adoption can bring in the test that checks it.
+    plan_executable(plan, instance, man, R)
 
     entries, rpayload, questions = plan_rendered(instance, man, source.files, {}, False,
                                                  adopt_files=rtree.files)
@@ -563,6 +650,17 @@ def summary(plan: dict) -> str:
         extra = f" — {a['note']}" if a.get("note") else ""
         warn = f" (!) {a['warning']}" if a.get("warning") else ""
         lines.append(f"  {box}{LABEL[a['kind']]:<12} {a['path']}{extra}{warn}")
+    if plan["modes"]:
+        lines.append("")
+        lines.append("Executable bit (the template ships these as executable):")
+        for m in plan["modes"]:
+            note = f" — {m['note']}" if m["note"] else ""
+            lines.append(f"  [{'x' if m['selected'] else ' '}] {m['path']}{note}")
+    if plan["info"]["renamed"]:
+        lines.append("")
+        lines.append("Renamed by the template (your edits stay at the old name and do not move):")
+        for r in plan["info"]["renamed"]:
+            lines.append(f"  {r['path']} -> {r['to']}")
     lines.append("")
     lines.append("Instruction files (rendered):")
     for e in plan["rendered"]:
@@ -603,6 +701,8 @@ def render_note(e: dict, mode: str) -> str:
                  else "edited (or not provable), so later upgrades only propose") +
                 "; differs from the new template (see --diff)")
     if s == "writable":
+        if e.get("by_default"):
+            return changed + 'will be re-rendered: this update has a BREAKING entry (to keep it, "rerender": [])'
         return changed + ("will be re-rendered" if e["requested"] else
                           "untouched; re-render on request (--rerender)")
     return changed + "edited by hand: only a proposal (see --diff), never written"

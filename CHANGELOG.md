@@ -17,11 +17,12 @@ the text and code are our own.
 Existing bases: run `/b:upgrade`. It brings the updated skills (`brain-ingest`,
 `brain-qa`, `brain-lint`, `brain-enhance`, `brain-compile`, `brain-gaps`,
 `brain-curate`), the scanners and their tests, the `kb-maintain` workflow, and the new
-`LIMITS.md`. It does not change your `AGENTS.md` unless the file is unedited and you ask
-for a re-render. Every rule also lives in the skills, so an edited `AGENTS.md` misses
-nothing. It never touches your note templates in `content/templates/`, your `README.md`
-or any note. After the upgrade, run `/b:lint`. Notes whose `source:` still points at
-`_raw/inbox/` show up as warnings, most of them with a ready `fix=` path. Fix them when
+`LIMITS.md`. It re-renders your `AGENTS.md` by default only when it recognises the file
+as unedited and your update crosses a **BREAKING** entry, as an update from before
+`0.2.0` does. Otherwise it changes that file only if you ask. Every rule also lives in
+the skills, so an edited `AGENTS.md` misses nothing. It never touches your note
+templates in `content/templates/`, your `README.md` or any note. After the upgrade, run
+`/b:lint`. Notes whose `source:` still points at `_raw/inbox/` show up as warnings, most of them with a ready `fix=` path. Fix them when
 it suits you; nothing is blocked. If you run `/b:ingest` or `/b:qa` without a person
 present, add `--batch` or `--no-save` (see below).
 
@@ -112,6 +113,11 @@ present, add `--batch` or `--no-save` (see below).
   example is where many stale `_raw/inbox/` source paths came from. Only new bases and
   bases that re-render an unedited `AGENTS.md` get this. Every rule it points to also
   lives in the skills, so an edited `AGENTS.md` misses nothing.
+- **`README.md`: no source count, and a link to the course.** The line "good for ~500
+  sources" is gone, and the setup section links a step-by-step course.
+
+  Existing bases: nothing to do. `README.md` is yours and an upgrade never writes it. If
+  you want these lines, copy them by hand.
 
 ### Fixed
 - **Lint reads lists written without indentation.** `lint_scan.py` read a YAML list only
@@ -130,6 +136,92 @@ present, add `--batch` or `--no-save` (see below).
   reporting, ingest checks that every path it wrote exists. Paths written by earlier
   versions are not rewritten: `/b:lint` lists them, with the fix where one archived copy
   exists.
+- **`/b:upgrade` no longer stops at its own plan step.** The skill passed the archive it
+  had just downloaded to `plan --source`. The engine counts every local zip as unverified,
+  so the default path ended in a refusal. The skill now runs `plan --to <version>`: the
+  engine downloads the release you agreed to over HTTPS, and the skill checks that the
+  commit is the one you were shown. A zip from elsewhere is still refused without your
+  consent, and a file placed next to it changes nothing.
+
+  Existing bases: a base on `0.2.x` still follows its own older skill for this one
+  update, so the first `plan` is refused once. The message names the way out (drop
+  `--source`, add `--to <version>`), and your agent can follow it. Updates after that use
+  the new skill. Nothing else is needed.
+- **Updates carry a file's executable bit.** `.githooks/pre-commit` is executable since
+  `0.2.0`, but updates compared content only, so a base from before `0.2.0` kept the old
+  mode. Git on Linux and macOS skips a hook that is not executable, and the `Tests`
+  workflow, which checks that hook, failed on Ubuntu. The plan now has an **Executable
+  bit** section for the files `.kb-manifest.json` lists under `executable`. A new or
+  updated file gets the bit as it is written, and adoption does the same. The bit is only
+  ever added. On a file you edited, your text stays and only the bit changes; you can
+  decline it with `"executable": false`.
+
+  Existing bases: `/b:upgrade` shows the row and sets the bit, also when the content
+  already equals the release, so a base that went through `0.2.x` is covered too. If your
+  clone uses `.githooks` (`git config core.hooksPath .githooks`), a hook that git skipped
+  until now starts to run on Linux and macOS, and blocks a commit with a note the check
+  rejects.
+- **An untouched `AGENTS.md` follows a breaking release.** The agent reads this file in
+  every session, but it was re-rendered only on request, so after a breaking change it
+  could keep describing the old setup. When the versions you update across include a
+  breaking entry, `/b:upgrade` now re-renders an untouched `AGENTS.md` by default.
+  `content/WRITING_STYLE.md` and `CLAUDE.md` stay on request.
+
+  Existing bases: nothing to do. An `AGENTS.md` you edited is never overwritten: the plan
+  says so and you compare it by hand. To keep an untouched copy as it is, answer no
+  (`"rerender": []`). A base already past that release can ask for it with `--rerender`.
+- **The plan names a file the template renamed under your edits.** When the template
+  moves a file you edited, your copy stays at the old path, and the plan only said
+  "removed from the template". It now also lists `old -> new` under **Renamed by the
+  template**. Your edits still don't move on their own, and the skill at the old path
+  stays in use until you carry them over. The match is a guess from the two paths and
+  only produces this line.
+
+  Existing bases: nothing to do. The section appears when it applies.
+- **Undoing an update is documented in the right order.** Undo the newest commit first:
+  the upgrade, then the adoption. Reverting the adoption alone runs into conflicts. A
+  reverted adoption also removes `.kb-onboard.json` from your disk if it was the commit
+  that added it, and `.gitignore` hides that, so `README.md` and the `brain-upgrade` skill
+  now give the command that brings the file back.
+
+  Existing bases: `/b:upgrade` brings the note in the skill. Nothing else is needed.
+- **`/b:ingest` hands yt-dlp only the video it checked.** `yt_fetch.py` read the video id
+  from the URL you pasted, then passed that URL on, so yt-dlp could pick another video
+  from `?v=A&v=B`, or go through a whole playlist from `&list=`. It now gets a URL built
+  from the checked id. The fallback that runs yt-dlp as a Python module also leaves the
+  current folder out of its search, so a stray `yt_dlp.py` in your base no longer runs in
+  its place.
+
+  Existing bases: `/b:upgrade` brings the fix (`brain-ingest`: `SKILL.md`,
+  `scripts/yt_fetch.py` and its tests). Nothing else is needed.
+- **YouTube ingest finds the captions of videos with dubbed audio.** A video with dubbed
+  audio tracks has an auto-caption transcript per dub, and yt-dlp lists every one of
+  them, machine-translated, under the plain language code. Asking for `en` downloaded the
+  last of those: for one video, its Ukrainian dub translated back into English. YouTube
+  usually refuses such translations with `HTTP 429`, and every other language failed the
+  same way, so `/b:ingest` stopped with `No captions and whisper.cpp not configured`
+  although English captions existed. `yt_fetch.py` now picks the languages from the
+  video's metadata. For each preferred language (`en`, `en-US`, `en-GB`, `pl`) it takes
+  manual subtitles first, then the original-language transcript (`en-orig`), then the
+  plain code as before. The video's own original language (`de-orig` for a German video)
+  is tried last when none of those matched. Videos with only plain `en` captions are
+  fetched as before.
+
+  Existing bases: pick it up with `/b:upgrade`, which updates the `brain-ingest` skill
+  (`scripts/yt_fetch.py` and its tests). Nothing else is needed.
+- **YouTube transcripts no longer repeat every line.** Auto-captions roll: each caption
+  shows the previous line again above the new one. `yt_fetch.py` joined both, so the
+  archived transcript of an auto-captioned video had every line two or three times
+  (`[0:01] A`, `[0:01] A B`, `[0:03] B`, …). It now keeps each line once, at the time it
+  starts. Two smaller faults in the same parser are fixed too: HTML entities are decoded
+  (`S&amp;P` is now `S&P`), and a line that opens a caption block, such as the first line
+  of the video, gets its own start time instead of the time it ends. Manual subtitles
+  come out as before.
+
+  Existing bases: `/b:upgrade` brings the fix (the same files as above). Transcripts
+  already in `content/_raw/processed/` keep their repeated lines; the notes written from
+  them are not affected. For a clean copy, re-run `yt_fetch.py <url> --out-dir <a temp
+  folder>` and replace the transcript below the archive's frontmatter.
 
 ## [0.2.1] - 2026-10-15
 

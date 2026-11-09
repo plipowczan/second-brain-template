@@ -23,11 +23,13 @@ def no_network(url):
 
 
 class AdoptCase(unittest.TestCase):
+    executable = ()
+
     @classmethod
     def setUpClass(cls):
         cls.ctmp = fx.TempDir()
         cls.repo = cls.ctmp.path / "template"
-        cls.shas = build_history(cls.repo)
+        cls.shas = build_history(cls.repo, cls.executable)
         cls.zip3 = fx.zip_of(cls.repo, "v0.2.0", cls.ctmp.path / "kb-template-0.2.0.zip")
         cls.zip1 = fx.zip_of(cls.repo, "v0.1.0", cls.ctmp.path / "kb-template-0.1.0.zip")
 

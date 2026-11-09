@@ -41,9 +41,12 @@ CONSENT = ("--allow-repository", REPO)
 VALUES = {"KB_NAME": "Test KB", "KB_OWNER": "Owner", "PRIMARY_LANGUAGE": "English"}
 
 
-def manifest(version: str) -> str:
-    return json.dumps({"format": 1, "version": version, "repository": REPO,
-                       "classes": CLASSES, "exclude": EXCLUDE}, indent=2) + "\n"
+def manifest(version: str, executable=()) -> str:
+    data = {"format": 1, "version": version, "repository": REPO, "classes": CLASSES,
+            "exclude": EXCLUDE}
+    if executable:
+        data["executable"] = list(executable)
+    return json.dumps(data, indent=2) + "\n"
 
 
 def changelog(*versions: str, unreleased: str | None = None) -> str:
@@ -58,10 +61,10 @@ def changelog(*versions: str, unreleased: str | None = None) -> str:
     return "\n".join(out) + "\n"
 
 
-def template(version: str = "0.2.0", changes: dict | None = None) -> dict[str, bytes]:
+def template(version: str = "0.2.0", changes: dict | None = None, executable=()) -> dict[str, bytes]:
     """A template tree; `changes` replaces files by path (value None deletes the path)."""
     files = {
-        ".kb-manifest.json": manifest(version),
+        ".kb-manifest.json": manifest(version, executable),
         "CHANGELOG.md": changelog(version, "0.1.0") if version != "0.1.0" else changelog("0.1.0"),
         ".claude/skills/demo/SKILL.md": "---\nname: demo\n---\n# Demo skill v1\n",
         ".claude/skills/demo/scripts/tool.py": "print('tool v1')\n",
@@ -225,16 +228,19 @@ def enc(files):
     return {p: v.encode() if isinstance(v, str) else v for p, v in files.items()}
 
 
-def build_history(repo: Path) -> dict:
+def build_history(repo: Path, executable=()) -> dict:
+    """`executable`: files every state ships, listed as executable by 0.2.0's manifest."""
+    extra = {p: "#!/bin/sh\n" for p in executable}
     git_init(repo)
-    shas = {"P0": commit_tree(repo, enc(P0), "pre-release state")}
-    shas["P1"] = commit_tree(repo, enc(P1), "release 0.1.0", tag="v0.1.0")
-    shas["P2"] = commit_tree(repo, enc(P2), "rename skills")
+    shas = {"P0": commit_tree(repo, enc({**P0, **extra}), "pre-release state")}
+    shas["P1"] = commit_tree(repo, enc({**P1, **extra}), "release 0.1.0", tag="v0.1.0")
+    shas["P2"] = commit_tree(repo, enc({**P2, **extra}), "rename skills")
     # The release commit: stage, index the staged tree as 0.2.0, commit, tag.
-    commit_tree(repo, enc(P3), "release 0.2.0 (without index yet)")
+    top = manifest("0.2.0", executable)
+    commit_tree(repo, enc({**P3, **extra, ".kb-manifest.json": top}),
+                "release 0.2.0 (without index yet)")
     git(repo, "reset", "-q", "--soft", "HEAD~1")
-    index = kt.build_index(repo, kt.Manifest.from_bytes(manifest("0.2.0").encode()),
-                           release_tree=True)
+    index = kt.build_index(repo, kt.Manifest.from_bytes(top.encode()), release_tree=True)
     write_tree(repo, {kt.INDEX: kt.dump_index(index)})
     git(repo, "add", "-A")
     git(repo, "commit", "-q", "-m", "release 0.2.0")
