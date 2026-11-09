@@ -22,9 +22,10 @@ as unedited and your update crosses a **BREAKING** entry, as an update from befo
 `0.2.0` does. Otherwise it changes that file only if you ask. Every rule also lives in
 the skills, so an edited `AGENTS.md` misses nothing. It never touches your note
 templates in `content/templates/`, your `README.md` or any note. After the upgrade, run
-`/b:lint`. Notes whose `source:` still points at `_raw/inbox/` show up as warnings, most of them with a ready `fix=` path. Fix them when
-it suits you; nothing is blocked. If you run `/b:ingest` or `/b:qa` without a person
-present, add `--batch` or `--no-save` (see below).
+`/b:lint`. Notes whose `source:` still points at `_raw/inbox/` show up as warnings, most
+of them with a ready `fix=` path. Fix them when it suits you; nothing is blocked. If you
+run `/b:ingest` or `/b:qa` without a person present, add `--batch` or `--no-save` (see
+below).
 
 ### Added
 - **Lint finds source paths that lead nowhere, and proposes the fix.** Until now nothing
