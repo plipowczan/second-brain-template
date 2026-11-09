@@ -15,6 +15,27 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
   you want these lines, copy them by hand.
 
 ### Fixed
+- **The weekly `kb-maintain` run no longer fails where it may not open a pull request,
+  and no longer fails on every run after its first.** GitHub lets a workflow open pull
+  requests only when the repository allows it, and that setting is off by default. So
+  the workflow pushed the refreshed indexes to `kb-maintenance/reindex`, then failed with
+  `GitHub Actions is not permitted to create or approve pull requests`, and GitHub sent a
+  failure notice. It now ends without an error: a warning and the run summary name the
+  setting (**Settings → Actions → General → Workflow permissions → Allow GitHub Actions to
+  create and approve pull requests**) and link the page where you open the pull request
+  by hand. Any other error still fails the run. The same step had a second fault: once a
+  run had pushed that branch, every later run was refused at the push (`stale info`),
+  because the checkout does not fetch the branch, so turning the setting on alone would
+  not have brought a pull request. The push now checks what the branch holds on GitHub
+  first. `README.md` and the `/b:onboard` handoff name the setting.
+
+  Existing bases: `/b:upgrade` brings the workflow (`.github/workflows/kb-maintain.yml`)
+  and the onboarding note. If your base is on GitHub, turn the setting on once; in a
+  repository owned by an organization, an owner may have to allow it in the
+  organization's settings first. If a refresh already waits on `kb-maintenance/reindex`,
+  the next run that finds the indexes out of date replaces it and opens the pull request;
+  to get it sooner, run **KB maintenance** from the **Actions** tab. `README.md` is yours and an upgrade never writes
+  it: copy the new "Weekly maintenance on GitHub" section by hand if you want it.
 - **`/b:upgrade` no longer stops at its own plan step.** The skill passed the archive it
   had just downloaded to `plan --source`. The engine counts every local zip as unverified,
   so the default path ended in a refusal. The skill now runs `plan --to <version>`: the
