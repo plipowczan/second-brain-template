@@ -132,7 +132,8 @@ Run every command from the vault root. `SCRIPT=.claude/skills/brain-watch/script
    snapshot, keeps each file's line endings, and leaves everything else in the note as it
    was. Running it again on the same inputs changes nothing.
 8. **Indexes.** `python .claude/skills/brain-reindex/scripts/build_indexes.py`, then add
-   one line at the top of `## Recent Changes` in `vault-map.md` (keep 10):
+   one line at the top of `## Recent Changes` in `vault-map.md`, leaving the lines below
+   it as they are (the section is a change log):
    `- YYYY-MM-DD <N> tool notes status-checked, <M> linked (/b:watch)`.
 9. **Report.** `python $SCRIPT report "$WS/scan.json" --digest "$WS/digest.json" --out content/_outputs/reports/YYYY-MM-DD_watch.md`.
 10. **Tell the user:** the counts, the flags, status changes, the `/b:enhance` list, the
