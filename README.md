@@ -105,6 +105,21 @@ To undo both, revert the upgrade first and the adoption second. If the adoption 
 `.kb-onboard.json`, reverting it also removes the file from your disk; bring it back with
 `git restore --source=<adoption commit> -- .kb-onboard.json`.
 
+## Weekly maintenance on GitHub
+
+If your base lives on GitHub, `.github/workflows/kb-maintain.yml` runs every Monday, and
+on demand from the **Actions** tab. It rebuilds the navigation indexes, writes a
+vault-health summary, and opens one pull request when the indexes drifted from your notes.
+It never changes a note.
+
+To let it open that pull request, allow it once in the repository: **Settings → Actions →
+General → Workflow permissions → Allow GitHub Actions to create and approve pull
+requests**, then **Save**. It is off by default. Without it the run still pushes the
+refreshed indexes to the branch `kb-maintenance/reindex`, and its summary links the page
+where you open the pull request by hand. A repository owned by an organization takes this
+setting from the organization, so an owner of the organization may have to allow it there
+first. Don't want the workflow? Delete the file.
+
 ## Skills
 
 | Command | What it does |
