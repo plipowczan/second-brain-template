@@ -753,6 +753,8 @@ def status_lines(n, r, titles, o=None):
     return lv, lines, changes
 
 
+# brain-export/scripts/privacy_sweep.py mirrors private_terms(), term_forms(), private_hit()
+# and redact() (as mask()); change both together. Its tests compare the two.
 def private_terms(root):
     """Terms from the "Always cut" section of content/_privacy.md and of the git-ignored
     content/_privacy.local.md (for names whose mere presence in the repository is a leak)."""

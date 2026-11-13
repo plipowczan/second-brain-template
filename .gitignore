@@ -5,7 +5,8 @@ __pycache__/
 *.pyc
 content/.obsidian/workspace*.json
 
-# Private terms that must not even be committed (read by /b:watch) and its workspaces
+# Private terms that must not even be committed (read by /b:watch and /b:export --public)
+# and the watch workspaces
 content/_privacy.local.md
 content/_raw/research-workspaces/watch-*/
 

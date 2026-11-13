@@ -28,6 +28,24 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
   even appear in the repository in `content/_privacy.local.md`; `.gitignore` now ignores
   it and the watch workspaces (`content/_raw/research-workspaces/watch-*/`).
 
+### Changed
+- **`/b:export --public` also cuts the names in `content/_privacy.local.md`.** The export
+  took its private terms from `content/_privacy.md` only, so a public bundle kept a client
+  name that lives only in the git-ignored local file. Now `privacy_sweep.py --terms` reads
+  the "## Always cut" section of both files, as `/b:watch` does: HTML comments are ignored,
+  each term also matches joined, hyphenated and underscored (`Acme Labs` → `acmelabs`,
+  `acme-labs`, `acme_labs`), and case does not matter. The redaction step cuts that list,
+  and the sweep flags any term that survived, in a note's text or its path. Its context
+  lines mask each term as `[private]`, and the redaction report (committed with the vault)
+  never quotes one. The verdict table shows how many terms came from each file, so a
+  checkout without the local file, such as a fresh git worktree, is easy to spot. The
+  sweep now runs from the vault root or with `--root <vault>`, and exits 1 when it finds
+  no `content/` there.
+
+  Existing bases: nothing to do; `/b:upgrade` brings the new skill. `content/_privacy.md`
+  is yours, so its starter text is unchanged in your base: names that must not even be
+  committed go in `content/_privacy.local.md`, under a `## Always cut` heading.
+
 ## [0.3.0] - 2026-11-13
 
 A quality package for what the agent writes into your base. Ingest now shows its plan
