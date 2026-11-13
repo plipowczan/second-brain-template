@@ -29,6 +29,7 @@
       "requirements.txt",
       "schema.yml",
       "ENVIRONMENTS.md",
+      "LIMITS.md",
       "CHANGELOG.md",
       "LICENSE"
     ],
