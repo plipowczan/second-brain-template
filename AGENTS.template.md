@@ -33,6 +33,7 @@ Primary language: **{{PRIMARY_LANGUAGE}}** (keep established technical terms in 
 | `/content/_indexes/` | Auto-maintained navigation indexes | No |
 | `/content/_outputs/answers/` | Saved Q&A results | No |
 | `/content/_outputs/reports/` | Lint/health reports | No |
+| `/content/_outputs/watch/` | `/b:watch` snapshot: the baseline the next run compares with | No |
 | `/content/_graveyard/` | Retired notes (reversible; excluded from indexes) | No |
 | `/content/templates/` | Note templates | No |
 
@@ -98,6 +99,11 @@ sources: ["_raw/processed/YYYY-MM-DD_filename.md"]  # or source: "<one value>"; 
 agent-created: true
 agent-reviewed: YYYY-MM-DD
 summary: "One-line description for indexes"
+# Optional tool-note fields (read and written by /b:watch):
+repo: "https://github.com/owner/name"   # or homepage: "https://product.example/"
+watch: false                          # opt this note out of /b:watch
+status-checked: YYYY-MM-DD            # last deep status check
+project-status: active                # active | maintained | slowing | stale | dead | done | sunset
 ---
 ```
 
@@ -116,7 +122,8 @@ Each workflow is a skill with a matching slash command:
 - **REFACTOR** (`/b:refactor`) — rename/move/merge/split notes with automatic wikilink + index repair.
 - **GAPS** (`/b:gaps`) — coverage analysis: weakly-connected notes, missing topics, thin areas.
 - **CURATE** (`/b:curate`) — staleness/relevance hygiene: scores notes (age, isolation, dead links, duplication), proposes archive/merge/refresh, retires confirmed notes to `_graveyard/` (reversible, gated on confirmation).
-- **EXPORT** (`/b:export`) — pack selected notes (list/tag/folder) into a portable `brain-pack-*.zip` bundle; default level verbatim and read-only, `--public` runs a redaction pipeline (default policy + `content/_privacy.md` overrides, one verdict table, pattern-sweep + audit nets, local redaction report).
+- **WATCH** (`/b:watch`) — re-check `type: tool` notes: a cheap GitHub/URL pass flags archives, renames, licence changes, new releases and stale repos against a snapshot; web-search agents research flagged and due notes; writes only each note's status box and its `status-checked` / `project-status` frontmatter, plus a report with `/b:enhance` and `/b:curate` candidates (never moves a note). Monthly is a good cadence.
+- **EXPORT** (`/b:export`) — pack selected notes (list/tag/folder) into a portable `brain-pack-*.zip` bundle; default level verbatim and read-only, `--public` runs a redaction pipeline (default policy + `content/_privacy.md` overrides + the always-cut terms of the git-ignored `content/_privacy.local.md`, one verdict table, pattern- and term-sweep + audit nets, local redaction report).
 - **IMPORT** (`/b:import`) — import a brain-pack bundle from another base: validate, triage collisions, adapt placement to this vault's taxonomy, stamp provenance, update indexes, write a report; at most 2 prompts per run.
 - **UPGRADE** (`/b:upgrade`) — pull a newer template release into this base: dry run with the changelog, one review table, apply, one commit; adopts a base without `.kb-template.json` first. Never touches notes in `content/`.
 

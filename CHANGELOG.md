@@ -5,6 +5,77 @@ who have cloned the template and want to pull improvements into their own base.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are ISO (UTC).
 
+## [Unreleased]
+
+### Added
+- **`/b:watch`: a recurring status check for tool notes.** A tool note goes out of date
+  without anyone noticing: the project ships a rewrite, gets archived, renamed or
+  relicensed. `/b:watch` (the `brain-watch` skill) checks every `type: tool` note in two
+  passes. A cheap pass reads GitHub (archived, renamed, licence, latest release, last push)
+  or the product URL and compares it with a snapshot in `content/_outputs/watch/`; only a
+  change is flagged. Web-search agents then research the flagged notes plus up to
+  `--deep-budget` notes that are due (never checked, or checked 90 or more days ago). The
+  skill writes only a "Status check YYYY-MM-DD" box under each researched note's H1 and its
+  `status-checked` / `project-status` frontmatter, adds `repo:` or `homepage:` once to
+  notes that have neither, and writes a report to `content/_outputs/reports/` with the
+  notes to refresh (`/b:enhance`) and to retire (`/b:curate`). It never moves a note and
+  holds back any line that contains a term from the "Always cut" section of
+  `content/_privacy.md` or of the new, git-ignored `content/_privacy.local.md`. Run it by
+  hand, or on a schedule (monthly works): an unattended run asks nothing.
+
+  Existing bases: after `/b:upgrade`, run `/b:watch --dry` to see which notes it tracks
+  and which need a `repo:` / `homepage:` link (or `watch: false`). Put names that must not
+  even appear in the repository in `content/_privacy.local.md`; `.gitignore` now ignores
+  it and the watch workspaces (`content/_raw/research-workspaces/watch-*/`).
+
+### Changed
+- **`/b:export --public` also cuts the names in `content/_privacy.local.md`.** The export
+  took its private terms from `content/_privacy.md` only, so a public bundle kept a client
+  name that lives only in the git-ignored local file. Now `privacy_sweep.py --terms` reads
+  the "## Always cut" section of both files, as `/b:watch` does: HTML comments are ignored,
+  each term also matches joined, hyphenated and underscored (`Acme Labs` → `acmelabs`,
+  `acme-labs`, `acme_labs`), and case does not matter. The redaction step cuts that list,
+  and the sweep flags any term that survived, in a note's text or its path. Its context
+  lines mask each term as `[private]`, and the redaction report (committed with the vault)
+  never quotes one. The verdict table shows how many terms came from each file, so a
+  checkout without the local file, such as a fresh git worktree, is easy to spot. The
+  sweep now runs from the vault root or with `--root <vault>`, and exits 1 when it finds
+  no `content/` there.
+
+  Existing bases: nothing to do; `/b:upgrade` brings the new skill. `content/_privacy.md`
+  is yours, so its starter text is unchanged in your base: names that must not even be
+  committed go in `content/_privacy.local.md`, under a `## Always cut` heading.
+
+### Security
+- **`/b:watch` writes what web pages say as text, not as markup.** The status box is
+  built from what the research agents read on web pages and in release notes, and it is
+  published. Quartz renders raw HTML, and its Obsidian plugin turns `==highlight==` and
+  `![[embed|alias]]` back into HTML after decoding entities, so a `<script>` or
+  `<img onerror=…>` in a result could have run on your site. Now every box line (results,
+  `overrides.json` lines, and `digest.json` again when `apply` writes it) has `<`, `>` and
+  character references escaped. A link is kept only to a plain http(s) URL, an image
+  becomes a link, and `[[wikilinks]]` survive only as a plain link to a tracked note.
+  `==`, `%%`, `#tags` and link definitions are broken up. The report escapes GitHub text
+  (release tags, licences) the same way and keeps its own `<details>` list.
+- **The `/b:watch` snapshot no longer names a private repo or site.** The snapshot in
+  `content/_outputs/watch/` is committed. A repo or URL that contains an "Always cut" term
+  is now stored under a hash keyed with your private terms, and a value that contains one
+  (a renamed repo's name, a release tag) is left out. Changing the terms resets those
+  entries once.
+- **`/b:watch` checks private terms before it escapes, and again at `apply`.** Escaping
+  can split a term (`Team #2` gets a no-break space), so a release tag with one in it could
+  reach the report. The report now checks each value as it came in. `apply` checks
+  `digest.json` again, since it may have been translated in between, and holds back a note
+  whose lines match or whose status is not one it knows.
+- **Private terms also match without Polish letters**, in `/b:watch` and in
+  `/b:export --public`. Names in folder slugs and URLs are usually written without them,
+  so `Łąka Wiśnia` now also matches `laka-wisnia` and `Laka Wisnia` (`ł` → `l`, other
+  diacritics dropped). A name that leaves fewer than four letters keeps only its written
+  form, so a short term like `Wąs` does not catch the English "was".
+
+  Existing bases: nothing to do; `/b:upgrade` brings the fix. The next `/b:watch` run
+  rewrites the snapshot, hashing any private entry an earlier run wrote in clear.
+
 ## [0.3.0] - 2026-11-13
 
 A quality package for what the agent writes into your base. Ingest now shows its plan

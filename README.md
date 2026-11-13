@@ -135,6 +135,7 @@ first. Don't want the workflow? Delete the file.
 | `/b:refactor` | Rename/move/merge/split notes with automatic wikilink repair. |
 | `/b:gaps` | Coverage analysis: weakly-connected notes, missing topics, thin areas. |
 | `/b:curate` | Staleness hygiene: score notes (age, isolation, dead links, duplication), propose archive/merge/refresh, retire confirmed notes to `_graveyard/` (reversible). |
+| `/b:watch` | Re-check tool notes: GitHub releases, archives, renames and licence changes, dead product URLs; research what changed, update each note's status box, report notes to refresh or retire. `--dry` for the report only. |
 | `/b:upgrade` | Pull a newer template release into this base: dry run, one review table, one commit; adopts a base without a `.kb-template.json` stamp first. Never touches your notes. |
 | (skill) `excalidraw-diagram` | Generate Excalidraw diagram JSON to embed in notes. |
 | (skill) `research`, `research-deep`, … | Structured multi-item web research into the vault (best-effort; depends on your Claude Code web tools). |
