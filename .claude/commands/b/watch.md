@@ -1,0 +1,1 @@
+Use the `brain-watch` skill to re-check the status of the vault's tool notes (GitHub releases, archive, rename, licence; product URLs), research what changed, update each note's status box and write a report to `content/_outputs/reports/`. Pass `--dry` for the report only, `--deep-budget N` to cap the deep pass.
