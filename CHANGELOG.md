@@ -5,7 +5,7 @@ who have cloned the template and want to pull improvements into their own base.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are ISO (UTC).
 
-## [Unreleased]
+## [0.3.0] - 2026-11-13
 
 A quality package for what the agent writes into your base. Ingest now shows its plan
 before writing and updates every note a source touches. Contradictions are marked, not
