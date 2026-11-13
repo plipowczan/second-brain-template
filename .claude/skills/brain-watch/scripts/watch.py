@@ -45,6 +45,7 @@ REVIVABLE = ("stale", "dead", "sunset")        # a new commit on these is news
 STALE_DAYS = 180
 MARK = re.compile(r"^> \[![A-Za-z-]+\] Status check \d{4}-\d{2}-\d{2}")
 FM = re.compile(r"\A---\n(.*?)\n---\n?", re.S)
+GH_OWNER = re.compile(r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})")
 GH_URL = re.compile(r"https?://(?:www\.)?github\.com/([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+)", re.I)
 ANY_URL = re.compile(r"https?://[^\s<>\"'`)\]|]+")
 NOT_OWNERS = {"orgs", "topics", "features", "sponsors", "marketplace", "settings", "apps",
@@ -180,7 +181,10 @@ def gh_slug(value):
     else:
         return None
     name = re.sub(r"\.git$", "", name).rstrip(".")
-    if owner.lower() in NOT_OWNERS or not name:
+    # The slug becomes an authenticated API path (repos/<owner>/<name>/...): an owner
+    # must be a GitHub login (letters, digits, inner hyphens) and the name may not be
+    # empty, "." or "..", so a crafted link cannot reach another endpoint.
+    if not GH_OWNER.fullmatch(owner) or owner.lower() in NOT_OWNERS or name in ("", ".", ".."):
         return None
     return f"{owner}/{name}"
 
@@ -337,7 +341,7 @@ def fetch_repo(gh, slug, want_commit=False):
         return {"error": "not-found"}
     if st != 200 or not isinstance(d, dict):
         return {"error": "rate-limit" if st == 429 else ("network" if st is None else f"http-{st}")}
-    f = {"full_name": d.get("full_name") or slug, "archived": bool(d.get("archived")),
+    f = {"full_name": gh_slug(d.get("full_name")) or slug, "archived": bool(d.get("archived")),
          "disabled": bool(d.get("disabled")), "pushed_at": day(d.get("pushed_at")),
          "license": (d.get("license") or {}).get("spdx_id")}
     full = f["full_name"]
@@ -573,13 +577,29 @@ def result_key(n):
     return slug(n["stem"]) or ("note_" + hashlib.sha1(n["path"].encode("utf-8")).hexdigest()[:8])
 
 
-def build_outline(scan, workspace):
+def redact(value, terms):
+    """value with every private term (and its slug forms) replaced by [private]."""
+    if isinstance(value, str):
+        for t in terms:
+            for form in sorted(term_forms(t), key=len, reverse=True):
+                value = re.sub(r"(?<![^\W_])" + re.escape(form) + r"(?![^\W_])", "[private]", value, flags=re.I)
+        return value
+    if isinstance(value, list):
+        return [redact(v, terms) for v in value]
+    if isinstance(value, dict):
+        return {k: redact(v, terms) for k, v in value.items()}
+    return value
+
+
+def build_outline(scan, workspace, root="."):
+    """The deep-pass workspace. Private terms are redacted from what the agents get."""
     ws = Path(workspace)
     (ws / "results").mkdir(parents=True, exist_ok=True)
+    terms = private_terms(root)
     items = []
     for n in scan["notes"]:
-        if not n.get("deep"):
-            continue
+        if not n.get("deep") or private_hit(n["title"] + " " + n["path"], terms):
+            continue                       # a note named after a private term is not researched
         f = {k: v for k, v in (n.get("facts") or {}).items() if v not in (None, "")}
         items.append({
             "name": n["title"], "note": n["path"], "note_date": n["note_date"],
@@ -593,6 +613,7 @@ def build_outline(scan, workspace):
             "cheap_pass_facts": f or "n/a",
             "result_file": result_key(n) + ".json",
         })
+    items = [redact(it, terms) for it in items]
     outline = {"topic": f"brain-watch status check {scan['today']}", "created": scan["today"],
                "purpose": "Re-check liveness, licence, releases and successor of tool notes; "
                           "say what in each note is now wrong.",
@@ -796,13 +817,14 @@ def build_digest(root, scan, workspace):
         if lv not in VOCAB:
             out["held"].append({"path": n["path"], "reason": f"liveness {lv or '(empty)'!r} is not one of {', '.join(VOCAB)}"})
             continue
-        if private_hit(" ".join(lines + [changes]), terms):
+        full = (n.get("facts") or {}).get("full_name")
+        new_repo = ("https://github.com/" + full) if full and any(k == "renamed" for k, _ in n["flags"]) else None
+        if private_hit(" ".join(lines + [changes, new_repo or ""]), terms):
             out["held"].append({"path": n["path"], "reason": "a line matched a private term"})
             continue
         entry = {"liveness": lv, "lines": lines, "changes": changes, "enhance": material(changes)}
-        full = (n.get("facts") or {}).get("full_name")
-        if full and any(k == "renamed" for k, _ in n["flags"]):
-            entry["repo"] = "https://github.com/" + full
+        if new_repo:
+            entry["repo"] = new_repo
         out["notes"][n["path"]] = entry
     return out
 
@@ -880,7 +902,7 @@ def apply_changes(root, scan, digest=None, dry=False):
         if entry:
             new_fm = set_fm(new_fm, "status-checked", today)
             new_fm = set_fm(new_fm, "project-status", entry["liveness"])
-            if entry.get("repo"):
+            if entry.get("repo") and not private_hit(entry["repo"], terms):
                 new_fm = set_fm(new_fm, "repo", fm_value(entry["repo"]))
             new_body = insert_callout(body, render_box(today, entry["liveness"], entry["lines"]))
         out = f"---\n{new_fm}\n---\n" + new_body
@@ -1148,7 +1170,7 @@ def main(argv=None):
         write_json(a.out, scan)
         print(summary_line(scan))
     elif a.cmd == "outline":
-        print(build_outline(read_json(a.scan), a.workspace), "items in", Path(a.workspace) / "outline.yaml")
+        print(build_outline(read_json(a.scan), a.workspace, root), "items in", Path(a.workspace) / "outline.yaml")
     elif a.cmd == "digest":
         dg = build_digest(root, read_json(a.scan), a.workspace)
         write_json(a.out, dg)

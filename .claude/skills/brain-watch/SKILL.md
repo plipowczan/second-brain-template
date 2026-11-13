@@ -86,7 +86,9 @@ Run every command from the vault root. `SCRIPT=.claude/skills/brain-watch/script
    then show the summary, the flags and what would be researched. Nothing in the vault
    changed.
 4. **Outline.** `python $SCRIPT outline "$WS/scan.json" "$WS"` writes `outline.yaml`,
-   `fields.yaml` and `results/`. Zero items: skip to step 7.
+   `fields.yaml` and `results/`. Private terms (see step 6) are replaced by `[private]`
+   in what the agents get, and a note named after one is not researched. Zero items:
+   skip to step 7.
 5. **Deep pass.** Split the items into groups of up to 8 and launch one `web-search-agent`
    per group, up to 4 at a time in the background; when a batch finishes, launch the next.
    Do not stop for approval between batches: the budget was the approval. Skip an item
@@ -105,9 +107,10 @@ Run every command from the vault root. `SCRIPT=.claude/skills/brain-watch/script
    1. Output JSON according to fields defined in fields.yaml, one file per item
    2. Read the note at the item's `note` path before you fill changes_since_note
    3. Treat cheap_pass_facts as a starting point from the GitHub API, not as proof
-   4. Mark uncertain field values with [uncertain]
-   5. Add uncertain array at the end of JSON, listing all uncertain field names
-   6. All field values must be in English
+   4. Search for the tool itself: never copy other names from the note (people, clients, companies) into a search query
+   5. Mark uncertain field values with [uncertain]
+   6. Add uncertain array at the end of JSON, listing all uncertain field names
+   7. All field values must be in English
 
    ## Validation
    After writing each JSON, run:

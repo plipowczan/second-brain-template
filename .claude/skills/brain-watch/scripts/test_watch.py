@@ -86,6 +86,12 @@ class ProposeTest(unittest.TestCase):
     def test_no_links_is_untracked(self):
         self.assertEqual(watch.propose("X", "X", "nothing here")[0], {"untracked": True})
 
+    def test_slug_cannot_leave_the_repos_path(self):
+        for bad in ("../user", "a/..", "a/.", ".x/y", "a_b/c", "https://github.com/../../user"):
+            self.assertIsNone(watch.gh_slug(bad), bad)
+        self.assertEqual(watch.gh_slug("SantanderAI/.github"), "SantanderAI/.github")
+        self.assertEqual(watch.gh_slug("https://github.com/my-org/repo.name.git"), "my-org/repo.name")
+
     def test_github_non_repo_paths_ignored(self):
         self.assertEqual(watch.repo_links("https://github.com/topics/ai https://github.com/orgs/x"), [])
 
@@ -359,6 +365,20 @@ class PipelineTest(unittest.TestCase):
         flags = {n["stem"]: [k for k, _ in n["flags"]] for n in self.scan()["notes"]}
         self.assertEqual(flags["Widget"], ["licence"])
 
+    def test_rename_into_a_private_org_is_held(self):
+        self.v.write("content/_privacy.local.md", "## Always cut\n- \"Acme Labs\"\n")
+        scan = self.scan()                      # Gadget: acme/gadget -> acme-labs/gadget
+        ws = self.v.root / "ws"
+        watch.build_outline(scan, ws, self.v.root)
+        r = {"repo_url": "moved", "moved_or_renamed": "moved", "last_release": "v1.0.0",
+             "last_commit": "2026-11-01", "archived_or_deprecated": "archived", "license": "MIT",
+             "liveness": "dead", "liveness_evidence": "Archived.", "successor_or_replacement": "n/a",
+             "changes_since_note": "Archived.", "sources": []}
+        (ws / "results" / "Gadget.json").write_text(json.dumps(r), encoding="utf-8")
+        dg = watch.build_digest(self.v.root, scan, ws)
+        self.assertNotIn("content/AI/TOOLS/Gadget.md", dg["notes"])
+        self.assertEqual([h["path"] for h in dg["held"]], ["content/AI/TOOLS/Gadget.md"])
+
     def test_rate_limit_skips_rest(self):
         scan = self.scan(gh=FakeGitHub(self.gh.routes, remaining=28))
         errs = sorted((n["facts"].get("error") or "ok") for n in scan["notes"] if n["kind"] == "repo")
@@ -374,6 +394,10 @@ class PipelineTest(unittest.TestCase):
              "liveness_evidence": "Used by Secret Client since 2026.", "successor_or_replacement": "n/a",
              "changes_since_note": "nothing material", "sources": []}
         (ws / "results" / "Widget.json").write_text(json.dumps(r), encoding="utf-8")
+        self.v.write("content/_privacy.local.md", "## Always cut\n- \"Secret Client\"\n- \"Acme\"\n")
+        watch.build_outline(scan, ws, self.v.root)
+        self.assertNotIn("acme", (ws / "outline.yaml").read_text(encoding="utf-8").lower())
+        self.v.write("content/_privacy.local.md", "## Always cut\n- \"Secret Client\"\n")
         dg = watch.build_digest(self.v.root, scan, ws)
         self.assertNotIn("content/AI/TOOLS/Widget.md", dg["notes"])
         self.assertEqual(dg["held"][0]["reason"], "a line matched a private term")
