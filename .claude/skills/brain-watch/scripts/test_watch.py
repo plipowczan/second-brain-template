@@ -203,6 +203,19 @@ class InsertTest(unittest.TestCase):
         self.assertEqual(watch.insert_callout("\nText\n", self.BOX), "\n" + "\n".join(self.BOX) + "\n\nText\n")
 
 
+class FrontmatterTest(unittest.TestCase):
+    def test_append_and_replace(self):
+        out = watch.set_fm('title: "X"\ntype: tool', "repo", '"u"')
+        self.assertEqual(out, 'title: "X"\ntype: tool\nrepo: "u"')
+        self.assertEqual(watch.set_fm(out, "repo", '"v"'), 'title: "X"\ntype: tool\nrepo: "v"')
+
+    def test_append_keeps_blank_line_before_closing_fence(self):
+        text = '---\ntitle: "X"\ntype: tool\n\n---\n# X\n'
+        fm, body = watch.split_fm(text)
+        out = watch.set_fm(fm, "homepage", '"https://x.example/"')
+        self.assertEqual(out, 'title: "X"\ntype: tool\nhomepage: "https://x.example/"\n')
+
+
 class PrivacyTest(unittest.TestCase):
     def test_terms_and_hits(self):
         v = Vault()

@@ -117,7 +117,8 @@ def set_fm(fm, key, value):
     pat = re.compile(rf"^{re.escape(key)}:.*$", re.M)
     if pat.search(fm):
         return pat.sub(lambda m: line, fm, count=1)
-    return fm.rstrip("\n") + "\n" + line
+    head = fm.rstrip("\n")
+    return head + "\n" + line + fm[len(head):]  # blank lines before the closing --- stay
 
 
 def fm_value(v):
