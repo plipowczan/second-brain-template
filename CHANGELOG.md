@@ -62,6 +62,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
   is now stored under a hash keyed with your private terms, and a value that contains one
   (a renamed repo's name, a release tag) is left out. Changing the terms resets those
   entries once.
+- **`/b:watch` checks private terms before it escapes, and again at `apply`.** Escaping
+  can split a term (`Team #2` gets a no-break space), so a release tag with one in it could
+  reach the report. The report now checks each value as it came in. `apply` checks
+  `digest.json` again, since it may have been translated in between, and holds back a note
+  whose lines match or whose status is not one it knows.
 - **Private terms also match without Polish letters**, in `/b:watch` and in
   `/b:export --public`. Names in folder slugs and URLs are usually written without them,
   so `Łąka Wiśnia` now also matches `laka-wisnia` and `Laka Wisnia` (`ł` → `l`, other

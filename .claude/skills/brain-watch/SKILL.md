@@ -154,6 +154,9 @@ flagged notes stay flagged for the next run.
 - The cheap pass reads only; every GitHub call names its repository (`repos/<owner>/<name>/…`), so `gh` never falls back to the current checkout's repository.
 - A network error, a block or a server error is "not checked", never `dead` or `gone`.
 - Lines and links that match a private term are not written into a note or the report.
+  The check runs on the text before it is escaped, and `apply` runs it again on
+  `digest.json` (which may have been translated), holding back a note whose lines match
+  or whose `liveness` is not in the vocabulary.
 - The snapshot is committed, so a repo or URL that contains a private term is stored
   under a hash keyed with the private terms, and a value that contains one (a renamed
   repo's name, a release tag) is left out. Changing the terms resets those entries once.

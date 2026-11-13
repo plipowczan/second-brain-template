@@ -15,6 +15,10 @@ HOSTILE = ("<script>alert(1)</script> <img src=x onerror=alert(1)> &lt;svg onloa
            "==<b onmouseover=alert(1)>hi</b>== [\\[Note|<i>alias</i>]] %% hidden %% $1 and $2 #injected")
 
 
+# Quartz's wikilinkRegex (quartz/plugins/transformers/ofm.ts).
+OFM_WIKILINK = re.compile(r"!?\[\[([^\[\]|#\\]+)?(#+[^\[\]|#\\]+)?(\\?\|[^\[\]#]+)?\]\]")
+
+
 def decoded(md):
     """Roughly the text Quartz's Obsidian plugin scans after Markdown parsing: backslash
     escapes and character references resolved."""
@@ -29,7 +33,12 @@ def assert_inert(case, md, notes=("Widget", "Gadget")):
     case.assertNotIn("%%", md)
     case.assertNotRegex(md, r"\]\((?!https?://)")
     case.assertNotIn("==", decoded(md))
-    case.assertNotRegex(decoded(md), r"!?\[\[(?!(?:" + "|".join(notes) + r")\]\])")
+    for text in (md, decoded(md)):          # Quartz reads wikilinks in both
+        for m in OFM_WIKILINK.finditer(text):
+            case.assertEqual(m.group(0), f"[[{m.group(1)}]]")          # no embed, alias or anchor
+            case.assertIn(m.group(1), notes)
+    case.assertNotIn("![[", decoded(md))                                # an embed
+    case.assertNotRegex(md, r"\]\][(\[]")                              # [[x]] as a link label
     case.assertNotRegex(decoded(md), r"(?m)(?:^| )#[^\s#]")         # a Quartz #tag
 
 
@@ -283,6 +292,22 @@ class SafeMarkdownTest(unittest.TestCase):
         out = watch.safe_md("Use [[Widget]], not [[Other]], [[Widget|<b>x</b>]] or ![[Widget]]", {"Widget"})
         self.assertEqual(out.count("[[Widget]]"), 1)
         assert_inert(self, out)
+
+    def test_nothing_pairs_with_what_is_put_back(self):
+        # Kept URLs and [[links]] go back in after the rules ran: the text that lands next
+        # to them must not make a highlight, image, embed or link out of them.
+        for s in ("xhttps://a.example/==<script>alert(1)</script>xhttps://b.example/==",
+                  "[](https://a.example/?q=)=<b>x</b>[](https://b.example/?q=)=",
+                  "see https://a.example/==x== ok",
+                  "!![p](https://evil.example/p.png)", "[!](bad)[p](https://evil.example/p.png)",
+                  "!![](javascript:x)[[Widget]]", "[!](bad)[[Widget]]", "!\\[](bad)[[Widget]]",
+                  "[[Widget]](javascript:alert(1))", "[[Widget]][x](https://ok.example/)",
+                  "[[Widget]][[Widget]] and [[[Widget]]](javascript:alert(1))"):
+            out = watch.safe_md(s, {"Widget"})
+            assert_inert(self, out)
+            self.assertEqual(watch.safe_md(out, {"Widget"}), out, s)
+        self.assertEqual(watch.safe_md("[t](https://ok.example/?k=YQ==) and [[Widget]]", {"Widget"}),
+                         "[t](https://ok.example/?k=YQ==) and [[Widget]]")    # == in a link target is fine
 
 
 class PrivacyTest(unittest.TestCase):
@@ -625,6 +650,26 @@ class PipelineTest(unittest.TestCase):
         self.assertNotIn("Vexmoor #2", watch.safe_md(r["liveness_evidence"]))   # the space became NBSP
         dg = watch.build_digest(self.v.root, scan, ws)
         self.assertNotIn("content/AI/TOOLS/Widget.md", dg["notes"])
+
+    def test_apply_checks_an_edited_digest_again(self):
+        self.v.write("content/_privacy.local.md", "## Always cut\n- \"Vexmoor\"\n")   # a made-up name
+        scan, path = self.scan(), "content/AI/TOOLS/Widget.md"
+        for entry in ({"liveness": "active", "lines": ["Now run by Vexmoor."]},   # added by a translation
+                      {"liveness": "active\ntitle: x", "lines": ["fine"]}):
+            done = watch.apply_changes(self.v.root, scan, {"notes": {path: entry}}, dry=True)
+            self.assertIn(path, done["held"], entry)
+            self.assertNotIn(path, done["status"], entry)
+
+    def test_report_checks_private_terms_before_escaping(self):
+        self.v.write("content/_privacy.local.md", "## Always cut\n- \"Vexmoor #2\"\n")   # made up
+        watch.write_json(self.v.root / watch.SNAPSHOT, {"repos": {"acme/widget": {
+            "full_name": "acme/widget", "archived": False, "license": "MIT", "latest_kind": "none",
+            "pushed_at": "2026-11-01", "checked": "2026-10-13"}}, "urls": {}})
+        gh = FakeGitHub(dict(self.gh.routes, **{
+            "repos/acme/widget/releases/latest": release("Vexmoor #2 build")}))
+        report = watch.build_report(self.v.root, self.scan(gh=gh), dry=True)
+        self.assertNotIn("vexmoor", report.lower())
+        self.assertIn("(withheld: a private term)", report)
 
     def test_rate_limit_skips_rest(self):
         scan = self.scan(gh=FakeGitHub(self.gh.routes, remaining=28))
