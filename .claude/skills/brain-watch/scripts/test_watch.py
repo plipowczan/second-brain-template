@@ -363,6 +363,8 @@ class PipelineTest(unittest.TestCase):
         root, ws = self.v.root, self.v.root / "ws"
         self.v.write("content/AI/TOOLS/Shifter.md", note(  # title != repo name: a single-link seed
             {"title": '"Shifter"', "type": "tool"}, "# Shifter\n\nCode: https://github.com/acme/mover\n"))
+        self.v.write("content/AI/TOOLS/Suite.md", note(
+            {"title": '"Suite"', "type": "tool"}, "# Suite\n\nSite: https://www.bigvendor.example/suite\n"))
         gh = FakeGitHub(dict(self.gh.routes, **{
             "repos/acme/mover": repo("acme-labs/mover"),
             "repos/acme-labs/mover/releases/latest": release("v1.0.0")}))
@@ -381,6 +383,8 @@ class PipelineTest(unittest.TestCase):
         self.assertIn("[[Shifter]] → https://github.com/acme-labs/mover (moved from https://github.com/acme/mover)",
                       report)
         self.assertNotIn("check these", report)  # the deep pass already checked Shifter's link
+        self.assertIn("[[Suite]] — one link, but its site is not named after the note: "
+                      "https://www.bigvendor.example/suite", report)
 
     def test_unresearched_flag_survives_to_next_run(self):
         watch.write_json(self.v.root / watch.SNAPSHOT, {"repos": {"acme/gadget": {

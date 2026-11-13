@@ -1105,7 +1105,8 @@ def build_report(root, scan, digest=None, dry=False):
         L.append("")
         for n in ambiguous:
             cands = ["(a private link)" if private_hit(c, terms) else c for c in n["ambiguous"]]
-            L.append(f"- {wl(n)} — several candidates: " + ", ".join(cands))
+            why = "several candidates" if len(cands) > 1 else "one link, but its site is not named after the note"
+            L.append(f"- {wl(n)} — {why}: " + ", ".join(cands))
         for n in untracked:
             L.append(f"- {wl(n)} — no repo or product link in the note")
     else:
