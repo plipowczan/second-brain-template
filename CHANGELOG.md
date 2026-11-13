@@ -5,6 +5,29 @@ who have cloned the template and want to pull improvements into their own base.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are ISO (UTC).
 
+## [Unreleased]
+
+### Added
+- **`/b:watch`: a recurring status check for tool notes.** A tool note goes out of date
+  without anyone noticing: the project ships a rewrite, gets archived, renamed or
+  relicensed. `/b:watch` (the `brain-watch` skill) checks every `type: tool` note in two
+  passes. A cheap pass reads GitHub (archived, renamed, licence, latest release, last push)
+  or the product URL and compares it with a snapshot in `content/_outputs/watch/`; only a
+  change is flagged. Web-search agents then research the flagged notes plus up to
+  `--deep-budget` notes that are due (never checked, or checked 90 or more days ago). The
+  skill writes only a "Status check YYYY-MM-DD" box under each researched note's H1 and its
+  `status-checked` / `project-status` frontmatter, adds `repo:` or `homepage:` once to
+  notes that have neither, and writes a report to `content/_outputs/reports/` with the
+  notes to refresh (`/b:enhance`) and to retire (`/b:curate`). It never moves a note and
+  holds back any line that contains a term from the "Always cut" section of
+  `content/_privacy.md` or of the new, git-ignored `content/_privacy.local.md`. Run it by
+  hand, or on a schedule (monthly works): an unattended run asks nothing.
+
+  Existing bases: after `/b:upgrade`, run `/b:watch --dry` to see which notes it tracks
+  and which need a `repo:` / `homepage:` link (or `watch: false`). Put names that must not
+  even appear in the repository in `content/_privacy.local.md`; `.gitignore` now ignores
+  it and the watch workspaces (`content/_raw/research-workspaces/watch-*/`).
+
 ## [0.3.0] - 2026-11-13
 
 A quality package for what the agent writes into your base. Ingest now shows its plan
@@ -60,27 +83,6 @@ below).
   model's reading of your sources. It ends with the reminder that a tidy base is not a
   correct one. `/b:qa` and `/b:lint` read it before they say the base is sure of
   anything. It is a template file: upgrades keep it current and keep your own additions.
-
-### Added
-- **`/b:watch`: a recurring status check for tool notes.** A tool note goes out of date
-  without anyone noticing: the project ships a rewrite, gets archived, renamed or
-  relicensed. `/b:watch` (the `brain-watch` skill) checks every `type: tool` note in two
-  passes. A cheap pass reads GitHub (archived, renamed, licence, latest release, last push)
-  or the product URL and compares it with a snapshot in `content/_outputs/watch/`; only a
-  change is flagged. Web-search agents then research the flagged notes plus up to
-  `--deep-budget` notes that are due (never checked, or checked 90 or more days ago). The
-  skill writes only a "Status check YYYY-MM-DD" box under each researched note's H1 and its
-  `status-checked` / `project-status` frontmatter, adds `repo:` or `homepage:` once to
-  notes that have neither, and writes a report to `content/_outputs/reports/` with the
-  notes to refresh (`/b:enhance`) and to retire (`/b:curate`). It never moves a note and
-  holds back any line that contains a term from the "Always cut" section of
-  `content/_privacy.md` or of the new, git-ignored `content/_privacy.local.md`. Run it by
-  hand, or on a schedule (monthly works): an unattended run asks nothing.
-
-  Existing bases: after `/b:upgrade`, run `/b:watch --dry` to see which notes it tracks
-  and which need a `repo:` / `homepage:` link (or `watch: false`). Put names that must not
-  even appear in the repository in `content/_privacy.local.md`; `.gitignore` now ignores
-  it and the watch workspaces (`content/_raw/research-workspaces/watch-*/`).
 
 ### Changed
 - **`/b:ingest` shows its plan before it writes, and updates every note a source is
