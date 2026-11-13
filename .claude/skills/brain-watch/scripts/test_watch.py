@@ -359,6 +359,29 @@ class PipelineTest(unittest.TestCase):
         self.assertEqual(done["seeded"] + done["status"], [])
         self.assertEqual({p.as_posix(): p.read_bytes() for p in (root / "content").rglob("*.md")}, files)
 
+    def test_report_shows_the_repo_apply_wrote(self):
+        root, ws = self.v.root, self.v.root / "ws"
+        self.v.write("content/AI/TOOLS/Shifter.md", note(  # title != repo name: a single-link seed
+            {"title": '"Shifter"', "type": "tool"}, "# Shifter\n\nCode: https://github.com/acme/mover\n"))
+        gh = FakeGitHub(dict(self.gh.routes, **{
+            "repos/acme/mover": repo("acme-labs/mover"),
+            "repos/acme-labs/mover/releases/latest": release("v1.0.0")}))
+        scan = self.scan(gh=gh)
+        watch.build_outline(scan, ws)
+        r = {"repo_url": "https://github.com/acme-labs/mover", "moved_or_renamed": "acme -> acme-labs",
+             "last_release": "v1.0.0", "last_commit": "2026-11-01", "archived_or_deprecated": "no",
+             "license": "MIT", "liveness": "active", "liveness_evidence": "Released v1.0.0.",
+             "successor_or_replacement": "n/a", "changes_since_note": "nothing material",
+             "sources": ["https://github.com/acme-labs/mover"], "uncertain": []}
+        (ws / "results" / "Shifter.json").write_text(json.dumps(r), encoding="utf-8")
+        dg = watch.build_digest(root, scan, ws)
+        watch.apply_changes(root, scan, dg)
+        self.assertIn('repo: "https://github.com/acme-labs/mover"', self.v.read("content/AI/TOOLS/Shifter.md"))
+        report = watch.build_report(root, scan, dg)
+        self.assertIn("[[Shifter]] → https://github.com/acme-labs/mover (moved from https://github.com/acme/mover)",
+                      report)
+        self.assertNotIn("check these", report)  # the deep pass already checked Shifter's link
+
     def test_unresearched_flag_survives_to_next_run(self):
         watch.write_json(self.v.root / watch.SNAPSHOT, {"repos": {"acme/gadget": {
             "full_name": "acme/gadget", "archived": False, "license": "MIT", "latest": "v1.0.0",
