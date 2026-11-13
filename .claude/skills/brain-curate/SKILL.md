@@ -34,7 +34,8 @@ then `score, reasons = curate_score.score_note(age_days, in_edges, out_edges, de
 
 - `dead_link` starts False. Only run live checks on the **flagged subset** — notes
   that already have age_points>0 or isolation_points>0, prioritising `tool` notes.
-  For those, extract the `source:`/repo URL and run
+  For those, extract the repo URL from `source:` or `sources:` (a list; take the URL
+  entries) and run
   `python .claude/skills/brain-curate/scripts/curate_links.py <url> ...`. A `"dead"`
   result sets `dead_link=True`; `"unverified"` leaves it False and is noted as
   `unverified` in the report (never auto-flag on a network error).
