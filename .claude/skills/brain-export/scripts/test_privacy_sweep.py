@@ -166,7 +166,8 @@ class PrivateTermsTest(unittest.TestCase):
     def test_local_term_is_a_hit_in_every_form(self):
         lines = ["built for ACME CORP in 2026", "https://github.com/acmecorp/tools",
                  "see acme-corp.com", "tags: [acme_corp]", "Zed asked for it",
-                 "spotkanie w żabka polska", "[[Żabka-Polska rollout]]"]
+                 "spotkanie w żabka polska", "[[Żabka-Polska rollout]]",
+                 "PROJECTS/zabka-polska/plan.md", "met Zabka Polska"]   # without Polish letters
         self.note("AI/TOOLS/Tool.md", "\n".join(lines) + "\n")
         code, out = sweep(self.staging, self.root)
         self.assertEqual(code, 2)
@@ -214,10 +215,11 @@ class PrivateTermsTest(unittest.TestCase):
             self.skipTest(f"cannot import brain-watch: {e}")
         self.assertEqual(privacy_sweep.private_terms(self.root), watch.private_terms(self.root))
         terms = watch.private_terms(self.root)
-        for t in terms + ["Acme  Labs", "a_b-c d"]:
+        for t in terms + ["Acme  Labs", "a_b-c d", "Wąs", "Gżel", "Żywłok Mąćski"]:
             self.assertEqual(privacy_sweep.term_forms(t), watch.term_forms(t), t)
         for text in ["built for acme corp", "acmecorp.io", "ACME_CORP", "Zedboard", "zed",
-                     "x_zed_y", "żabka-polska", "Acme Corporation", "nothing here", ""]:
+                     "x_zed_y", "żabka-polska", "zabka-polska", "ZABKAPOLSKA", "zabkapolskami",
+                     "Acme Corporation", "nothing here", ""]:
             self.assertEqual(privacy_sweep.private_hit(text, terms),
                              watch.private_hit(text, terms), text)
             self.assertEqual(privacy_sweep.mask(text, terms), watch.redact(text, terms), text)

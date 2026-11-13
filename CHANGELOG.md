@@ -46,6 +46,31 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
   is yours, so its starter text is unchanged in your base: names that must not even be
   committed go in `content/_privacy.local.md`, under a `## Always cut` heading.
 
+### Security
+- **`/b:watch` writes what web pages say as text, not as markup.** The status box is
+  built from what the research agents read on web pages and in release notes, and it is
+  published. Quartz renders raw HTML, and its Obsidian plugin turns `==highlight==` and
+  `![[embed|alias]]` back into HTML after decoding entities, so a `<script>` or
+  `<img onerror=…>` in a result could have run on your site. Now every box line (results,
+  `overrides.json` lines, and `digest.json` again when `apply` writes it) has `<`, `>` and
+  character references escaped. A link is kept only to a plain http(s) URL, an image
+  becomes a link, and `[[wikilinks]]` survive only as a plain link to a tracked note.
+  `==`, `%%`, `#tags` and link definitions are broken up. The report escapes GitHub text
+  (release tags, licences) the same way and keeps its own `<details>` list.
+- **The `/b:watch` snapshot no longer names a private repo or site.** The snapshot in
+  `content/_outputs/watch/` is committed. A repo or URL that contains an "Always cut" term
+  is now stored under a hash keyed with your private terms, and a value that contains one
+  (a renamed repo's name, a release tag) is left out. Changing the terms resets those
+  entries once.
+- **Private terms also match without Polish letters**, in `/b:watch` and in
+  `/b:export --public`. Names in folder slugs and URLs are usually written without them,
+  so `Łąka Wiśnia` now also matches `laka-wisnia` and `Laka Wisnia` (`ł` → `l`, other
+  diacritics dropped). A name that leaves fewer than four letters keeps only its written
+  form, so a short term like `Wąs` does not catch the English "was".
+
+  Existing bases: nothing to do; `/b:upgrade` brings the fix. The next `/b:watch` run
+  rewrites the snapshot, hashing any private entry an earlier run wrote in clear.
+
 ## [0.3.0] - 2026-11-13
 
 A quality package for what the agent writes into your base. Ingest now shows its plan

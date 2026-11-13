@@ -26,8 +26,9 @@ Exit codes: 0 clean (or --terms), 1 usage error, 2 hits found.
 Private terms come from the "## Always cut" section of content/_privacy.md
 and of the git-ignored content/_privacy.local.md, parsed and matched as
 brain-watch does: HTML comments are ignored, each term also matches joined,
-hyphenated and underscored, case does not matter, and a term never matches
-inside a longer word.
+hyphenated and underscored, and without diacritics when that leaves at least
+four letters ("Łąka Wiśnia" → laka-wisnia), case does not matter, and a term
+never matches inside a longer word.
 
 Pattern set v1 (extend from real misses, see design OQ1). Deliberately
 conservative — false positives erode trust in the sweep:
@@ -40,6 +41,7 @@ conservative — false positives erode trust in the sweep:
 import json
 import re
 import sys
+import unicodedata
 from pathlib import Path
 
 PRIVACY_FILES = ("_privacy.md", "_privacy.local.md")
@@ -98,11 +100,22 @@ def private_terms(root):
     return terms
 
 
+def fold(s):
+    """s without diacritics: ł → l, then NFKD with the combining marks dropped
+    ("Żółw Łąka" → "Zolw Laka"), as names are often written in slugs and URLs."""
+    s = unicodedata.normalize("NFKD", s.replace("ł", "l").replace("Ł", "L"))
+    return "".join(c for c in s if not unicodedata.combining(c))
+
+
 def term_forms(term):
     """A term as written and as it shows up in slugs and URLs: "Acme Labs" also matches
-    acmelabs, acme-labs and acme_labs."""
+    acmelabs, acme-labs and acme_labs, and "Łąka Wiśnia" also lakawisnia, laka-wisnia.
+    A folded form shorter than 4 letters is left out: "Wąs" would match "was"."""
     words = re.split(r"[\s_-]+", term.strip())
-    return {term.strip(), "".join(words), "-".join(words), "_".join(words)} - {""}
+    forms = {term.strip(), "".join(words), "-".join(words), "_".join(words)}
+    if len(re.sub(r"\W", "", fold(term))) >= 4:
+        forms |= {fold(f) for f in forms}
+    return forms - {""}
 
 
 def private_hit(text, terms):

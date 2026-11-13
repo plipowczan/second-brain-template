@@ -1,5 +1,8 @@
 """Unit tests for watch.py. No network: GitHub and URL checks are faked."""
+import hashlib
+import html
 import json
+import re
 import tempfile
 import unittest
 from pathlib import Path
@@ -7,6 +10,27 @@ from pathlib import Path
 import watch
 
 TODAY = "2026-11-13"
+HOSTILE = ("<script>alert(1)</script> <img src=x onerror=alert(1)> &lt;svg onload=alert(1)&gt; "
+           "![p](https://evil.example/p.png) ![[Secret.png]] [x](javascript:alert(1)) "
+           "==<b onmouseover=alert(1)>hi</b>== [\\[Note|<i>alias</i>]] %% hidden %% $1 and $2 #injected")
+
+
+def decoded(md):
+    """Roughly the text Quartz's Obsidian plugin scans after Markdown parsing: backslash
+    escapes and character references resolved."""
+    return html.unescape(re.sub(r"\\([!-/:-@\[-`{-~])", r"\1", md))
+
+
+def assert_inert(case, md, notes=("Widget", "Gadget")):
+    """md shows its text as text on a Quartz site: no raw HTML, image, embed, highlight,
+    comment or non-http(s) link; wikilinks only to `notes`."""
+    case.assertNotRegex(md, r"<[A-Za-z/!]")
+    case.assertNotIn("![", md)
+    case.assertNotIn("%%", md)
+    case.assertNotRegex(md, r"\]\((?!https?://)")
+    case.assertNotIn("==", decoded(md))
+    case.assertNotRegex(decoded(md), r"!?\[\[(?!(?:" + "|".join(notes) + r")\]\])")
+    case.assertNotRegex(decoded(md), r"(?m)(?:^| )#[^\s#]")         # a Quartz #tag
 
 
 class FakeGitHub:
@@ -216,7 +240,76 @@ class FrontmatterTest(unittest.TestCase):
         self.assertEqual(out, 'title: "X"\ntype: tool\nhomepage: "https://x.example/"\n')
 
 
+class SafeMarkdownTest(unittest.TestCase):
+    def test_hostile_text_is_inert(self):
+        out = watch.safe_md(HOSTILE)
+        assert_inert(self, out)
+        self.assertIn("&lt;script&gt;alert(1)&lt;/script&gt;", out)
+        self.assertIn("[p](https://evil.example/p.png)", out)     # an image becomes a link
+        self.assertIn("\\$1 and \\$2", out)
+
+    def test_twice_is_once(self):
+        for s in (HOSTILE, "a & b &amp; c &#60; &nbsp; <x>", "[[Widget]] and [[Other]]",
+                  "https://ok.example/a?b=1&c=2 and https://bad.example/a(b)", "\\$5, \\\\$6",
+                  "https://ok.example/<img src=x> and https://bad.example/a&quot;b", "#tag, #1, C# and # x"):
+            once = watch.safe_md(s, {"Widget"})
+            self.assertEqual(watch.safe_md(once, {"Widget"}), once, s)
+
+    def test_character_references_are_escaped(self):
+        self.assertEqual(watch.safe_md("&#60;b&#62; &nbsp; a & b"), "&amp;#60;b&amp;#62; &amp;nbsp; a & b")
+
+    def test_links_only_to_checked_http_urls(self):
+        self.assertEqual(watch.safe_md("[docs](https://ok.example/a?b=1&c=2#x)"),
+                         "[docs](https://ok.example/a?b=1&c=2#x)")
+        for bad in ("javascript:alert(1)", "javascript:void", "data:text/html,x", "https://ok.example/\"x",
+                    "//evil.example/", "https://user@evil.example/", "https://ok.example/&lt;x"):
+            out = watch.safe_md(f"[docs]({bad})")
+            self.assertNotRegex(out, r"\]\((?!https?://)", bad)
+            self.assertIn("docs", out)
+        self.assertNotIn("](javascript", watch.safe_md("[a [b] c](javascript:alert(1))"))
+        self.assertEqual(watch.safe_md("see https://ok.example/x."), "see https://ok.example/x.")
+        self.assertEqual(watch.safe_md("(https://ok.example/x)"), "(https://ok.example/x)")
+        self.assertEqual(watch.safe_md("https://bad.example/a(b)"), "https://bad.example/a(b)")  # text
+        self.assertNotRegex(watch.safe_md("[x](https://bad.example/a(b))"), r"\]\(")
+        self.assertTrue(watch.safe_md("[ref]: javascript:alert(1)").startswith("\\[ref]:"))
+        self.assertIsNone(watch.safe_url("javascript:alert(1)"))
+        self.assertEqual(watch.safe_url("https://github.com/a/b"), "https://github.com/a/b")
+
+    def test_tags_are_not_made(self):
+        self.assertEqual(watch.safe_md("#tag first, then #other, but C# and # x"),
+                         watch.NBSP + "#tag first, then" + watch.NBSP + "#other, but C# and # x")
+
+    def test_wikilinks_only_to_known_notes(self):
+        out = watch.safe_md("Use [[Widget]], not [[Other]], [[Widget|<b>x</b>]] or ![[Widget]]", {"Widget"})
+        self.assertEqual(out.count("[[Widget]]"), 1)
+        assert_inert(self, out)
+
+
 class PrivacyTest(unittest.TestCase):
+    def test_folded_forms_match_names_without_polish_letters(self):
+        terms = ["Żywłok Mąćski"]                               # a made-up name
+        for text in ("clients/zywlok-macski/plan.md", "Zywlok Macski", "ZYWLOKMACSKI",
+                     "żywłok_mąćski", "met ŻYWŁOK MĄĆSKI"):
+            self.assertTrue(watch.private_hit(text, terms), text)
+        self.assertFalse(watch.private_hit("zywlokmacskiego", terms))   # still a whole word
+        self.assertEqual(watch.redact("see zywlok-macski here", terms), "see [private] here")
+        self.assertIn("Zywlok-Macski", watch.term_forms("Żywłok Mąćski"))
+
+    def test_short_folded_form_is_left_out(self):
+        self.assertEqual(watch.term_forms("Wąs"), {"Wąs"})       # folded, it would be "was"
+        self.assertTrue(watch.private_hit("Wąs", ["Wąs"]))
+        self.assertFalse(watch.private_hit("it was fine", ["Wąs"]))
+        self.assertTrue(watch.private_hit("gzel.example", ["Gżel"]))  # four letters: folded too
+
+    def test_snapshot_key(self):
+        terms = ["Vexmoor"]                                      # a made-up name
+        self.assertEqual(watch.snapshot_key("acme/widget", terms), "acme/widget")
+        hidden = watch.snapshot_key("vexmoor/kit", terms)
+        self.assertTrue(hidden.startswith("private:"))
+        self.assertNotIn(hashlib.sha256(b"vexmoor/kit").hexdigest()[:32], hidden)  # keyed, not a plain hash
+        self.assertEqual(watch.snapshot_key("vexmoor/kit", terms), hidden)
+        self.assertNotEqual(watch.snapshot_key("vexmoor/kit", terms + ["Other"]), hidden)
+
     def test_terms_and_hits(self):
         v = Vault()
         try:
@@ -418,6 +511,120 @@ class PipelineTest(unittest.TestCase):
         dg = watch.build_digest(self.v.root, scan, ws)
         self.assertNotIn("content/AI/TOOLS/Gadget.md", dg["notes"])
         self.assertEqual([h["path"] for h in dg["held"]], ["content/AI/TOOLS/Gadget.md"])
+
+    def test_hostile_results_and_overrides_are_written_as_text(self):
+        root, ws = self.v.root, self.v.root / "ws"
+        scan = self.scan()
+        watch.build_outline(scan, ws)
+        r = {"repo_url": "https://evil.example/<img src=x onerror=alert(1)>", "moved_or_renamed": HOSTILE,
+             "last_release": HOSTILE, "last_commit": HOSTILE, "archived_or_deprecated": HOSTILE,
+             "license": HOSTILE, "liveness": "dead", "liveness_evidence": HOSTILE,
+             "successor_or_replacement": "Use Widget. " + HOSTILE, "changes_since_note": HOSTILE, "sources": []}
+        (ws / "results" / "Gadget.json").write_text(json.dumps(r), encoding="utf-8")
+        (ws / "overrides.json").write_text(json.dumps({"Widget": {"liveness": "active", "lines": [
+            "**Verdict:** " + HOSTILE, "[ref]: javascript:alert(1)", "two\nlines <iframe src=x>"]}}),
+            encoding="utf-8")
+        dg = watch.build_digest(root, scan, ws)
+        for e in dg["notes"].values():
+            for line in e["lines"] + [e["changes"]]:
+                assert_inert(self, line)
+        # digest.json may be edited (translated) before apply: apply escapes again.
+        dg["notes"]["content/AI/TOOLS/Widget.md"]["lines"].append("<script>alert(2)</script>")
+        watch.apply_changes(root, scan, dg)
+        for stem in ("Gadget", "Widget"):
+            box = [x[2:] for x in self.v.read(f"content/AI/TOOLS/{stem}.md").replace("\r\n", "\n").split("\n")
+                   if x.startswith("> ") and "Status check" not in x]
+            self.assertTrue(box, stem)
+            for line in box:
+                assert_inert(self, line)
+                self.assertNotIn("javascript:", line.split("](")[-1][:11])
+        gad = self.v.read("content/AI/TOOLS/Gadget.md")
+        self.assertIn("> **Source:** https://evil.example/&lt;img src=x", gad)   # failed the URL check
+        self.assertIn("[[Widget]]", gad)                                    # the skill's own wikilink
+        wid = self.v.read("content/AI/TOOLS/Widget.md")
+        self.assertIn("> \\[ref]: javascript", wid)                        # no link definition
+        self.assertIn("> two lines &lt;iframe src=x&gt;", wid.replace("\r\n", "\n"))
+        report = watch.build_report(root, scan, dg)
+        assert_inert(self, report.split("<details><summary>All seeded notes</summary>")[0],
+                     ("Widget", "Gadget", "Map", "Lonely"))
+
+    def test_report_keeps_its_details_wrapper_and_escapes_github_text(self):
+        watch.write_json(self.v.root / watch.SNAPSHOT, {"repos": {"acme/widget": {
+            "full_name": "acme/widget", "archived": False, "license": "MIT", "latest_kind": "none",
+            "pushed_at": "2026-11-01", "checked": "2026-10-13"}}, "urls": {}})
+        gh = FakeGitHub(dict(self.gh.routes, **{
+            "repos/acme/widget": (200, {"full_name": "acme/widget", "pushed_at": "2026-11-01T00:00:00Z",
+                                        "license": {"spdx_id": "<img src=x onerror=alert(1)>"}}),
+            "repos/acme/widget/releases/latest": release("v1.0<svg/onload=alert(1)>")}))
+        scan = self.scan(gh=gh)
+        report = watch.build_report(self.v.root, scan, dry=True)
+        self.assertIn("\n<details><summary>All seeded notes</summary>\n", report)
+        self.assertIn("\n</details>\n", report)
+        flags = [x for x in report.split("\n")
+                 if x.startswith(("| [[Widget]] | licence |", "| [[Widget]] | release |"))]
+        self.assertEqual(len(flags), 2, report)
+        for line in flags:
+            assert_inert(self, line)
+        self.assertIn("&lt;svg/onload=alert(1)&gt;", report)
+
+    def test_snapshot_keeps_private_names_out(self):
+        self.v.write("content/_privacy.local.md", "## Always cut\n- \"Vexmoor\"\n")   # a made-up name
+        self.v.write("content/AI/TOOLS/Kit.md", note(
+            {"title": '"Kit"', "type": "tool", "repo": '"https://github.com/vexmoor/kit"'}, "# Kit\n"))
+        self.v.write("content/AI/TOOLS/Portal.md", note(
+            {"title": '"Portal"', "type": "tool", "homepage": '"https://vexmoor-portal.example/"'}, "# Portal\n"))
+        self.v.write("content/AI/TOOLS/Spare.md", note(     # public repo, private release tag
+            {"title": '"Spare"', "type": "tool", "repo": '"https://github.com/acme/spare"'}, "# Spare\n"))
+        routes = dict(self.gh.routes, **{
+            "repos/vexmoor/kit": repo("vexmoor/kit"), "repos/vexmoor/kit/releases/latest": release("v1.0.0"),
+            "repos/acme/spare": repo("acme/spare"), "repos/acme/spare/releases/latest": release("vexmoor-2.0")})
+        watch.apply_changes(self.v.root, self.scan(gh=FakeGitHub(routes)))
+        raw = (self.v.root / watch.SNAPSHOT).read_text(encoding="utf-8")
+        self.assertNotIn("vexmoor", raw.lower())
+        snap = json.loads(raw)
+        hidden = [k for k in list(snap["repos"]) + list(snap["urls"]) if k.startswith("private:")]
+        self.assertEqual(len(hidden), 2)                       # Kit's repo, Portal's URL
+        self.assertEqual(snap["repos"]["acme/spare"]["license"], "MIT")
+        self.assertNotIn("latest_kind", snap["repos"]["acme/spare"])
+        self.assertIn("acme/widget", snap["repos"])
+
+        flags = lambda scan: {n["stem"]: [k for k, _ in n["flags"]] for n in scan["notes"]}
+        again = flags(self.scan(gh=FakeGitHub(routes)))      # the hashed baseline is found
+        self.assertEqual((again["Kit"], again["Spare"], again["Portal"]), ([], [], []))
+        routes["repos/vexmoor/kit"] = repo("vexmoor/kit", lic="GPL-3.0")
+        self.assertEqual(flags(self.scan(gh=FakeGitHub(routes)))["Kit"], ["licence"])
+
+    def test_private_entry_from_an_older_snapshot_is_read_then_hashed(self):
+        self.v.write("content/_privacy.local.md", "## Always cut\n- \"Vexmoor\"\n")
+        self.v.write("content/AI/TOOLS/Kit.md", note(
+            {"title": '"Kit"', "type": "tool", "repo": '"https://github.com/vexmoor/kit"'}, "# Kit\n"))
+        watch.write_json(self.v.root / watch.SNAPSHOT, {"repos": {"vexmoor/kit": {
+            "full_name": "vexmoor/kit", "archived": False, "license": "MIT", "latest": "v1.0.0",
+            "latest_kind": "release", "pushed_at": "2026-11-01", "checked": "2026-10-13"}}, "urls": {}})
+        routes = dict(self.gh.routes, **{"repos/vexmoor/kit": repo("vexmoor/kit", archived=True),
+                                         "repos/vexmoor/kit/releases/latest": release("v1.0.0")})
+        scan = self.scan(gh=FakeGitHub(routes))
+        self.assertEqual({n["stem"]: [k for k, _ in n["flags"]] for n in scan["notes"]}["Kit"], ["archived"])
+        watch.apply_changes(self.v.root, scan, {"notes": {}})   # flagged, not researched: keep the old entry
+        raw = (self.v.root / watch.SNAPSHOT).read_text(encoding="utf-8")
+        self.assertNotIn("vexmoor", raw.lower())
+        old = [v for k, v in json.loads(raw)["repos"].items() if k.startswith("private:")]
+        self.assertEqual(len(old), 1)
+        self.assertFalse(old[0]["archived"])                     # the flag survives to the next run
+
+    def test_private_term_changed_by_escaping_is_still_held(self):
+        self.v.write("content/_privacy.local.md", "## Always cut\n- \"Vexmoor #2\"\n")   # made up
+        scan = self.scan()
+        ws = self.v.root / "ws"
+        watch.build_outline(scan, ws, self.v.root)
+        r = {"repo_url": "https://github.com/acme/widget", "moved_or_renamed": "no", "last_release": "v2.0.0",
+             "last_commit": "2026-11-01", "archived_or_deprecated": "no", "license": "MIT", "liveness": "active",
+             "liveness_evidence": "Used by Vexmoor #2 since 2026.", "successor_or_replacement": "n/a",
+             "changes_since_note": "nothing material", "sources": []}
+        (ws / "results" / "Widget.json").write_text(json.dumps(r), encoding="utf-8")
+        self.assertNotIn("Vexmoor #2", watch.safe_md(r["liveness_evidence"]))   # the space became NBSP
+        dg = watch.build_digest(self.v.root, scan, ws)
+        self.assertNotIn("content/AI/TOOLS/Widget.md", dg["notes"])
 
     def test_rate_limit_skips_rest(self):
         scan = self.scan(gh=FakeGitHub(self.gh.routes, remaining=28))

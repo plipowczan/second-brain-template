@@ -21,12 +21,14 @@ back to the repository of the current checkout.
 import argparse
 import datetime as dt
 import hashlib
+import hmac
 import json
 import os
 import re
 import shutil
 import subprocess
 import sys
+import unicodedata
 import urllib.error
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
@@ -62,6 +64,7 @@ FIELDS = ["repo_url", "moved_or_renamed", "last_release", "last_commit", "archiv
           "license", "liveness", "liveness_evidence", "successor_or_replacement",
           "changes_since_note", "sources"]
 BOM = chr(0xFEFF)
+NBSP = chr(0xA0)
 UA = {"User-Agent": "Mozilla/5.0 (brain-watch link check)"}
 
 
@@ -405,9 +408,42 @@ def load_snapshot(root):
     return d
 
 
-def repo_baseline(snap, slug, full=None):
+def snapshot_key(key, terms):
+    """The key a repo slug or URL is stored under in the snapshot, which is committed and
+    may be published: the key itself, or, when it contains a private term, a hash keyed
+    with the private terms, so a reader without them cannot test a guessed name. Editing
+    the terms changes the hash: those entries then start from no baseline, once."""
+    if not terms or not private_hit(key, terms):
+        return key
+    secret = "\n".join(sorted(terms)).encode("utf-8")
+    return "private:" + hmac.new(secret, key.encode("utf-8"), hashlib.sha256).hexdigest()[:32]
+
+
+def public_entry(entry, terms):
+    """A snapshot entry without the values that contain a private term (a renamed repo's
+    full_name, say). A dropped release tag takes its kind and date along, so the next
+    run does not see a "first release"."""
+    out = {k: v for k, v in entry.items() if not (isinstance(v, str) and private_hit(v, terms))}
+    if "latest" in entry and "latest" not in out:
+        out.pop("latest_kind", None)
+        out.pop("latest_date", None)
+    return out
+
+
+def repo_baseline(snap, slug, full=None, terms=()):
+    """The snapshot entry of a repo: by its slug, else by its current full name; each
+    under its stored key (hashed when private), else as written by an older run."""
     repos = snap["repos"]
-    return repos.get(slug.lower()) or (repos.get(full.lower()) if full else None)
+    for k in (slug, full):
+        if k:
+            hit = repos.get(snapshot_key(k.lower(), terms)) or repos.get(k.lower())
+            if hit:
+                return hit
+    return None
+
+
+def url_baseline(snap, url, terms=()):
+    return snap["urls"].get(snapshot_key(url, terms)) or snap["urls"].get(url)
 
 
 def version(tag):
@@ -543,13 +579,14 @@ def run_scan(root, today, budget=40, due_days=90, overrides=None, gh=None, url_c
             for u, st in zip(urls, ex.map(url_check, urls)):
                 facts[u] = {"status": st}
 
+    terms = private_terms(root)
     for n in notes:
         if n["kind"] == "repo":
             f = facts.get(n["repo"].lower(), {"error": "not-fetched"})
-            base = repo_baseline(snap, n["repo"], f.get("full_name"))
+            base = repo_baseline(snap, n["repo"], f.get("full_name"), terms)
         elif n["kind"] == "url":
             f = facts.get(n["url"], {"error": "not-fetched"})
-            base = snap["urls"].get(n["url"])
+            base = url_baseline(snap, n["url"], terms)
         else:
             f, base = {}, None
         n["facts"] = f
@@ -695,6 +732,82 @@ def material(changes):
     return bool(s) and not s.startswith(("nothing material", "nothing", "no material", "none", "n/a", "no change"))
 
 
+# ---------------------------------------------------------------- safe markdown
+#
+# The deep-pass results come from web pages and release notes, and the status box is
+# published. Quartz renders raw HTML (rehype-raw), and its Obsidian plugin scans the text
+# *after* entities are decoded for ==highlight== and ![[embed|alias]], which it rebuilds
+# as raw HTML. So `&lt;` in the source would come back as `<` there. safe_md() escapes
+# < > and character references, and also breaks up the markup those passes look for.
+
+SAFE_URL = re.compile(r"https?://[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?"
+                      r"(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)*(?::\d{1,5})?"
+                      r"(?:[/?#](?:[A-Za-z0-9._~!&*+,;=:@/?#-]|%[0-9A-Fa-f]{2})*)?")
+MD_LINK = re.compile(r"(!?)\[([^\[\]\n]*)\]\(\s*<?([^\s<>()]*)>?(?:\s+(?:\"[^\"\n]*\"|'[^'\n]*'))?\s*\)")
+URL_CHAR = r"(?:(?!&(?:lt|gt);)[^\s<>\"'`\x00-\x03])"          # &lt; ends a URL, as < does
+BARE_URL = re.compile(rf"https?://{URL_CHAR}+|(?<![\w.\\])www\.{URL_CHAR}+", re.I)
+KEPT_LINK = re.compile(r"(?<![!\\])\[\[([^\[\]|#^\\\n]+)\]\]")
+
+
+def safe_url(u):
+    """u when it is a plain http(s) URL: a host name, an optional port, and a path, query
+    and fragment of URL characters only (no quotes, brackets, parentheses, backslashes,
+    spaces, $ or character references). Else None."""
+    u = str(u or "").strip()
+    ok = len(u) <= 2048 and SAFE_URL.fullmatch(u) and not re.search(r"&#?[A-Za-z0-9]+;", u)
+    return u if ok else None
+
+
+def safe_md(s, keep=()):
+    """One line of Markdown that shows untrusted text as text.
+
+    Escapes < and > and any character reference (`&lt;` already written stays as it is,
+    so a second pass changes nothing). A link survives only to a URL that safe_url()
+    accepts; an image becomes a link, or its alt text. A bare URL is kept whole when it
+    passes the check; else it is text, which GFM may still auto-link, but only as
+    http(s). [[wikilinks]] survive only to a note title in `keep`, never as an embed.
+    ==, %%, #tags and a leading link definition are broken up."""
+    s = re.sub(r"[\x00-\x03]", "", str(s if s is not None else ""))
+    s = re.sub(r"\s*[\r\n]+\s*", " ", s)
+    held = []
+
+    def hold(x):
+        held.append(x)
+        return f"\x00{len(held) - 1}\x00"
+
+    def link(m):
+        url = safe_url(m.group(3))
+        if not url:
+            return m.group(2)
+        if not m.group(2).strip():
+            return hold(url)
+        return f"\x01{m.group(2)}\x02{hold(url)[1:-1]}\x03"   # the label is made safe below
+
+    def bare(m):
+        u = m.group(0)
+        core = u.rstrip(".,;:!?*_~)]")
+        if safe_url(core if core.lower().startswith("http") else "http://" + core):
+            return hold(core) + u[len(core):]
+        return u
+
+    keep = set(keep)
+    s = KEPT_LINK.sub(lambda m: hold(m.group(0)) if m.group(1) in keep else m.group(0), s)
+    s = MD_LINK.sub(link, s)
+    s = BARE_URL.sub(bare, s)
+    s = re.sub(r"&(?!(?:amp|lt|gt);)(?=#?[A-Za-z0-9]+;)", "&amp;", s)
+    s = s.replace("<", "&lt;").replace(">", "&gt;")
+    s = re.sub(r"(\\?\[)(?=\\?\[)", r"\1 ", s)      # [[x]], ![[x]] (also as [\[x]])
+    s = re.sub(r"(\\?=)(?=\\?=)", r"\1 ", s)        # ==highlight==
+    s = re.sub(r"%(?=%)", "% ", s)                  # %%comment%% (cut before parsing)
+    s = re.sub(r"(^| )#(?=[^\s#])", NBSP + "#", s)       # #tag: Quartz wants a plain space first
+    s = re.sub(r"!(?=\[)", r"!\\", s)               # ![image](...)
+    s = s.replace("](", "]\\(")                     # any other inline link
+    s = re.sub(r"^(\s*)\[(?=[^\]]*\]:)", r"\1\\[", s)  # [ref]: definition
+    s = re.sub(r"(?<!\\)((?:\\\\)*)\$", r"\1\\$", s)   # $…$ would be LaTeX
+    s = re.sub(r"\x01([^\x01-\x03]*)\x02(\d+)\x03", lambda m: f"[{m.group(1)}]({held[int(m.group(2))]})", s)
+    return re.sub(r"\x00(\d+)\x00", lambda m: held[int(m.group(1))], s)
+
+
 def link_titles(s, titles, self_name):
     done = {self_name}
     for t in titles:
@@ -721,9 +834,10 @@ def status_lines(n, r, titles, o=None):
                      f"**last commit:** {date_of(r.get('last_commit'))} · "
                      f"**licence:** {first(r.get('license'), 120)}")
     m = re.search(r"https?://\S+", str(r.get("repo_url") or ""))
-    forge = m and re.search(r"github\.com|gitlab\.com|codeberg\.org|huggingface\.co", m.group(0))
+    url = safe_url(m.group(0).rstrip(').,;')) if m else None
+    forge = url and re.search(r"github\.com|gitlab\.com|codeberg\.org|huggingface\.co", url)
     lab = "Repo" if (forge and n["kind"] == "repo") else "Source"
-    repo_line = (f"**{lab}:** {m.group(0).rstrip(').,;')}" if m
+    repo_line = (f"**{lab}:** {url}" if url
                  else f"**Source:** {first(r.get('repo_url'), 140)}")
     mv = first(r.get("moved_or_renamed"), 260, 2)
     if not negative(r.get("moved_or_renamed")) and not (
@@ -779,11 +893,22 @@ def private_terms(root):
     return terms
 
 
+def fold(s):
+    """s without diacritics: ł → l, then NFKD with the combining marks dropped
+    ("Żółw Łąka" → "Zolw Laka"), as names are often written in slugs and URLs."""
+    s = unicodedata.normalize("NFKD", s.replace("ł", "l").replace("Ł", "L"))
+    return "".join(c for c in s if not unicodedata.combining(c))
+
+
 def term_forms(term):
     """A term as written and as it shows up in slugs and URLs: "Acme Labs" also matches
-    acmelabs, acme-labs and acme_labs."""
+    acmelabs, acme-labs and acme_labs, and "Łąka Wiśnia" also lakawisnia, laka-wisnia.
+    A folded form shorter than 4 letters is left out: "Wąs" would match "was"."""
     words = re.split(r"[\s_-]+", term.strip())
-    return {term.strip(), "".join(words), "-".join(words), "_".join(words)} - {""}
+    forms = {term.strip(), "".join(words), "-".join(words), "_".join(words)}
+    if len(re.sub(r"\W", "", fold(term))) >= 4:
+        forms |= {fold(f) for f in forms}
+    return forms - {""}
 
 
 def private_hit(text, terms):
@@ -817,12 +942,15 @@ def build_digest(root, scan, workspace):
         else:
             out["missing"].append(n["path"])
             continue
+        raw = [str(x) for x in lines] + [str(changes)]
+        lines, changes = [safe_md(x, titles) for x in lines], safe_md(changes, titles)   # as written
         if lv not in VOCAB:
             out["held"].append({"path": n["path"], "reason": f"liveness {lv or '(empty)'!r} is not one of {', '.join(VOCAB)}"})
             continue
         full = (n.get("facts") or {}).get("full_name")
         new_repo = ("https://github.com/" + full) if full and any(k == "renamed" for k, _ in n["flags"]) else None
-        if private_hit(" ".join(lines + [changes, new_repo or ""]), terms):
+        # Both forms: a link label survives escaping as plain text, a space may become NBSP.
+        if private_hit(" ".join(raw + lines + [changes, new_repo or ""]), terms):
             out["held"].append({"path": n["path"], "reason": "a line matched a private term"})
             continue
         entry = {"liveness": lv, "lines": lines, "changes": changes, "enhance": material(changes)}
@@ -874,7 +1002,10 @@ def insert_callout(body, block):
     return "\n".join(head + lead + block + [""] + (rest if rest else []))
 
 
-def render_box(today, lv, lines):
+def render_box(today, lv, lines, keep=()):
+    """The status box. Each line goes through safe_md() again: digest.json may have been
+    edited (translated) since the digest wrote it."""
+    lines = [safe_md(x, keep) for x in lines]
     return [f"> [!{CALLOUT[lv]}] Status check {today} — {lv}"] + [f"> {x}" if x else ">" for x in lines]
 
 
@@ -882,6 +1013,7 @@ def apply_changes(root, scan, digest=None, dry=False):
     """Write seeds, status boxes and frontmatter. Returns what changed (or would)."""
     today, entries = scan["today"], (digest or {}).get("notes", {})
     terms = private_terms(root)
+    titles = {n["stem"] for n in scan["notes"]}
     done = {"seeded": [], "status": [], "skipped": [], "held": []}
     for n in scan["notes"]:
         entry, seed = entries.get(n["path"]), n.get("seed") or {}
@@ -905,9 +1037,9 @@ def apply_changes(root, scan, digest=None, dry=False):
         if entry:
             new_fm = set_fm(new_fm, "status-checked", today)
             new_fm = set_fm(new_fm, "project-status", entry["liveness"])
-            if entry.get("repo") and not private_hit(entry["repo"], terms):
+            if safe_url(entry.get("repo")) and not private_hit(entry["repo"], terms):
                 new_fm = set_fm(new_fm, "repo", fm_value(entry["repo"]))
-            new_body = insert_callout(body, render_box(today, entry["liveness"], entry["lines"]))
+            new_body = insert_callout(body, render_box(today, entry["liveness"], entry["lines"], titles))
         out = f"---\n{new_fm}\n---\n" + new_body
         if out == text:
             continue
@@ -926,8 +1058,13 @@ def write_snapshot(root, scan, researched=()):
     """The cheap-pass facts as the next run's baseline. Entries no note points at any
     more are dropped. A repo or URL keeps its previous entry when it could not be read,
     or when it was flagged but no note on it was researched this run: otherwise the
-    next run would compare with the new facts and the flag would be lost."""
+    next run would compare with the new facts and the flag would be lost.
+
+    The snapshot is committed, so a key that contains a private term is stored hashed
+    (snapshot_key) and a value that contains one is left out (public_entry)."""
     old, today = load_snapshot(root), scan["today"]
+    terms = private_terms(root)
+    sk = lambda k: snapshot_key(k, terms)
     researched = set(researched)
     fresh = {}
     for n in scan["notes"]:
@@ -941,32 +1078,33 @@ def write_snapshot(root, scan, researched=()):
         f = n.get("facts") or {}
         if n["kind"] == "repo":
             readable = not f.get("error") or f.get("error") == "not-found"
-            prev = repo_baseline(old, n["repo"], f.get("full_name"))
+            prev = repo_baseline(old, n["repo"], f.get("full_name"), terms)
             if readable and (fresh[n["repo"].lower()] or prev is None):
                 key = (f.get("full_name") or n["repo"]).lower()
-                repos[key] = {**f, "checked": today}   # keep None: "no licence" is a fact to compare
+                repos[sk(key)] = public_entry({**f, "checked": today}, terms)  # keep None: "no licence" is a fact
             elif prev is not None:
-                key = n["repo"].lower() if n["repo"].lower() in old["repos"] else f["full_name"].lower()
-                repos[key] = prev
+                key = n["repo"].lower() if repo_baseline(old, n["repo"], None, terms) else f["full_name"].lower()
+                repos[sk(key)] = public_entry(prev, terms)
         elif n["kind"] == "url":
-            prev = old["urls"].get(n["url"])
+            prev = url_baseline(old, n["url"], terms)
             if f.get("status") in ("alive", "dead") and (fresh[n["url"]] or prev is None):
-                urls[n["url"]] = {"status": f["status"], "checked": today}
+                urls[sk(n["url"])] = {"status": f["status"], "checked": today}
             elif prev is not None:
-                urls[n["url"]] = prev
+                urls[sk(n["url"])] = public_entry(prev, terms)
             elif f.get("status"):
-                urls[n["url"]] = {"status": f["status"], "checked": today}
+                urls[sk(n["url"])] = {"status": f["status"], "checked": today}
     write_json(Path(root) / SNAPSHOT, {"updated": today, "repos": repos, "urls": urls})
 
 
 # ---------------------------------------------------------------- report
 
-def esc(s):
-    return re.sub(r"(?<!\\)\$", r"\\$", str(s))
+def esc(s, keep=()):
+    """Untrusted text (GitHub tags, deep-pass results, links) for one report line."""
+    return safe_md(s, keep)
 
 
 def cell(s):
-    return esc(s).replace("|", "/").replace("\n", " ")
+    return esc(s).replace("|", "/")
 
 
 def build_report(root, scan, digest=None, dry=False):
@@ -1031,7 +1169,8 @@ def build_report(root, scan, digest=None, dry=False):
             for n in researched:
                 e = entries[n["path"]]
                 was = n["project_status"] or "never checked"
-                st = e["liveness"] if was == e["liveness"] else f"{was} → **{e['liveness']}**"
+                lv = cell(e["liveness"])
+                st = lv if was == e["liveness"] else f"{was} → **{lv}**"
                 L.append(f"| {wl(n, True)} | {cell(n['deep'])} | {st} |")
         else:
             L.append("No note needed a deep check this run.")
@@ -1046,7 +1185,7 @@ def build_report(root, scan, digest=None, dry=False):
             L.append("The note body is now wrong in the way the status box says. Nothing was changed outside the box.")
             L.append("")
             for n in enh:
-                L.append(f"- `/b:enhance {wl(n)}` — {esc(first(entries[n['path']]['changes'], 220))}")
+                L.append(f"- `/b:enhance {wl(n)}` — {esc(first(entries[n['path']]['changes'], 220), stems)}")
         else:
             L.append("None.")
         L.append("")
@@ -1058,7 +1197,7 @@ def build_report(root, scan, digest=None, dry=False):
             L.append("Newly stale, dead or sunset. Nothing was moved: run `/b:curate` to decide.")
             L.append("")
             for n in cur:
-                L.append(f"- {wl(n)} — {entries[n['path']]['liveness']}")
+                L.append(f"- {wl(n)} — {esc(entries[n['path']]['liveness'])}")
         else:
             L.append("None.")
         L.append("")
@@ -1092,10 +1231,10 @@ def build_report(root, scan, digest=None, dry=False):
         if check:
             L += ["", "Taken from the only GitHub link in the note (check these):", ""]
             for n in check:
-                L.append(f"- {wl(n)} → {written(n)}")
+                L.append(f"- {wl(n)} → {esc(written(n))}")
         L += ["", "<details><summary>All seeded notes</summary>", ""]
         for n in seeded:
-            L.append(f"- {wl(n)} → {written(n)} ({n['basis']})")
+            L.append(f"- {wl(n)} → {esc(written(n))} ({n['basis']})")
         L += ["", "</details>"]
     else:
         L.append("None.")
@@ -1106,7 +1245,7 @@ def build_report(root, scan, digest=None, dry=False):
         L.append("Add `repo:` or `homepage:` to the note (or `watch: false`).")
         L.append("")
         for n in ambiguous:
-            cands = ["(a private link)" if private_hit(c, terms) else c for c in n["ambiguous"]]
+            cands = ["(a private link)" if private_hit(c, terms) else esc(c) for c in n["ambiguous"]]
             why = "several candidates" if len(cands) > 1 else "one link, but its site is not named after the note"
             L.append(f"- {wl(n)} — {why}: " + ", ".join(cands))
         for n in untracked:
@@ -1120,7 +1259,7 @@ def build_report(root, scan, digest=None, dry=False):
         for n in errors:
             L.append(f"- {wl(n)} — {n['facts']['error']}")
         for n in unverified:
-            L.append(f"- {wl(n)} — {n['url']} did not answer clearly (blocked, server error or network); not counted as dead")
+            L.append(f"- {wl(n)} — {esc(n['url'])} did not answer clearly (blocked, server error or network); not counted as dead")
     else:
         L.append("None.")
     L.append("")
@@ -1133,7 +1272,8 @@ def build_report(root, scan, digest=None, dry=False):
         for n in held_seeds:
             L.append(f"- `{n['path']}` — the proposed link matched a private term; no `repo:` / `homepage:` was written")
         for b in (digest or {}).get("bad", []):
-            L.append(f"- `results/{b}` — not valid JSON")
+            name = re.sub(r"[^\w.() -]", "_", b)      # an agent named the file: no markup
+            L.append(f"- `results/{name}` — not valid JSON")
         L.append("")
 
     guarded = []

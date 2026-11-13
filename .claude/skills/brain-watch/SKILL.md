@@ -121,10 +121,13 @@ Run every command from the vault root. `SCRIPT=.claude/skills/brain-watch/script
 6. **Digest.** `python $SCRIPT digest "$WS/scan.json" "$WS" --out "$WS/digest.json"`.
    A note whose lines contain a term from the "Always cut" section of
    `content/_privacy.md` or of the git-ignored `content/_privacy.local.md` is held back
-   (also in its slug forms: `Acme Labs` matches `acme-labs`, `acmelabs`). So is a result
-   whose `liveness` is not in the vocabulary. To correct a result by hand, put
+   (also in its slug forms: `Acme Labs` matches `acme-labs`, `acmelabs`; and a name with
+   Polish letters matches without them when that leaves at least four letters:
+   `Łąka Wiśnia` matches `laka-wisnia`). So is a result whose `liveness` is not in the
+   vocabulary. To correct a result by hand, put
    `{result_key: {"field": "text"}}` or `{result_key: {"liveness": …, "lines": […]}}` in
-   `$WS/overrides.json` and re-run the digest. If `content/WRITING_STYLE.md` names a
+   `$WS/overrides.json` and re-run the digest. Override lines are made safe like the
+   results (see Safety), so link a note as a plain `[[Note]]`. If `content/WRITING_STYLE.md` names a
    primary language other than English, translate the `lines` in `digest.json` into it
    now, keeping URLs, versions, dates and wikilinks as they are.
 7. **Apply.** `python $SCRIPT apply "$WS/scan.json" --digest "$WS/digest.json"` (without
@@ -151,6 +154,16 @@ flagged notes stay flagged for the next run.
 - The cheap pass reads only; every GitHub call names its repository (`repos/<owner>/<name>/…`), so `gh` never falls back to the current checkout's repository.
 - A network error, a block or a server error is "not checked", never `dead` or `gone`.
 - Lines and links that match a private term are not written into a note or the report.
+- The snapshot is committed, so a repo or URL that contains a private term is stored
+  under a hash keyed with the private terms, and a value that contains one (a renamed
+  repo's name, a release tag) is left out. Changing the terms resets those entries once.
+- What the agents found comes from web pages, and the status box is published. Every
+  line (results, overrides, and `digest.json` again at `apply`) is written as text:
+  `<`, `>` and character references are escaped; a link is kept only to a plain
+  http(s) URL, and an image becomes a link; `[[wikilinks]]` survive only as a plain
+  link to a tracked note, never as an embed; `==`, `%%`, `#tags` and link definitions
+  are broken up, since Quartz rebuilds HTML from them after decoding entities. The
+  report escapes GitHub text (release tags, licences) the same way.
 - Currency in lines is escaped as `\$`.
 - Never modify `.obsidian/` or engine directories; never move, archive or delete a note.
 
