@@ -68,8 +68,12 @@ The check fails when:
 - a skill under `.claude/skills/` has no copy;
 - `.agents/skills/` holds a directory or file with no source (this catches the
   `source-command-*` wrappers and any leftover file of the migration);
-- a source `SKILL.md` names `scripts/…` or another non-Markdown file of its skill
-  without the `.claude/skills/<skill>/` prefix (D3);
+- a source `SKILL.md` names a non-Markdown file of its skill by a relative path
+  (`scripts/…`, `references/…`) without the `.claude/skills/<skill>/` prefix (D3). A bare
+  file name with no folder (`render.py` in `brain-onboard`, `yt_fetch.py` in
+  `brain-ingest`, `lint_links.py` in `brain-lint`) is a name, not a path, and passes: it
+  points at no folder the copy lacks, and the command that runs the script carries the
+  full path;
 - a source frontmatter is not valid YAML, or its `name` or `description` is outside
   Codex's limits (D4);
 - `.codex/hooks.json` holds an absolute path or a command other than the one in D5.
@@ -109,6 +113,9 @@ The few relative mentions of scripts (`scripts/bundle.py` in `brain-export`,
 `scripts/build_indexes.py` in `brain-reindex`, `scripts/upgrade.py` in `brain-upgrade`)
 become repository-root paths in the source skills. They would mislead a Codex agent
 reading the copy, which has no `scripts/` folder. The generator's check then keeps it so.
+Bare file names in prose (`render.py`, `yt_fetch.py`, `lint_links.py`, `bundle.py`) stay
+as they are; the check reads only mentions with a folder (D1), so these three skills are
+the whole source edit.
 
 *Alternative considered.* Copy the whole skill folder: 40-odd code files twice in every
 base, two copies of each script that an owner can edit apart, and `known-hashes.json`
@@ -225,8 +232,21 @@ into `source-command-*` skills, rewrites "Claude" and `CLAUDE.md` in each `SKILL
 writes `.codex/hooks.json` with absolute paths when that file is missing. Once the
 template ships `.agents/skills/` and `.codex/hooks.json`, a later `/import` leaves them
 alone. It still adds the wrapper skills, so the docs advise against running it in a base.
-An owner who ran it before upgrading has local files at the template's new paths; task 6.2
-checks what the plan does with such a file before the release.
+An owner who ran it before upgrading has local files at the template's new paths, and the
+upgrade does not get past them on its own. The plan marks each one `conflict` ("new
+template file, but this base has its own file here"), and `apply` refuses any planned
+path with uncommitted work, untracked included (`planner.dirty_paths`), and writes
+nothing. Committing the migration output would not help either: the broken copies would
+then be the owner's own version, which the upgrade keeps or reports as a conflict.
+
+So the upgrade has one step before it, in the changelog entry and `ENVIRONMENTS.md`:
+delete the migration output at the template's paths, that is `.agents/skills/<skill>/` for
+each of the 20 template skills, every `.agents/skills/source-command-*`, and
+`.codex/hooks.json`. Skills of the owner's own under `.agents/skills/` stay. The rest of
+the migration output (`.codex/hooks/`, `.codex/agents/`) is not in the upgrade's way;
+it is the owner's to delete. Task 6.2 proves the path end to end: after that step the
+upgrade applies and commits, every copy equals the template's, and an own skill is
+untouched.
 
 ### D9. The migration output is deleted first
 

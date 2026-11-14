@@ -15,6 +15,10 @@ shipped SHALL stay the base's own.
 - **WHEN** a base has `.agents/skills/my-skill/SKILL.md`, a path no template version shipped
 - **THEN** brain-upgrade neither changes nor deletes it
 
+#### Scenario: A base that ran Codex's migration
+- **WHEN** a base holds untracked migration output at the template's new paths, and the owner deletes it as the changelog entry says, keeping an own `.agents/skills/my-skill/`
+- **THEN** `/b:upgrade` applies and commits, every copy under `.agents/skills/` equals the template's, and `my-skill` is unchanged
+
 #### Scenario: Migration output in the template source
 - **WHEN** a file under `.agents/skills/` that the generator did not write exists in the template checkout, tracked or not
 - **THEN** the generator's check exits non-zero and names it, so it cannot be committed by accident

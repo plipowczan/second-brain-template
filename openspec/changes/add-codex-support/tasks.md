@@ -9,12 +9,12 @@ accepts `design.md`. Commit by path, never `git add -A`, until task 0.1 is done.
 
 ## 1. Source skills (D3)
 
-- [ ] 1.1 In `brain-export`, `brain-reindex` and `brain-upgrade`, write the relative mentions of `scripts/…` as repository-root paths (`.claude/skills/<skill>/scripts/…`); quote the `brain-ingest` `description` so its frontmatter is valid YAML (D4); no other text changes
+- [ ] 1.1 In `brain-export`, `brain-reindex` and `brain-upgrade`, write the relative mentions of `scripts/…` as repository-root paths (`.claude/skills/<skill>/scripts/…`); quote the `brain-ingest` `description` so its frontmatter is valid YAML (D4); no other text changes. Bare file names in prose (`render.py`, `yt_fetch.py`, `lint_links.py`, `bundle.py`) stay (D1); done when the check from 2.1 passes on the whole `.claude/skills/` tree
 - [ ] 1.2 `python tests/run_skill_tests.py` still passes (no script changed)
 
 ## 2. Generator and its check (D1, D3, D4)
 
-- [ ] 2.1 `dev/test_build_codex_skills.py` first, on a temporary tree: copy equals source byte for byte; Markdown under `references/` copied, `scripts/`, `*.py`, `*.json` and `__pycache__/` not; a stale copy, a missing copy, an orphan directory (`source-command-b-qa`) and an orphan file each fail `--check` and are named; CRLF in a Windows checkout is not drift; a relative `scripts/x.py` in a source `SKILL.md` fails with skill and path; a frontmatter that is not valid YAML, an empty `description`, a `description` over 1024 characters and a `name` over 64 each fail; `--check` writes nothing
+- [ ] 2.1 `dev/test_build_codex_skills.py` first, on a temporary tree: copy equals source byte for byte; Markdown under `references/` copied, `scripts/`, `*.py`, `*.json` and `__pycache__/` not; a stale copy, a missing copy, an orphan directory (`source-command-b-qa`) and an orphan file each fail `--check` and are named; CRLF in a Windows checkout is not drift; a relative `scripts/x.py` in a source `SKILL.md` fails with skill and path, a bare `render.py` in prose passes; a frontmatter that is not valid YAML, an empty `description`, a `description` over 1024 characters and a `name` over 64 each fail; `--check` writes nothing
 - [ ] 2.2 `dev/build_codex_skills.py`: standard library only, runs from the repository root, writes `.agents/skills/` from `.claude/skills/`, `--check` mode; the skill list comes from the directories under `.claude/skills/` that the manifest ships
 - [ ] 2.3 The check also reads `.codex/hooks.json` and fails on an absolute path (POSIX, drive letter, UNC) or a SessionStart command other than `python .claude/hooks/load_vault_map.py` (D5); tests for each
 - [ ] 2.4 `tests/run_tests.py`: run the check where `dev/` exists, next to `dev/check_manifest.py`
@@ -33,15 +33,15 @@ accepts `design.md`. Commit by path, never `git add -A`, until task 0.1 is done.
 
 ## 5. Docs (D6, D8)
 
-- [ ] 5.1 `ENVIRONMENTS.md`: the Codex row says where skills and the hook come from, how to start a skill (`$brain-ingest` for `/b:ingest`, or `/skills`), to open the base's root folder, trust the project and approve the hook in `/hooks`, not to run `/import` in a base, and that an edited skill must be copied to `.agents/skills/` by hand
+- [ ] 5.1 `ENVIRONMENTS.md`: the Codex row says where skills and the hook come from, how to start a skill (`$brain-ingest` for `/b:ingest`, or `/skills`), to open the base's root folder, trust the project and approve the hook in `/hooks`, not to run `/import` in a base, what to delete before upgrading a base that already ran it (D8), and that an edited skill must be copied to `.agents/skills/` by hand
 - [ ] 5.2 `README.md` "Works beyond Claude Code": one line on Codex skills
 - [ ] 5.3 `CONTRIBUTING.md`: `dev/build_codex_skills.py` under "Author tools in `dev/`", and under "Before you commit": edit `.claude/skills/`, then run the generator
-- [ ] 5.4 `CHANGELOG.md` under `[Unreleased]` → `Added`, with "Existing bases": what the upgrade adds, the two approvals in Codex, the hand copy after editing a skill, and for owners who ran `/import`: delete `.agents/skills/source-command-*` and the old `.codex/hooks.json` before the upgrade (or as 6.2 finds)
+- [ ] 5.4 `CHANGELOG.md` under `[Unreleased]` → `Added`, with "Existing bases": what the upgrade adds, the two approvals in Codex, the hand copy after editing a skill, and for owners who ran `/import`, before the upgrade: delete `.agents/skills/<skill>/` for each template skill, every `.agents/skills/source-command-*` and `.codex/hooks.json`, keep any skill of their own (D8)
 
 ## 6. Integration checks
 
 - [ ] 6.1 `python tests/run_tests.py` and `python tests/run_skill_tests.py` pass on Windows; CI green on Ubuntu and Windows
-- [ ] 6.2 Upgrade a scratch base from the latest release to this branch (`--allow-repository`): the plan adds the new files and nothing else; repeat with a base that already holds untracked migration output at the same paths, and write down what the plan does with it (D8)
+- [ ] 6.2 Upgrade a scratch base from the latest release to this branch (`--allow-repository`): the plan adds the new files and nothing else; repeat with a base that already holds untracked migration output at the same paths plus an own `.agents/skills/my-skill/`: write down what `plan` and `apply` do before the cleanup, then follow the 5.4 steps; done when `apply` completes and commits, every copy under `.agents/skills/` equals the template's, and `my-skill` is unchanged (D8)
 - [ ] 6.3 In a scratch clone opened in Codex: `$brain-reindex` runs its script from `.claude/skills/`, `$brain-onboard` renders `CLAUDE.md` and `AGENTS.md` once each, the session starts with the vault map
 
 ## 7. Review

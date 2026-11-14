@@ -28,6 +28,10 @@ hold scripts or other files.
 - **WHEN** a source `SKILL.md` names `scripts/x.py` without the `.claude/skills/<skill>/` prefix
 - **THEN** the tool exits non-zero and names the skill and the path
 
+#### Scenario: A bare file name is not a path
+- **WHEN** a source `SKILL.md` names a script of its skill by its file name alone, with no folder (`render.py`)
+- **THEN** the tool accepts it
+
 ### Requirement: The check fails on a copy that drifted
 
 The tool SHALL have a check mode that writes nothing and exits non-zero, naming each path,
