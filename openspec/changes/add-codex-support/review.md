@@ -27,3 +27,16 @@ tasks, tasks that can be done literally, decisions that fail in a real base. Cod
 
 Checks: `openspec validate add-codex-support --strict` — valid; `python dev/check_manifest.py` — ok.
 No code changed, so `tests/run_tests.py` is left to CI.
+
+## Round 3 — 2026-11-14 — reviewed cce88c6
+
+Adversarial review again, asked whether the round-2 fixes hold against
+`.claude/skills/brain-upgrade/scripts/planner.py`, `upgrade.py` and the `SKILL.md` files,
+and whether the documents still agree.
+
+No findings. "Both round-2 fixes hold against the branch's upgrade code and SKILL.md
+files; proposal, design, specs and tasks agree. Runtime implementation remains
+unverified."
+
+The round limit (3) is reached. The implementation, when it lands on this branch, starts
+its own rounds (task 7.1).
