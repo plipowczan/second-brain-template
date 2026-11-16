@@ -92,13 +92,13 @@ with `ALL PASS`.
 
 ## 2. Source frontmatter (D4)
 
-- [ ] 2.1 Run the check on the merged tree and fix exactly the frontmatter problems it
+- [x] 2.1 Run the check on the merged tree and fix exactly the frontmatter problems it
   reports. Expected: `brain-export` and `brain-ingest`. Wrap each description in single
   quotes and leave its text unchanged (double any `'` inside). Done when the check reports
   no frontmatter problem; it still reports the missing Codex files until section 3.
-- [ ] 2.2 In the `brain-export` and `brain-import` descriptions, write `/b:import` and
+- [x] 2.2 In the `brain-export` and `brain-import` descriptions, write `/b:import` and
   `/b:export` where they say `/import` and `/export`. Change no other text.
-- [ ] 2.3 Run `python tests/run_skill_tests.py`; it passes. Commit 2.1 and 2.2 with a
+- [x] 2.3 Run `python tests/run_skill_tests.py`; it passes. Commit 2.1 and 2.2 with a
   `Fixed` line in `CHANGELOG.md`.
 
 ## 3. Manifest and Codex files (D3, D5, D7)

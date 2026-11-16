@@ -1,6 +1,6 @@
 ---
 name: brain-import
-description: Use when user says "import <file.zip>", "zaimportuj paczkę", "import bundle/pack of notes". Imports a brain-pack zip (made by /export in another brain) into this vault - validates, triages collisions, places notes into this vault's taxonomy, stamps provenance, updates all 3 indexes, writes a report. At most 2 user prompts per run.
+description: Use when user says "import <file.zip>", "zaimportuj paczkę", "import bundle/pack of notes". Imports a brain-pack zip (made by /b:export in another brain) into this vault - validates, triages collisions, places notes into this vault's taxonomy, stamps provenance, updates all 3 indexes, writes a report. At most 2 user prompts per run.
 ---
 
 # IMPORT

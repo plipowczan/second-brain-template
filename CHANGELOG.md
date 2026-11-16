@@ -46,6 +46,18 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
   is yours, so its starter text is unchanged in your base: names that must not even be
   committed go in `content/_privacy.local.md`, under a `## Always cut` heading.
 
+### Fixed
+- **Two skill descriptions are read whole again.** In `brain-export`, an unquoted ` #`
+  started a YAML comment, so the skill list showed 49 of the description's 452
+  characters. In `brain-ingest`, a `: ` made the frontmatter invalid YAML, which some
+  parsers repair and others reject. Both descriptions are now quoted, with the same text.
+  The `brain-export` and `brain-import` descriptions also name the template's commands,
+  `/b:import` and `/b:export`, instead of `/import` and `/export`: in Codex, `/import` is
+  the command that converts a Claude Code project.
+
+  Existing bases: nothing to do; `/b:upgrade` brings the fix. If you edited one of these
+  three `SKILL.md` files, the upgrade asks what to keep.
+
 ### Security
 - **`/b:watch` writes what web pages say as text, not as markup.** The status box is
   built from what the research agents read on web pages and in release notes, and it is
