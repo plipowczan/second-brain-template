@@ -5,7 +5,11 @@ who have cloned the template and want to pull improvements into their own base.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are ISO (UTC).
 
-## [Unreleased]
+## [0.4.0] - 2026-11-16
+
+Codex gets the template's skills and its session hook, from the same files Claude Code
+reads, and `/b:watch` keeps tool notes current. Two skill descriptions are read whole
+again, and the public export and the watch report hold back private names more reliably.
 
 ### Added
 - **Codex gets the skills and the session hook.** Codex reads `AGENTS.md`, but not
