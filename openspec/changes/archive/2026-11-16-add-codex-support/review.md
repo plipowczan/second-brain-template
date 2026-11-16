@@ -299,3 +299,19 @@ unquoted ` #`. It found none, and no other defect.
 
 This is the first round on the implementation with no P1 or P2 finding, so task 7.1 is
 done. Checks: `tests/run_tests.py` — ALL PASS on 6417eea; the record commit changed no code.
+
+## Round 10 — 2026-11-16 — reviewed efcc625
+
+The archive PR: the change moved to `openspec/changes/archive/2026-11-16-add-codex-support/`,
+the delta specs merged into `openspec/specs/` (new `codex-support`, one requirement added
+to `template-manifest`), and task 7.2 ticked after PR #17 was merged. One pass,
+`codex review --base origin/main`.
+
+No findings. "The changes archive the completed Codex-support proposal and promote its
+requirements into the main specifications without modifying executable code."
+
+Checks: `tests/run_tests.py` — ALL PASS; `tests/run_skill_tests.py` — ALL PASS, 448 run, 1
+skipped (Linux and macOS only); `python dev/check_manifest.py` — ok; `python
+dev/build_codex_files.py --check` — ok; `openspec validate --specs` — 6 passed;
+`openspec validate --specs --strict` — the same three long-requirement warnings as on
+`main`, none from this change.
