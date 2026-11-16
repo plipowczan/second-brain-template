@@ -132,9 +132,12 @@ For each skill that ships, the generator writes one file, `.agents/skills/<skill
 
 This skill's instructions are in `.claude/skills/<skill>/SKILL.md`. Read that file and
 follow it. Its folder, `.claude/skills/<skill>/`, is this skill's base directory.
+If that file does not exist, tell the user that this skill was removed from this base,
+and stop.
 ```
 
-Codex lists the skill and picks it by its frontmatter, as for any skill. When the skill
+The last sentence covers a base that deleted a template skill but still has its stub
+(D8). Codex lists the skill and picks it by its frontmatter, as for any skill. When the skill
 starts, the agent reads the source file, which is the text Claude Code reads. A relative
 path in it resolves against the same folder in both agents. Nothing else is written under
 `.agents/skills/<skill>/`.
@@ -206,7 +209,7 @@ Two descriptions also tell the user to run `/import` and `/export` (`brain-expor
 Claude Code tool names in skill text stay. Where a skill says to use `AskUserQuestion`,
 Codex has no such tool, and the agent is expected to ask in the chat. The five
 `brain-research*` skills start parallel agents with Claude Code's `Task` tool, which Codex
-does not have. Task 6.4 runs one of them in Codex and records what happens. Until then
+does not have. Task 6.5 runs one of them in Codex and records what happens. Until then
 the template does not promise them in Codex, and `ENVIRONMENTS.md` says so.
 
 ### D5. The session hook runs the Claude Code hook script, by a relative path
@@ -336,6 +339,11 @@ What an owner does after that:
 - **Edits a skill's text:** nothing; the stub points at the edited file.
 - **Edits a skill's description, or adds a skill:** writes or edits the stub by hand, as
   in D3. `ENVIRONMENTS.md` shows the file.
+- **Deleted a template skill:** the upgrade still adds its stub. The planner does not tie
+  the stub to its source: the deleted source is a `restore?` row, not selected, and the
+  stub is a new template file, selected. The stub then tells Codex the skill is missing
+  (D3). To drop it, the owner deletes `.agents/skills/<skill>/` after the upgrade and
+  commits; later upgrades list it as `restore?`, not selected. `ENVIRONMENTS.md` says so.
 
 **A base where the owner already ran the migration.** `/import` does five things:
 
@@ -358,24 +366,31 @@ broken copies stay live in Codex.
 
 So the upgrade has one step before it, in the changelog entry and `ENVIRONMENTS.md`:
 
+- **First:** copy `.agents/` and `.codex/` to a folder outside the base. An owner who
+  edited an imported skill or the imported hook carries the edit over to
+  `.claude/skills/<skill>/SKILL.md`, `.claude/settings.json`, or a skill of their own.
 - **Required:** delete `.agents/skills/<skill>/` for each template skill, and
   `.codex/hooks.json`. They stand at the template's paths and block the upgrade.
 - **Advised:** delete every `.agents/skills/source-command-*`, `.codex/hooks/` and
   `.codex/agents/`. They do not block the upgrade, but the wrappers double the skill list
   (D6) and the rest is broken.
+- **If the migration output was committed:** delete it with `git rm -r` and commit the
+  deletion. `apply` refuses planned paths with uncommitted changes, and a deletion is one.
 - The owner's own skills under `.agents/skills/` stay.
 
-Task 6.3 tests this end to end: after that step the upgrade applies and commits, every
-stub equals the template's, and the owner's own skill is untouched.
+Tasks 6.3 and 6.4 test this end to end, with the migration output untracked and with
+it committed: after that step the upgrade applies and commits, every stub equals the
+template's, and the owner's own skill is untouched.
 
 ### D9. The migration output is deleted first
 
-Task 0.1 saves a copy of the migration output outside any repository, for task 6.3, and
-then deletes the untracked `.agents/` and `.codex/` folders in the maintainer's checkout.
-Nothing in them is reused; the generator writes new files. Until they are deleted, the
-check fails every local test run in that checkout, because `.agents/skills/` holds files
-with no source or with other content. That is intended: migration output cannot pass the
-tests there. The folders were never committed, so no release contains them.
+Task 0.1 saves a copy of the migration output outside any repository, for tasks 6.3
+and 6.4, and then deletes the untracked `.agents/` and `.codex/` folders in the
+maintainer's checkout. Nothing in them is reused; the generator writes new files. Until
+they are deleted, the check fails every local test run in that checkout, because
+`.agents/skills/` holds files with no source or with other content. That is intended:
+migration output cannot pass the tests there. The folders were never committed, so no
+release contains them.
 
 ## Risks / Trade-offs
 

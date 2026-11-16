@@ -10,12 +10,12 @@ in the template, and they reach bases like any other template file.
 
 ### Requirement: Codex skill stubs are generated from the Claude skills
 
-Skills SHALL be edited only in `.claude/skills/`. The template SHALL contain an
-author-class generator that writes a stub at `.agents/skills/<skill>/SKILL.md` for every
-skill directory under `.claude/skills/` whose `SKILL.md` the manifest ships. A stub SHALL
-hold the source's frontmatter lines unchanged and a fixed body that tells the agent to
-read and follow `.claude/skills/<skill>/SKILL.md`, naming that folder as the skill's base
-directory. `.agents/skills/<skill>/` SHALL hold no other file.
+Skills SHALL be edited only in `.claude/skills/`. An author-class generator SHALL write a
+stub at `.agents/skills/<skill>/SKILL.md` for every skill whose `SKILL.md` the manifest
+ships. A stub SHALL hold the source's frontmatter lines unchanged and a fixed body: read
+and follow `.claude/skills/<skill>/SKILL.md`, whose folder is the base directory, or say
+the skill was removed and stop if that file is missing. `.agents/skills/<skill>/` SHALL
+hold no other file.
 
 #### Scenario: Contributor edits a skill's text
 - **WHEN** a contributor edits the body of `.claude/skills/brain-qa/SKILL.md` and runs the generator
@@ -28,6 +28,10 @@ directory. `.agents/skills/<skill>/` SHALL hold no other file.
 #### Scenario: Scripts stay in one place
 - **WHEN** the generator writes the stub of `brain-reindex`
 - **THEN** `.agents/skills/brain-reindex/` holds only `SKILL.md`, and the stub names `.claude/skills/brain-reindex/SKILL.md`, whose commands run `python .claude/skills/brain-reindex/scripts/build_indexes.py`
+
+#### Scenario: Base that deleted a template skill
+- **WHEN** an owner deleted `.claude/skills/brain-gaps/` and committed, and the upgrade adds `.agents/skills/brain-gaps/SKILL.md`
+- **THEN** the stub tells the agent to report the skill as removed and stop, and `ENVIRONMENTS.md` tells the owner to delete the stub
 
 ### Requirement: The check fails on a Codex file the generator would not write
 
@@ -100,11 +104,16 @@ and the template SHALL NOT ship a second copy of the hook script.
 ### Requirement: A base that ran Codex's migration upgrades after one cleanup step
 
 The changelog entry and `ENVIRONMENTS.md` SHALL tell the owner of a base that ran Codex's
-`/import` what to delete before upgrading: `.agents/skills/<skill>/` for each template
-skill and `.codex/hooks.json` (required), and every `.agents/skills/source-command-*`,
-`.codex/hooks/` and `.codex/agents/` (advised). The owner's own skills under
+`/import` to copy its output aside first, then what to delete before upgrading:
+`.agents/skills/<skill>/` for each template skill and `.codex/hooks.json` (required), and
+every `.agents/skills/source-command-*`, `.codex/hooks/` and `.codex/agents/` (advised),
+committing the deletion when the output was committed. The owner's own skills under
 `.agents/skills/` SHALL stay.
 
 #### Scenario: Upgrade after the cleanup
 - **WHEN** a base holds untracked migration output at the template's new paths, and the owner deletes it as the changelog entry says, keeping their own `.agents/skills/my-skill/`
 - **THEN** `/b:upgrade` applies and commits, every stub under `.agents/skills/` equals the template's, and `my-skill` is unchanged
+
+#### Scenario: Committed migration output
+- **WHEN** the migration output is committed, and the owner deletes it with `git rm -r` and commits the deletion
+- **THEN** `/b:upgrade` applies and commits, and every stub under `.agents/skills/` equals the template's

@@ -119,4 +119,5 @@ not read.
   `CHANGELOG.md`.
 - **Bases:** at the next upgrade, one new file per template skill plus
   `.codex/hooks.json`, none of them in `content/`, and three updated skills. `AGENTS.md`
-  gets the new sentence only when the owner re-renders it.
+  gets the new sentence only when the owner re-renders it. An owner who ran `/import`
+  copies its output aside and deletes it before upgrading (design, D8).

@@ -74,3 +74,18 @@ generator in `dev/`; release in `0.4.0`; leave the hook output limit at its defa
 keep the base-root rule.
 
 Checks: `openspec validate add-codex-support --strict` — valid; `python dev/check_manifest.py` — ok.
+
+## Round 4 — 2026-11-16 — reviewed 2f70a81
+
+The EGM review changed the design (stubs instead of copies), so one adversarial round ran
+on the revised documents (`/codex:adversarial-review --base origin/main`), asked to check
+the facts against `origin/main`. Verdict `needs-attention`, three findings. Each was
+checked against `origin/main` before it was taken.
+
+| id | sev | where | finding | outcome |
+|---|---|---|---|---|
+| R4-1 | P1 | design.md D8 | The cleanup deletes imported skills and the hook with no copy, so an owner's edits to them are lost. Deleting committed migration output leaves uncommitted deletions at planned paths, which `apply` refuses (`upgrade.py`, `planner.dirty_paths`). Task 6.3 covers only untracked output | fixed: copy aside and carry edits over first; commit a `git rm -r`; new task 6.4 for committed output; spec scenario |
+| R4-2 | P2 | design.md D8 | A base that deleted a template skill gets its stub anyway: the deleted source is `restore?`, not selected (`planner.py` 400-402), and the stub is a selected `add`. The stub then points at nothing | fixed: the stub's last sentence says the skill was removed and stops (D3), the owner deletes the stub after the upgrade (D8, docs), trial 0.3 and task 6.2 check it. Not taken: tying stubs to sources in `brain-upgrade`, which this change leaves untouched |
+| R4-3 | P2 | tasks.md 1.1 | The tests were to copy the tracked tree as `dev/test_check_manifest.py` does; that copy holds the two broken frontmatters, so the success cases cannot pass before section 2 | fixed: the tests use the template's manifest and fixture skills of their own |
+
+Checks: `openspec validate add-codex-support --strict` — valid; `python dev/check_manifest.py` — ok.

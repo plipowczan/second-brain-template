@@ -19,8 +19,8 @@ with `ALL PASS`.
 ## 0. Before any code (D2, D3, D5, D9)
 
 - [ ] 0.1 In the maintainer's checkout, where `git status` lists `.agents/` and `.codex/`
-  as untracked, copy both folders to a folder outside any repository (the input of task
-  6.3), then delete them. Done when `git status` lists neither and the copy exists.
+  as untracked, copy both folders to a folder outside any repository (the input of tasks
+  6.3 and 6.4), then delete them. Done when `git status` lists neither and the copy exists.
 - [ ] 0.2 In a scratch clone named `kb-codex-trial`, write two stubs by hand as D3 shows
   (`brain-reindex`, `excalidraw-diagram`) and `.codex/hooks.json` as D5 shows. Copy the
   clone without its `.git` folder to a second folder, the ZIP base. Done when both folders
@@ -32,6 +32,8 @@ with `ALL PASS`.
     and runs its script.
   - Ask `$excalidraw-diagram` for a small diagram. Expected: the agent reads files under
     `.claude/skills/excalidraw-diagram/references/`.
+  - Rename `.claude/skills/brain-reindex/SKILL.md` and run `$brain-reindex`. Expected: the
+    agent says the skill was removed and stops. Rename the file back.
   - Start Codex in `content/`. Expected: the hook fails and the session still starts.
   - Start Codex in the root of the ZIP base, trust it, approve the hook. Expected: `/skills`
     lists both stubs, and the session starts with the vault map.
@@ -44,9 +46,11 @@ with `ALL PASS`.
 
 ## 1. Generator and its tests (D1, D3, D4, D5)
 
-- [ ] 1.1 Write `dev/test_build_codex_files.py` first. It builds a temporary git tree as
-  `dev/test_check_manifest.py` does and runs the generator with `--root`. One test per
-  case:
+- [ ] 1.1 Write `dev/test_build_codex_files.py` first. It builds a temporary git tree with
+  a copy of the template's `.kb-manifest.json` and small fixture skills of its own, and
+  runs the generator with `--root`. It does not copy the repository's skills, as
+  `dev/test_check_manifest.py` does: two of them fail the frontmatter rule until section
+  2. One test per case:
   - a stub is the source's frontmatter lines, unchanged, plus the fixed body of D3 with
     the skill's name; nothing else is written under `.agents/skills/<skill>/`;
   - `.codex/hooks.json` equals the content in D5;
@@ -61,8 +65,8 @@ with `ALL PASS`.
     an unquoted description that contains ` #`;
   - a stub with CRLF line endings and a source with LF is not a difference;
   - paths the manifest excludes (`__pycache__/`, `.DS_Store`) under `.agents/skills/` are
-    skipped, and a git-ignored Markdown file under `.claude/skills/` (an excalidraw
-    `.venv/`) is not read;
+    skipped, and a git-ignored Markdown file under a fixture skill's `.venv/` is not
+    read;
   - write mode deletes a file under `.agents/skills/` that has no source, and writes
     nothing when a source frontmatter fails.
 
@@ -124,11 +128,13 @@ with `ALL PASS`.
   - start a skill by name, `$brain-ingest` for `/b:ingest`, or pick it from `/skills`;
   - open the base's root folder, trust the project, and approve the hook in `/hooks`;
   - for a ZIP base, what task 0.3 found (run `git init` once, if that was needed);
-  - for the five `brain-research*` skills, what task 6.4 found;
+  - for the five `brain-research*` skills, what task 6.5 found;
   - do not run `/import` in a base;
-  - in a base that already ran it, delete the paths D8 lists before upgrading;
+  - in a base that already ran it, copy the output aside and delete the paths D8 lists
+    before upgrading, committing the deletion if the output was committed;
   - after adding a skill or editing a description, write or edit its stub by hand (show
     the file from D3);
+  - after deleting a template skill, delete its stub after the next upgrade (D8);
   - keep `.agents/` and `.codex/` even without Codex: deleting them brings back a
     "restore?" row at every upgrade.
 - [ ] 4.2 In `README.md`, section "Works beyond Claude Code", add one line: in Codex,
@@ -148,10 +154,14 @@ with `ALL PASS`.
     clone;
   - after adding a skill or editing a description, the owner edits the stub by hand;
   - the `AGENTS.md` sentence arrives only when the owner re-renders `AGENTS.md`;
-  - an owner who ran `/import` deletes, before upgrading, `.agents/skills/<skill>/` for
-    each template skill and `.codex/hooks.json` (required), and every
-    `.agents/skills/source-command-*`, `.codex/hooks/` and `.codex/agents/` (advised), and
-    keeps any skill of their own.
+  - an owner who deleted a template skill gets its stub anyway and deletes it after the
+    upgrade;
+  - an owner who ran `/import` first copies `.agents/` and `.codex/` outside the base and
+    carries over any edit of their own, then deletes, before upgrading,
+    `.agents/skills/<skill>/` for each template skill and `.codex/hooks.json` (required),
+    and every `.agents/skills/source-command-*`, `.codex/hooks/` and `.codex/agents/`
+    (advised), commits the deletion if the output was committed, and keeps any skill of
+    their own.
 
 ## 5. Integration checks
 
@@ -166,17 +176,24 @@ with `ALL PASS`.
 - [ ] 6.2 In the scratch base, run
   `python .claude/skills/brain-upgrade/scripts/upgrade.py plan --source <this checkout> --ref HEAD --allow-repository plipowczan/second-brain-template`.
   Without `--ref HEAD` the plan would install tag `v0.3.0` instead of this branch.
-  Expected: the `add` actions include every stub and `.codex/hooks.json`, and no action
+  Before `plan`, delete `.claude/skills/brain-gaps/` and commit, as an owner who dropped a
+  skill. Expected: the `add` actions include every stub and `.codex/hooks.json`, the
+  `brain-gaps` files are `restore?` and not selected, its stub is an `add`, and no action
   touches `content/`. Record the action list in `review.md`, then apply. Done when `apply`
   completes and commits.
 - [ ] 6.3 Make a second scratch base as in 6.1. Put the copy from 0.1 into it at the same
-  paths, untracked, and add the owner's own `.agents/skills/my-skill/SKILL.md`. Run `plan`
-  as in 6.2, then `apply`, and record in `review.md` what each does. Expected: `plan`
+  paths, untracked, and add the owner's own `.agents/skills/my-skill/SKILL.md`. Run the
+  `plan` command of 6.2 (no skill deleted), then `apply`, and record in `review.md` what
+  each does. Expected: `plan`
   marks each migrated path at a template path as a conflict, and `apply` writes nothing.
   Then delete the paths D8 lists and run `plan` and `apply` again. Done when `apply`
   completes and commits, every stub under `.agents/skills/` equals the template's, and
   `my-skill` is unchanged.
-- [ ] 6.4 In a scratch clone with the generated files, open Codex as in the first step of
+- [ ] 6.4 Repeat 6.3 in a third scratch base where the copy from 0.1 is committed. Delete
+  the paths D8 lists with `git rm -r`, commit, and run `plan` and `apply`. Record the
+  result in `review.md`. Done when `apply` completes and commits, and every stub under
+  `.agents/skills/` equals the template's.
+- [ ] 6.5 In a scratch clone with the generated files, open Codex as in the first step of
   0.3. Run `$brain-reindex`: it runs its script. Run `$brain-onboard`: it renders
   `CLAUDE.md` and `AGENTS.md` once each. Run one `brain-research*` skill: record what the
   agent does where the skill says `Task` and `AskUserQuestion`. Record the results in
