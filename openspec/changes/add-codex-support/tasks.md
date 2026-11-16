@@ -206,6 +206,6 @@ with `ALL PASS`.
 
 ## 7. Review
 
-- [ ] 7.1 Run Codex review rounds on the pull request until a round reports no P1 or P2
+- [x] 7.1 Run Codex review rounds on the pull request until a round reports no P1 or P2
   finding. Record each round in `review.md`.
 - [ ] 7.2 Paweł merges.

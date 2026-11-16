@@ -281,3 +281,21 @@ Test changes:
 Checks: `dev/test_build_codex_files.py` — 20/20 (both new cases failed before the fix);
 every source frontmatter under `.claude/skills/` passes; `python dev/build_codex_files.py
 --check` — ok; `tests/run_tests.py` — ALL PASS.
+
+## Round 9 — 2026-11-16 — reviewed 5f48add
+
+Two passes, as in round 6. `codex review --base origin/main`: clean ("No actionable
+regressions were identified in the changes against the supplied merge base"). Adversarial
+review, asked to test the round-8 fixes and the whole branch again: `approve`.
+
+No findings. "No concrete blocking defects found. Round-8 fixes hold; all 21 source
+frontmatters and 23 frontmatter test cases pass in memory, and generator --check passes.
+Generator, specs, and owner migration instructions agree with the upgrade code."
+
+Rounds 6-8 each found a YAML form that slipped past the description check, from a
+continued line to merge keys. This round's prompt asked for forms a contributor could
+plausibly write in a `SKILL.md`, since the check exists for the real mistake of D4, an
+unquoted ` #`. It found none, and no other defect.
+
+This is the first round on the implementation with no P1 or P2 finding, so task 7.1 is
+done. Checks: `tests/run_tests.py` — ALL PASS on 6417eea; the record commit changed no code.
