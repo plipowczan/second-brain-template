@@ -223,3 +223,23 @@ Found on the way:
 
 `ENVIRONMENTS.md` (task 4.1) records both: what `brain-research` does in Codex, and that
 Codex asks before a skill writes to `.git`.
+
+## Round 6 — 2026-11-16 — reviewed f7b5b14
+
+The whole pull request, after task 6.5 and the `ENVIRONMENTS.md` section. Two passes,
+Codex CLI 0.169.0, plugin 1.0.6: `codex review --base origin/main` through the
+`ss:review-fix` helper (verdict clean: "No actionable correctness regressions were
+identified in the generator, generated stubs, hook configuration, or test integration"),
+and an adversarial review asked to check the generator against D1-D5 and the specs, and
+the owner-facing docs against D8, `planner.py` and `upgrade.py` (verdict
+`needs-attention`, one finding; it found the cleanup steps agree with the planner).
+
+| id | sev | where | finding | outcome |
+|---|---|---|---|---|
+| R6-1 | P2 | dev/build_codex_files.py:107-122 | An unquoted description continued on an indented line escapes the ` #` check: `description: Use for archive requests` / `  or export #tag requests.` reads as "Use for archive requests or export", and both `--check` and write mode accept it, against the spec scenario "Description cut by a comment" | fixed in 10c36d8 |
+
+Test changes:
+- `dev/test_build_codex_files.py` — R6-1: two failing cases join `test_check_fails_on_bad_frontmatter` (the cut on a continuation line, and a value that starts on the line after the key), and a new test checks that write mode writes nothing for the first
+
+Checks: `dev/test_build_codex_files.py` — 20/20 (the new cases failed before the fix);
+`python dev/build_codex_files.py --check` — ok; `tests/run_tests.py` — ALL PASS.
