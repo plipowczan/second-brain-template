@@ -243,3 +243,21 @@ Test changes:
 
 Checks: `dev/test_build_codex_files.py` — 20/20 (the new cases failed before the fix);
 `python dev/build_codex_files.py --check` — ok; `tests/run_tests.py` — ALL PASS.
+
+## Round 7 — 2026-11-16 — reviewed 8ca8695
+
+Two passes, as in round 6. `codex review --base origin/main`: clean ("No actionable
+regressions were identified"). Adversarial review, asked to test the round-6 fix and
+then the whole branch again: `needs-attention`, one finding, and "no additional
+concrete docs or upgrade defects found".
+
+| id | sev | where | finding | outcome |
+|---|---|---|---|---|
+| R7-1 | P2 | dev/build_codex_files.py:112-127 | The round-6 fix reads the frontmatter text line by line, so valid YAML forms still pass a cut description: `description: &desc …`, `description: !!str …` and `"description": …` with ` #tag` all read as "Use for export", in `--check` and write mode | fixed in 8b951ed: the check now reads YAML's nodes (`yaml.compose`) and fails when a comment follows an unquoted description inside its entry, whatever the form |
+
+Test changes:
+- `dev/test_build_codex_files.py` — R7-1: four failing cases join `test_check_fails_on_bad_frontmatter` (anchor, tag, quoted key, a comment line inside the value), the write-mode test of round 6 also runs the anchor case, and three passing cases join `test_whole_descriptions_pass` (a blank line inside the value, `C#` with no space, a quoted value followed by a comment)
+
+Checks: `dev/test_build_codex_files.py` — 20/20 (the anchor, tag and quoted-key cases
+failed before the fix); every source frontmatter under `.claude/skills/` passes;
+`python dev/build_codex_files.py --check` — ok; `tests/run_tests.py` — ALL PASS.
