@@ -117,8 +117,8 @@ So a file in `.agents/skills/` is the only documented way, short of symlinks (D1
 
 A base from "Download ZIP" has no `.git`. The design assumes that Codex then treats the
 session's folder as the project root, so a session started in the base root finds
-`.agents/skills/`. Neither the Codex docs nor the check above settle it; task 0.3 tries
-it. If it fails, `ENVIRONMENTS.md` tells the owner of a ZIP base to run `git init` once.
+`.agents/skills/`. Neither the Codex docs nor the check above settle it. Task 0.3 tried
+it on 2026-11-16: a ZIP base lists the stubs and runs the hook, with no `git init`.
 
 ### D3. A stub per skill points at the source
 
@@ -155,8 +155,8 @@ What it costs:
 - **One more file read** each time a skill starts in Codex.
 - **It relies on the agent following the pointer**, which CI cannot test. Codex's own
   migration relies on the same thing: each of its wrapper skills is one line, "Use the
-  `brain-qa` skill …". Task 0.3 tries a stub in a real session before any code is
-  written.
+  `brain-qa` skill …". Task 0.3 tried stubs in real sessions before any code was
+  written, and Codex followed each one (`review.md`).
 - **The frontmatter is in two places.** An owner who edits a description, or adds a
   skill, writes the stub by hand (D8).
 
@@ -394,8 +394,9 @@ release contains them.
 
 ## Risks / Trade-offs
 
-- **[Codex does not follow a stub]** → Task 0.3 tries it before any code. If it fails,
-  the generator writes full copies instead (D3, fallback), and Paweł is asked again.
+- **[Codex does not follow a stub]** → Task 0.3 found that it does (Codex 0.163 and
+  0.169). If a later Codex stops following stubs, the generator writes full copies
+  instead (D3, fallback), and Paweł is asked again.
 - **[The frontmatter is in two places]** → The check keeps the copies equal in the
   template. In a base, an owner who edits a description writes the stub by hand (D8). A
   description changes rarely.
@@ -425,9 +426,10 @@ release contains them.
   system code page, which can garble or fail on characters outside it. Both already hold
   for Claude Code; they are a separate issue, not part of this change.
 - **[Other tools may read `.agents/skills/` too]** → `ENVIRONMENTS.md` lists Copilot and
-  Cursor as reading `.claude/skills/`. If one of them also reads `.agents/skills/`, every
-  skill shows twice there, once as a stub that leads to the same text. Task 0.4 checks
-  both tools' docs and records the result.
+  Cursor as reading `.claude/skills/`. Task 0.4 found in their docs that both also read
+  `.agents/skills/`. Copilot CLI keeps the stub and hides the source; Cursor's docs do
+  not say which of two same-named skills wins. Either way the agent reaches the same
+  text, and `ENVIRONMENTS.md` says so.
 - **[A contributor forgets to run the generator]** → CI fails and names the file; the fix
   is one command.
 - **[Skills say "Claude"]** → A few lines say "Claude Code" where the agent could be

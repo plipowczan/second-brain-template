@@ -89,3 +89,53 @@ checked against `origin/main` before it was taken.
 | R4-3 | P2 | tasks.md 1.1 | The tests were to copy the tracked tree as `dev/test_check_manifest.py` does; that copy holds the two broken frontmatters, so the success cases cannot pass before section 2 | fixed: the tests use the template's manifest and fixture skills of their own |
 
 Checks: `openspec validate add-codex-support --strict` — valid; `python dev/check_manifest.py` — ok.
+
+## Trial in Codex — 2026-11-16 (tasks 0.1-0.5)
+
+On Windows 11, in PowerShell. Codex TUI 0.169.0 (Paweł's sessions) and `codex exec`
+0.163.0 (agent runs), both on `eb900de` (this branch with `main` merged).
+
+**0.1.** The migration output in the maintainer's checkout (87 files, untracked) was
+copied to `C:\Projects\kb-codex-migration-output\`, outside any repository, with matching
+checksums, then deleted. `git status` lists neither folder.
+
+**0.2.** Scratch clone `C:\Projects\kb-codex-trial` with two hand-written stubs
+(`brain-reindex`, `excalidraw-diagram`) and `.codex/hooks.json`, as D3 and D5 show. ZIP
+base: the same tree without `.git`, `C:\Projects\kb-codex-trial-zip`.
+
+**0.3.**
+
+| step | result |
+|---|---|
+| Session in the clone root, project trusted, hook approved | Pass. The session starts with the vault map: asked for the first row of the Folders table, Codex quotes it without reading a file. |
+| `$brain-reindex` | Pass. The agent reads the stub, then `.claude/skills/brain-reindex/SKILL.md`, and rebuilds the indexes. The three index files change only in `updated:`, which is the script's output; the `exec` event log of 0.163 does not show the script call itself. |
+| `$excalidraw-diagram` | Pass. The agent uses the project's stub, reads `.claude/skills/excalidraw-diagram/SKILL.md` and both files it needs from `references/`, and writes the diagram. The maintainer also has a user-level `excalidraw-diagram` in `~/.agents/skills/`; Codex lists both, and `$excalidraw-diagram` in the clone took the project's. |
+| Stub whose source is gone (`SKILL.md` renamed) | Pass. The agent says the skill was removed from this base and stops; the indexes are untouched. |
+| Session started in `content/` | Pass. The hook exits with code 1, no map, the session starts and answers. |
+| ZIP base (no `.git`), trusted, hook approved | Pass. `/skills` lists `brain-reindex` (and `exec` lists both stubs); the session starts with the vault map. No `git init` is needed. |
+| Linux or macOS | Not run: none at hand. Gap kept until task 5.1's CI and a later manual check. |
+
+Found on the way, for `ENVIRONMENTS.md` (task 4.1):
+
+- Codex asks for the hook review with every changed hook at once. With plugins installed
+  the base's hook is one of many (19 here), and "Trust all" would trust every one. The
+  owner should pick "Review hooks" and trust only `python .claude/hooks/load_vault_map.py`.
+- In TUI 0.169.0, "Review hooks" failed once with `config/read failed in TUI`. The project
+  trust was already saved; a second attempt worked (a restart, or `/hooks` in the session).
+- Untrusted plugin hooks print a "Hook failed" line each at every prompt. That is noise
+  from the owner's own setup, not from the base.
+
+**0.4.** From the docs, not tested locally:
+
+- **GitHub Copilot CLI** reads `.github/skills`, `.agents/skills` and `.claude/skills`; on
+  the same `name` the first found wins in that order, so the stub hides the source and
+  points at it. The VS Code and cloud-agent docs do not say how duplicates behave.
+  (docs.github.com, Copilot CLI command reference, "Skill locations".)
+- **Cursor** reads `.agents/skills` and `.cursor/skills`, and `.claude/skills` for
+  compatibility, on by default. Its docs do not say which of two skills with one name
+  wins. (cursor.com/docs/skills.)
+
+Either way the agent reaches the same `.claude/skills/` text, so the design stands.
+
+**0.5.** Codex followed every stub. The design keeps the stub (D3); the full-copy
+fallback is not needed.

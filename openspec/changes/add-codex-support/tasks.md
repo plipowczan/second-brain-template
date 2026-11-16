@@ -18,14 +18,14 @@ with `ALL PASS`.
 
 ## 0. Before any code (D2, D3, D5, D9)
 
-- [ ] 0.1 In the maintainer's checkout, where `git status` lists `.agents/` and `.codex/`
+- [x] 0.1 In the maintainer's checkout, where `git status` lists `.agents/` and `.codex/`
   as untracked, copy both folders to a folder outside any repository (the input of tasks
   6.3 and 6.4), then delete them. Done when `git status` lists neither and the copy exists.
-- [ ] 0.2 In a scratch clone named `kb-codex-trial`, write two stubs by hand as D3 shows
+- [x] 0.2 In a scratch clone named `kb-codex-trial`, write two stubs by hand as D3 shows
   (`brain-reindex`, `excalidraw-diagram`) and `.codex/hooks.json` as D5 shows. Copy the
   clone without its `.git` folder to a second folder, the ZIP base. Done when both folders
   hold the three files.
-- [ ] 0.3 Run the trial in Codex on Windows (PowerShell). Record the Codex version.
+- [x] 0.3 Run the trial in Codex on Windows (PowerShell). Record the Codex version.
   - Start Codex in the clone's root, trust the project, approve the hook in `/hooks`.
     Expected: the session starts with the vault map.
   - Run `$brain-reindex`. Expected: the agent reads `.claude/skills/brain-reindex/SKILL.md`
@@ -38,9 +38,9 @@ with `ALL PASS`.
   - Start Codex in the root of the ZIP base, trust it, approve the hook. Expected: `/skills`
     lists both stubs, and the session starts with the vault map.
   - On Linux or macOS, if one is at hand, repeat the first step; otherwise record the gap.
-- [ ] 0.4 Read the Copilot and Cursor docs: does either read `.agents/skills/` as well as
+- [x] 0.4 Read the Copilot and Cursor docs: does either read `.agents/skills/` as well as
   `.claude/skills/`?
-- [ ] 0.5 Record the results of 0.3 and 0.4 in `review.md`. If Codex did not follow a
+- [x] 0.5 Record the results of 0.3 and 0.4 in `review.md`. If Codex did not follow a
   stub, stop and ask Paweł: the design then switches to the full-copy fallback of D3. Done
   when the results are recorded and, if needed, Paweł has answered.
 
@@ -127,7 +127,12 @@ with `ALL PASS`.
     session hook comes from `.codex/hooks.json`;
   - start a skill by name, `$brain-ingest` for `/b:ingest`, or pick it from `/skills`;
   - open the base's root folder, trust the project, and approve the hook in `/hooks`;
-  - for a ZIP base, what task 0.3 found (run `git init` once, if that was needed);
+  - a ZIP base needs nothing extra (task 0.3);
+  - in Codex's hook review, pick "Review hooks" and trust only
+    `python .claude/hooks/load_vault_map.py`, not "Trust all"; if the review fails,
+    restart or use `/hooks` (task 0.3);
+  - Copilot CLI and Cursor also read `.agents/skills/`, and the stub points them at the
+    same text (task 0.4);
   - for the five `brain-research*` skills, what task 6.5 found;
   - do not run `/import` in a base;
   - in a base that already ran it, copy the output aside and delete the paths D8 lists
