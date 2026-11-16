@@ -13,7 +13,8 @@ under `.agents/skills/` (paths the manifest excludes aside).
     aside), or is missing;
   - `.agents/skills/` holds a folder or a file with no source skill;
   - a source frontmatter is not valid YAML, lacks a string `name` or `description`, or
-    YAML reads less of an unquoted description than the file holds, on one line or more;
+    a comment follows an unquoted description, so YAML reads less of it than the file
+    holds;
   - a path this script writes runs through a symbolic link or junction.
 Write mode fails on the last two kinds and then writes nothing.
 
@@ -68,8 +69,6 @@ HOOKS_JSON = ('{\n'
               '}\n').encode("utf-8")
 
 _TOP_KEY = re.compile(r"([A-Za-z0-9_-]+)\s*:(?:\s|$)")
-# A value that starts with one of these is quoted, a block, or tagged: not a plain scalar.
-_NOT_PLAIN = tuple("'\"|>!&*[{")
 
 
 def skills(root: Path, manifest: kt.Manifest) -> list[str]:
@@ -104,28 +103,25 @@ def key_at(lines: list[str], index: int) -> str | None:
     return None
 
 
-def plain_text(lines: list[str], key: str) -> str | None:
-    """The text of `key`'s value as the file holds it, when the value is an unquoted
-    (plain) scalar: the rest of the key's line and every indented line after it, joined
-    by single spaces. None when the value is quoted, a block, or absent."""
-    found = None
-    for i, ln in enumerate(lines):  # the last entry wins, as in YAML
-        m = _TOP_KEY.match(ln)
-        if m and m.group(1) == key:
-            found = i
-    if found is None:
-        return None
-    parts = [lines[found].split(":", 1)[1].strip()]
-    for ln in lines[found + 1:]:
-        if not ln.strip():
-            continue  # a blank line inside a plain scalar folds to a line break
-        if ln[0] not in " \t":
-            break  # the next top-level key
-        parts.append(ln.strip())
-    parts = [p for p in parts if p]
-    if not parts or parts[0].startswith(_NOT_PLAIN):
-        return None
-    return " ".join(parts)
+def comment_after_plain(src: str, key: str) -> bool:
+    """True when `key`'s value is an unquoted (plain) scalar and a YAML comment follows it
+    before the next entry. YAML then drops the text from that ` #` on, on its line and on
+    any line after it. Read from YAML's own nodes, so a tag, an anchor or a quoted key
+    makes no difference. A quoted or block value keeps its `#`, so it is never cut."""
+    root = yaml.compose(src, Loader=yaml.SafeLoader)
+    if not isinstance(root, yaml.MappingNode):
+        return False
+    value = None
+    for k, v in root.value:  # the last entry wins, as in YAML
+        if isinstance(k, yaml.ScalarNode) and k.value == key:
+            value = v
+    if not isinstance(value, yaml.ScalarNode) or value.style is not None:
+        return False
+    end = value.end_mark.index
+    # Between a value and the next node there is only white space and comments.
+    starts = [n.start_mark.index for pair in root.value for n in pair]
+    stop = min((s for s in starts if s >= end), default=len(src))
+    return "#" in src[end:stop]
 
 
 def frontmatter_problems(rel: str, text: str | None) -> list[str]:
@@ -157,12 +153,10 @@ def frontmatter_problems(rel: str, text: str | None) -> list[str]:
         elif not isinstance(value, str) or not value.strip():
             out.append(f"{where}: {key}: must be a non-empty string, YAML reads {value!r}")
     desc = data.get("description")
-    text = plain_text(lines, "description")
-    # YAML folds a plain scalar's lines with spaces; any other difference is a cut.
-    if isinstance(desc, str) and text is not None and desc.split() != text.split():
-        out.append(f"{where}: description: YAML reads {len(' '.join(desc.split()))} of its "
-                   f"{len(text)} characters (a ' #' starts a comment); wrap the value in "
-                   f"single quotes")
+    if isinstance(desc, str) and comment_after_plain("\n".join(lines), "description"):
+        out.append(f"{where}: description: YAML reads only its first {len(desc)} "
+                   f"characters (a ' #' in an unquoted value starts a comment); wrap the "
+                   f"value in single quotes")
     return out
 
 

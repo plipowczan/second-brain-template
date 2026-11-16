@@ -197,13 +197,19 @@ class BuildCodexFilesTest(unittest.TestCase):
         self.assertEqual(snapshot(self.repo), before)
 
     def test_write_writes_nothing_when_a_continued_description_is_cut(self):
-        self.put(GAMMA, "---\nname: gamma\ndescription: Use for archive requests\n"
-                 "  or export #tag requests.\n---\n", track=True)
-        before = snapshot(self.repo)
-        r = self.run_script()
-        self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
-        self.assertTrue(self.lines_naming(r.stdout, GAMMA, "description"), r.stdout)
-        self.assertEqual(snapshot(self.repo), before)
+        cases = {
+            "continuation line": ("---\nname: gamma\ndescription: Use for archive requests\n"
+                                  "  or export #tag requests.\n---\n"),
+            "anchor": "---\nname: gamma\ndescription: &d Use for export #tag requests.\n---\n",
+        }
+        for case, source in cases.items():
+            with self.subTest(case):
+                self.put(GAMMA, source, track=True)
+                before = snapshot(self.repo)
+                r = self.run_script()
+                self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
+                self.assertTrue(self.lines_naming(r.stdout, GAMMA, "description"), r.stdout)
+                self.assertEqual(snapshot(self.repo), before)
 
     # --- the check: Codex files ------------------------------------------------------
 
@@ -318,6 +324,18 @@ class BuildCodexFilesTest(unittest.TestCase):
             "unquoted ` #`, value starts on the next line": (
                 "---\nname: gamma\ndescription:\n  Use for export #tag requests.\n---\n",
                 "description"),
+            "unquoted ` #` after an anchor": (
+                "---\nname: gamma\ndescription: &desc Use for export #tag requests.\n---\n",
+                "description"),
+            "unquoted ` #` after a tag": (
+                "---\nname: gamma\ndescription: !!str Use for export #tag requests.\n---\n",
+                "description"),
+            "unquoted ` #`, quoted key": (
+                "---\nname: gamma\n\"description\": Use for export #tag requests.\n---\n",
+                "description"),
+            "comment line inside the value": (
+                "---\nname: gamma\ndescription: Use for export\n  #tag requests.\n---\n",
+                "description"),
         }
         for case, (source, field) in cases.items():
             with self.subTest(case):
@@ -328,6 +346,9 @@ class BuildCodexFilesTest(unittest.TestCase):
             "double-quoted": '---\nname: gamma\ndescription: "Says \\"export #tag\\"."\n---\n',
             "folded block": "---\nname: gamma\ndescription: >-\n  Says export #tag,\n  on two lines.\n---\n",
             "plain on two lines": "---\nname: gamma\ndescription: Says one thing\n  and another.\n---\n",
+            "plain with a blank line": "---\nname: gamma\ndescription: Says one thing\n\n  and another.\n---\n",
+            "`#` with no space before it": "---\nname: gamma\ndescription: Use for C# notes.\n---\n",
+            "quoted, then a comment": "---\nname: gamma\ndescription: 'Says export #tag.' # a note\n---\n",
             "CRLF source": "---\r\nname: gamma\r\ndescription: Plain.\r\n---\r\n",
         }
         for case, source in cases.items():
