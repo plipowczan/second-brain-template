@@ -46,7 +46,7 @@ with `ALL PASS`.
 
 ## 1. Generator and its tests (D1, D3, D4, D5)
 
-- [ ] 1.1 Write `dev/test_build_codex_files.py` first. It builds a temporary git tree with
+- [x] 1.1 Write `dev/test_build_codex_files.py` first. It builds a temporary git tree with
   a copy of the template's `.kb-manifest.json` and small fixture skills of its own, and
   runs the generator with `--root`. It does not copy the repository's skills, as
   `dev/test_check_manifest.py` does: two of them fail the frontmatter rule until section
@@ -71,7 +71,7 @@ with `ALL PASS`.
     nothing when a source frontmatter fails.
 
   Done when every test runs and fails only because the generator does not exist yet.
-- [ ] 1.2 Write the generator as D1, D3 and D5 say:
+- [x] 1.2 Write the generator as D1, D3 and D5 say:
   - Command line: `python dev/build_codex_files.py [--root PATH] [--check]`. The root
     defaults to the repository the script is in, as in `dev/check_manifest.py`.
   - Build it on `kbtemplate` as `dev/check_manifest.py` does. The skills are the
