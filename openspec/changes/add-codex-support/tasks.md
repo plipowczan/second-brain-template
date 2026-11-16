@@ -170,7 +170,7 @@ with `ALL PASS`.
 
 ## 5. Integration checks
 
-- [ ] 5.1 `python tests/run_tests.py` and `python tests/run_skill_tests.py` pass on
+- [x] 5.1 `python tests/run_tests.py` and `python tests/run_skill_tests.py` pass on
   Windows, and the `Tests` workflow passes on Linux and Windows.
 
 ## 6. Upgrade and Codex sessions
