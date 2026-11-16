@@ -104,6 +104,32 @@ def adoption_case():
         check("nothing left uncommitted", fx.git(base, "status", "--porcelain") == "")
 
 
+def lint_warnings_case():
+    """A note citing an inbox file that ingest has since archived is a warning with a
+    ready fix, never one of the classes the pre-commit hook blocks on."""
+    with tempfile.TemporaryDirectory() as d:
+        content = Path(d) / "content"
+        (content / "REFERENCE").mkdir(parents=True)
+        (content / "_raw" / "processed").mkdir(parents=True)
+        (content / "_raw" / "processed" / "2026-07-02_talk.md").write_text("src\n", encoding="utf-8")
+        (content / "REFERENCE" / "Alpha.md").write_text(
+            NOTE_A.replace('summary: "Alpha note."',
+                           'summary: "Alpha note."\nsource: "_raw/inbox/talk.md"'),
+            encoding="utf-8")
+        (Path(d) / "schema.yml").write_text((ROOT / "schema.yml").read_text(encoding="utf-8"),
+                                            encoding="utf-8")
+        r = run(LINT_SCAN, cwd=d)
+        scan = json.loads(r.stdout)
+        found = scan["issues"]["missing_source_file"]
+        check("lint_scan warns on an archived inbox source, with the fix",
+              len(found) == 1 and "fix=_raw/processed/2026-07-02_talk.md" in found[0], found)
+        check("lint_scan names its warning classes",
+              scan.get("warnings") == ["missing_source_file", "contradiction"], scan.get("warnings"))
+        check("missing source stays out of the pre-commit classes",
+              scan["counts"]["missing_frontmatter"] == 0 and scan["counts"]["schema_violation"] == 0,
+              scan["counts"])
+
+
 def main():
     with tempfile.TemporaryDirectory() as d:
         c = Path(d) / "content" / "REFERENCE"
@@ -138,6 +164,7 @@ def main():
         check("refactor rewrote link", "[[Gamma]]" in alpha and "[[Beta]]" not in alpha)
         check("refactor renamed file", (c / "Gamma.md").exists())
 
+    lint_warnings_case()
     adoption_case()
 
     # curate skill: run its pure-function unit suites (scoring + link classification).

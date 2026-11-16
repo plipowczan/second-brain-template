@@ -1,0 +1,53 @@
+# Field definitions for the brain-watch deep pass (one JSON result per tool note).
+# Rule for every field: primary sources first (repository, releases page, package
+# registry, docs, changelog, pricing page). If a value cannot be confirmed from a primary
+# source, write "[uncertain] ..." with what you did find, and list the field in
+# `uncertain`. Read the note at the item's `note` path before you fill
+# `changes_since_note`: that field compares the world today with what the note says.
+categories:
+  - name: Status
+    fields:
+      - name: repo_url
+        description: Canonical repository URL today (follow redirects and renames). For a closed product, "none (closed product)" plus the official changelog or release-notes URL.
+        detail_level: brief
+        required: true
+      - name: moved_or_renamed
+        description: Whether the repo or product was renamed, moved to another org, or rebranded since the note was written; old -> new. "no" if unchanged.
+        detail_level: brief
+        required: true
+      - name: last_release
+        description: Latest release tag or version and its date (YYYY-MM-DD) from the releases page, package registry (npm, PyPI, crates) or product changelog. "no releases (commits only)" if the project never tags releases.
+        detail_level: brief
+        required: true
+      - name: last_commit
+        description: Date (YYYY-MM-DD) of the latest commit on the default branch. For a closed product, the date of the latest changelog or blog entry about it.
+        detail_level: brief
+        required: true
+      - name: archived_or_deprecated
+        description: '"no", or how it is retired: GitHub archived flag, README deprecation notice, sunset announcement, acquisition.'
+        detail_level: brief
+        required: true
+      - name: license
+        description: SPDX id or plain description, including dual licensing, enterprise or commercial folders, source-available terms, or "proprietary SaaS" with the pricing model in a few words.
+        detail_level: brief
+        required: true
+      - name: liveness
+        description: 'Exactly one word first, one of: active (commits or releases in the last 30 days), maintained (last 90 days), slowing (90-180 days), stale (over 180 days, not archived), dead (archived, deprecated or abandoned), done (intentionally finished, e.g. a static prompt file or spec), sunset (a closed product that was shut down). For a closed product that still runs: active.'
+        detail_level: brief
+        required: true
+      - name: liveness_evidence
+        description: One or two sentences with the dates and facts behind the liveness verdict.
+        detail_level: moderate
+        required: true
+      - name: successor_or_replacement
+        description: If dead, stale, slowing or superseded, what to use instead and why (official successor first, then the closest alive alternative). "n/a" if alive and not superseded.
+        detail_level: moderate
+        required: true
+      - name: changes_since_note
+        description: What materially changed since the item's note_date, measured against what the note at `note` says (major versions, scope change, pricing or licence change, rename, new owner). Name the claims in the note that are now wrong. "nothing material" if so.
+        detail_level: moderate
+        required: true
+      - name: sources
+        description: List of URLs actually consulted (primary sources first).
+        detail_level: brief
+        required: true

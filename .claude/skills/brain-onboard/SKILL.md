@@ -112,6 +112,11 @@ Print a short "what now":
 - Ask a question with `/b:qa`.
 - Run `/b:lint` for a health check.
 - Run `/b:upgrade` later to pull new template releases (it reads `.kb-template.json`).
+- If the base will live on GitHub: allow the weekly `kb-maintain` workflow to open its
+  index-refresh pull request, once, in **Settings → Actions → General → Workflow
+  permissions → Allow GitHub Actions to create and approve pull requests**. It is off
+  by default; without it the workflow pushes the branch `kb-maintenance/reindex` and
+  its run summary says how to open the pull request by hand.
 Summarize the created topic folders and the personalized files. Commit
 `.kb-onboard.json` and `.kb-template.json` with the rest: they travel with the base.
 

@@ -1,1 +1,1 @@
-Use the `brain-qa` skill to research the topic provided and synthesize an answer from the vault.
+Use the `brain-qa` skill to research the topic provided and synthesize an answer from the vault. Substantive answers are saved to `content/_outputs/answers/`; pass `--no-save` to answer without writing.

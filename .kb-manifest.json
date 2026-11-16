@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "version": "0.2.1",
+  "version": "0.3.0",
   "repository": "plipowczan/second-brain-template",
   "classes": {
     "author": [
@@ -29,6 +29,7 @@
       "requirements.txt",
       "schema.yml",
       "ENVIRONMENTS.md",
+      "LIMITS.md",
       "CHANGELOG.md",
       "LICENSE"
     ],

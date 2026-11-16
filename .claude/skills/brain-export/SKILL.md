@@ -72,7 +72,8 @@ mixable in one call:
 - **Ambiguous title** (same title in two folders): list all matching paths; the user picks
   during the confirmation step (step 2) — no extra prompt round.
 - **Exclusions:** notes under `_indexes/`, `_outputs/`, `_raw/`, `_graveyard/`, `templates/`,
-  any underscore-prefixed file or folder (`_privacy.md` can never ship), and non-`.md` files
+  any underscore-prefixed file or folder (`_privacy.md` and `_privacy.local.md` can never
+  ship), and non-`.md` files
   are dropped from resolution but named in the confirmation list as "omitted (excluded)".
 - **Empty selection:** report "selector resolved to 0 notes" and stop. No file is created.
 
@@ -119,6 +120,27 @@ session scratchpad (never inside `content/`; sources stay byte-identical).
 exceptions ("the vault owner's name is public"). Extends/overrides the defaults. Absent →
 defaults alone, silently.
 
+**Local terms — `content/_privacy.local.md`** (optional, git-ignored): its "## Always cut"
+section holds names whose mere presence in the repository is a leak (clients, people). It
+adds to `_privacy.md`'s list; only that section is read. `/b:watch` reads the same file.
+
+**Get the always-cut list from the script**, not by reading the two files yourself:
+
+```bash
+python .claude/skills/brain-export/scripts/privacy_sweep.py --terms
+```
+
+Run it from the vault root (or pass `--root <vault>`). It parses both files as `/b:watch`
+does (HTML comments ignored, so the commented examples are not terms) and prints every
+term with its `forms`: as written, joined, hyphenated, underscored (`Acme Labs` →
+`AcmeLabs`, `Acme-Labs`, `Acme_Labs`). Cut every form, in any case, wherever it stands:
+prose, frontmatter, tags, URLs, wikilink targets and aliases. Never quote a term from
+`_privacy.local.md` in anything written to the repository (see step 5).
+
+`sources` gives the count per file, `null` when the file is not there. A git worktree has
+no `_privacy.local.md` unless it was copied in, because the file is git-ignored. If it is
+`null` and the main checkout has one, copy it into this checkout before you go on.
+
 **Wikilink leak rule** — links targeting excluded notes or notes matching the policy:
 1. De-personalize the title, keep the wikilink: `[[My Crypto Strategy]]` → `[[Crypto Strategy]]`.
 2. Title itself is the private datum (person/client name) → genericize the surrounding text
@@ -134,6 +156,10 @@ Per-note verdict:
 - `exclude` — unsalvageable (the note's substance is itself private, e.g. a personal
   finance strategy) — drop from the bundle instead of shipping a husk.
 
+A note whose path contains an always-cut term (`PROJECTS/Acme Corp/Plan.md`) would ship
+that name in the bundle's paths and manifest. Give its staging copy a de-personalized path
+and fix the links to it, or `exclude` it.
+
 ### 3b. `--public` only — verdict table (interaction 3)
 
 One approvable table, whole-table approval, full diff on demand inside the same prompt:
@@ -145,8 +171,12 @@ Redaction (5 notes):
 | Wiring Serena into a Codebase | redact | client monorepo context ×3, link de-personalized ×1 |
 | My Crypto Strategy | exclude | unsalvageable (finance) |
 | GrepRAG | include | — |
+Always-cut terms: 2 from _privacy.md, 12 from _privacy.local.md
 Approve? [yes / edit verdicts / show diff [[X]]]
 ```
+
+The "Always-cut terms" line gives the `sources` counts from `--terms` ("not found" for
+`null`). It shows the user whether the local file was read, without naming a term.
 
 ### 3c. `--public` only — verification nets (autonomous)
 
@@ -158,11 +188,15 @@ After approval, before zipping, two nets over the redacted/included copies:
    python .claude/skills/brain-export/scripts/privacy_sweep.py "<scratchpad>/export-staging"
    ```
 
-   Scans for emails, phone shapes, IBAN/card numbers, API-key prefixes, JWTs, crypto
-   wallets. Exit 2 + JSON hits when something survived redaction.
+   Run it from the vault root (or pass `--root <vault>`): it exits 1 when it finds no
+   `content/` there, so it can't quietly sweep without the private terms. Scans for
+   emails, phone shapes, IBAN/card numbers, API-key prefixes, JWTs, crypto wallets, and
+   every always-cut term from both privacy files in all its forms (class `private-term`;
+   line `0` means the file path). Context lines show each term masked as `[private]`.
+   Exit 2 + JSON hits when something survived redaction.
 
-2. **Adversarial audit** — a fresh-context LLM pass over the same copies with the policy +
-   `_privacy.md`, role: "find remaining private information".
+2. **Adversarial audit** — a fresh-context LLM pass over the same copies with the policy,
+   `_privacy.md` and the `--terms` list, role: "find remaining private information".
 
 Hits → fix the copy, log to the report. False positives (sweep context lines show them) →
 dismiss in the report, no edit. A hit that **flips a verdict** (redact→exclude) →
@@ -195,10 +229,15 @@ sweep/audit hits and how each was resolved (fixed / dismissed as false positive)
 path. The report stays local — **never** goes into the bundle (its cut descriptions are
 themselves a meta-leak).
 
+The report sits in `content/_outputs/reports/`, which is committed with the vault. So it
+describes cuts and never quotes the always-cut terms: "client name ×2", "private term ×1
+(file path)", never the name itself. Sweep hits go in by file, line and class, without their
+context lines.
+
 ## Scripts
 
 | Script | Purpose |
 |--------|---------|
 | `scripts/bundle.py` | `pack` / `unpack` / `same` — deterministic bundle format tool (shared with `/b:import`) |
-| `scripts/privacy_sweep.py` | report-only pattern sweep of redacted copies (`--public` net #1) |
+| `scripts/privacy_sweep.py` | report-only pattern and private-term sweep of redacted copies (`--public` net #1); `--terms` prints the always-cut list from `_privacy.md` and `_privacy.local.md` |
 | `scripts/test_bundle.py`, `scripts/test_privacy_sweep.py` | unit tests; run each with `python <path>` |

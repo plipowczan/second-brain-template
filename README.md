@@ -105,21 +105,37 @@ To undo both, revert the upgrade first and the adoption second. If the adoption 
 `.kb-onboard.json`, reverting it also removes the file from your disk; bring it back with
 `git restore --source=<adoption commit> -- .kb-onboard.json`.
 
+## Weekly maintenance on GitHub
+
+If your base lives on GitHub, `.github/workflows/kb-maintain.yml` runs every Monday, and
+on demand from the **Actions** tab. It rebuilds the navigation indexes, writes a
+vault-health summary, and opens one pull request when the indexes drifted from your notes.
+It never changes a note.
+
+To let it open that pull request, allow it once in the repository: **Settings → Actions →
+General → Workflow permissions → Allow GitHub Actions to create and approve pull
+requests**, then **Save**. It is off by default. Without it the run still pushes the
+refreshed indexes to the branch `kb-maintenance/reindex`, and its summary links the page
+where you open the pull request by hand. A repository owned by an organization takes this
+setting from the organization, so an owner of the organization may have to allow it there
+first. Don't want the workflow? Delete the file.
+
 ## Skills
 
 | Command | What it does |
 |---------|--------------|
 | `/b:onboard` | Interview + scaffold a fresh knowledge base from the template (personalizes the brain, creates topics, builds indexes). |
-| `/b:ingest` | Turn raw sources (files in `_raw/inbox/`, or YouTube URLs) into wiki notes; updates indexes. |
+| `/b:ingest` | Turn raw sources (files in `_raw/inbox/`, or YouTube URLs) into wiki notes: shows its plan first, updates every note a source is about, marks contradictions instead of overwriting; updates indexes. `--batch` skips the plan. |
 | `/b:compile` | Synthesize a new article from existing notes on a topic. |
 | `/b:enhance` | Improve a single note: fill gaps, add wikilinks, mark reviewed. |
-| `/b:qa` | Answer a question from the vault, citing notes. |
-| `/b:lint` | Audit vault health: frontmatter, broken links, orphans, stubs, stale notes. |
+| `/b:qa` | Answer a question from the vault, citing notes; saves substantive answers with what they rest on and what the vault could not answer (`--no-save` to skip). |
+| `/b:lint` | Audit vault health: frontmatter, broken links, orphans, stubs, stale notes, source paths that lead nowhere, open contradictions; ends with what to fix first. |
 | `/b:output` | Generate a report/summary (reading list, topic map, timeline). |
 | `/b:reindex` | Rebuild `vault-map.md`, `catalog.md`, `graph.md` from all notes. |
 | `/b:refactor` | Rename/move/merge/split notes with automatic wikilink repair. |
 | `/b:gaps` | Coverage analysis: weakly-connected notes, missing topics, thin areas. |
 | `/b:curate` | Staleness hygiene: score notes (age, isolation, dead links, duplication), propose archive/merge/refresh, retire confirmed notes to `_graveyard/` (reversible). |
+| `/b:watch` | Re-check tool notes: GitHub releases, archives, renames and licence changes, dead product URLs; research what changed, update each note's status box, report notes to refresh or retire. `--dry` for the report only. |
 | `/b:upgrade` | Pull a newer template release into this base: dry run, one review table, one commit; adopts a base without a `.kb-template.json` stamp first. Never touches your notes. |
 | (skill) `excalidraw-diagram` | Generate Excalidraw diagram JSON to embed in notes. |
 | (skill) `research`, `research-deep`, … | Structured multi-item web research into the vault (best-effort; depends on your Claude Code web tools). |
@@ -138,6 +154,13 @@ To undo both, revert the upgrade first and the adoption second. If the adoption 
 This template omits the Quartz static-site pipeline and the optional `brain-mcp`
 server on purpose. Either can be layered on top of `content/` later without
 changing how the skills work.
+
+## Acknowledgements
+
+The ingest plan, the contradiction callouts, saved answers with their gaps and
+[`LIMITS.md`](LIMITS.md) were inspired by
+[super-brain](https://github.com/superhero-tech/super-brain) by Wojtek Strzałkowski and
+Piotr Kacała (AI Product Heroes, MIT). The text and code here are our own.
 
 ## License
 
