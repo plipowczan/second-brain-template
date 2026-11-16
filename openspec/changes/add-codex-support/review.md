@@ -139,3 +139,48 @@ Either way the agent reaches the same `.claude/skills/` text, so the design stan
 
 **0.5.** Codex followed every stub. The design keeps the stub (D3); the full-copy
 fallback is not needed.
+
+## Implementation — 2026-11-16 (sections 1-4)
+
+| section | commit | checks |
+|---|---|---|
+| 1. Generator and its tests | ed30298 | 19 tests in `dev/test_build_codex_files.py`, written first; they failed only because the generator was missing, then pass. |
+| 2. Source frontmatter | 313f46a | The check reported exactly `brain-export` (cut at ` #`) and `brain-ingest` (invalid YAML). Both are quoted, text unchanged; `/b:import` and `/b:export` in two descriptions. `run_skill_tests.py` passes (1 skip). |
+| 3. Manifest and Codex files | 8e266a7, 9310d59 | The generator wrote 21 stubs and `.codex/hooks.json`; the check exits 0 and `dev/check_manifest.py` passes. `tests/run_tests.py`: ALL PASS, fails and names the stub after one byte of `brain-qa`'s stub changed, ALL PASS after the revert. A committed `.codex/config.toml` fails the manifest check ("matches no class"). `git diff main` of the Claude Code hook and `settings.json` is empty; a Claude Code session in a scratch clone starts with the vault map. |
+| 4. Docs | 57cc7e5 (4.2-4.5), 4.1 below | `tests/run_tests.py`: ALL PASS. |
+
+## Upgrade of existing bases — 2026-11-16 (tasks 6.1-6.4)
+
+Each scratch base is tag `v0.3.0` cloned from the maintainer's checkout, stamped with
+`upgrade.py stamp` and committed. Each `plan` ran
+`--source <this worktree> --ref HEAD --allow-repository plipowczan/second-brain-template`
+at 57cc7e5, and `apply` took the defaults (`{}`). The manifest still says `0.3.0`, so the
+plan reads `0.3.0 -> 0.3.0` with the `[Unreleased]` entries. The bases were not pruned
+the way `/b:onboard` prunes, so each plan also deletes the author-class files
+(`CONTRIBUTING.md`, `dev/`, `openspec/`); that is the scratch setup, not this change.
+
+**6.2, owner dropped `brain-gaps`.** `add` for all 21 stubs (`brain-gaps` and the new
+`brain-watch` included) and `.codex/hooks.json`. The three `brain-gaps` files are
+`restore?`, not selected. Other actions: `add` for the `brain-watch` skill and
+`.claude/commands/b/watch.md`; `update` for `brain-export` (and two of its scripts),
+`brain-import`, `brain-ingest`, `.gitignore`, `.kb-manifest.json`, `CHANGELOG.md` and
+`tests/run_tests.py`. Nothing under `content/` is written: `content/_privacy.md` is
+"changed upstream, information only" and `content/WRITING_STYLE.md` only a proposal.
+`apply` and `commit` complete; the stubs and the hook equal the template's, and
+`.claude/skills/brain-gaps/` stays deleted.
+
+**6.3, `/import` output untracked, with the owner's `my-skill`.** `plan` marks 21 paths
+`CONFLICT` ("new template file, but this base has its own file here"): the 20 migrated
+skill copies and `.codex/hooks.json`. `brain-watch`, which the migration never saw, is a
+plain `add`. It also warns that `apply` refuses uncommitted changes in those paths.
+`apply` with the defaults stops ("choose keep, overwrite or merge"); with `overwrite` on
+every conflict it stops on the uncommitted changes. Neither writes anything. After the D8
+steps (copy aside, delete the template skills' folders, `.codex/hooks.json`, every
+`source-command-*`, `.codex/hooks/`, `.codex/agents/`), `plan` lists 21 stub `add`s and
+the hook `add`, no conflict. `apply` and `commit` complete; every stub equals the
+template's, and `my-skill` is unchanged and still untracked.
+
+**6.4, `/import` output committed.** Before the clean-up, the same 21 `CONFLICT`s as in
+6.3. After `git rm -r` of the D8 paths and a commit, `plan` lists the stubs and the hook
+as `add`, not `restore?`: the stamp never had these paths. `apply` and `commit`
+complete; every stub equals the template's, and `my-skill` is unchanged.

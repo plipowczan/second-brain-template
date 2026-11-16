@@ -175,10 +175,10 @@ with `ALL PASS`.
 
 ## 6. Upgrade and Codex sessions
 
-- [ ] 6.1 Make a scratch base from the latest release: clone tag `v0.3.0` into a scratch
+- [x] 6.1 Make a scratch base from the latest release: clone tag `v0.3.0` into a scratch
   folder, stamp it as `brain-onboard` does
   (`python .claude/skills/brain-upgrade/scripts/upgrade.py stamp`), and commit.
-- [ ] 6.2 In the scratch base, run
+- [x] 6.2 In the scratch base, run
   `python .claude/skills/brain-upgrade/scripts/upgrade.py plan --source <this checkout> --ref HEAD --allow-repository plipowczan/second-brain-template`.
   Without `--ref HEAD` the plan would install tag `v0.3.0` instead of this branch.
   Before `plan`, delete `.claude/skills/brain-gaps/` and commit, as an owner who dropped a
@@ -186,7 +186,7 @@ with `ALL PASS`.
   `brain-gaps` files are `restore?` and not selected, its stub is an `add`, and no action
   touches `content/`. Record the action list in `review.md`, then apply. Done when `apply`
   completes and commits.
-- [ ] 6.3 Make a second scratch base as in 6.1. Put the copy from 0.1 into it at the same
+- [x] 6.3 Make a second scratch base as in 6.1. Put the copy from 0.1 into it at the same
   paths, untracked, and add the owner's own `.agents/skills/my-skill/SKILL.md`. Run the
   `plan` command of 6.2 (no skill deleted), then `apply`, and record in `review.md` what
   each does. Expected: `plan`
@@ -194,7 +194,7 @@ with `ALL PASS`.
   Then delete the paths D8 lists and run `plan` and `apply` again. Done when `apply`
   completes and commits, every stub under `.agents/skills/` equals the template's, and
   `my-skill` is unchanged.
-- [ ] 6.4 Repeat 6.3 in a third scratch base where the copy from 0.1 is committed. Delete
+- [x] 6.4 Repeat 6.3 in a third scratch base where the copy from 0.1 is committed. Delete
   the paths D8 lists with `git rm -r`, commit, and run `plan` and `apply`. Record the
   result in `review.md`. Done when `apply` completes and commits, and every stub under
   `.agents/skills/` equals the template's.
