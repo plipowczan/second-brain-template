@@ -196,6 +196,15 @@ class BuildCodexFilesTest(unittest.TestCase):
         self.assertTrue(self.lines_naming(r.stdout, GAMMA, "description"), r.stdout)
         self.assertEqual(snapshot(self.repo), before)
 
+    def test_write_writes_nothing_when_a_continued_description_is_cut(self):
+        self.put(GAMMA, "---\nname: gamma\ndescription: Use for archive requests\n"
+                 "  or export #tag requests.\n---\n", track=True)
+        before = snapshot(self.repo)
+        r = self.run_script()
+        self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
+        self.assertTrue(self.lines_naming(r.stdout, GAMMA, "description"), r.stdout)
+        self.assertEqual(snapshot(self.repo), before)
+
     # --- the check: Codex files ------------------------------------------------------
 
     def test_generated_tree_passes(self):
@@ -303,6 +312,12 @@ class BuildCodexFilesTest(unittest.TestCase):
             "non-string description": ("---\nname: gamma\ndescription: 42\n---\n", "description"),
             "unquoted ` #`": ("---\nname: gamma\ndescription: Use when the user says "
                               "\"export #tag\" or \"export FOLDER\".\n---\n", "description"),
+            "unquoted ` #` on a continuation line": (
+                "---\nname: gamma\ndescription: Use for archive requests\n"
+                "  or export #tag requests.\n---\n", "description"),
+            "unquoted ` #`, value starts on the next line": (
+                "---\nname: gamma\ndescription:\n  Use for export #tag requests.\n---\n",
+                "description"),
         }
         for case, (source, field) in cases.items():
             with self.subTest(case):
