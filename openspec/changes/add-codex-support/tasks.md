@@ -1,8 +1,8 @@
 # Tasks
 
 The design is waiting for Paweł's review (proposed 2026-11-09, revised after the EGM
-review on 2026-11-16). Nothing below starts before he accepts `design.md`. Merge `main`
-into this branch first.
+review on 2026-11-16; open questions answered on 2026-11-16). Nothing below starts
+before he accepts `design.md`. Merge `main` into this branch first.
 
 Terms:
 
@@ -84,8 +84,8 @@ with `ALL PASS`.
   - Write stubs with `Path.write_bytes`, so no file gets the executable bit.
   - Print one line per problem, `<kind>: <path>: <reason>`, as `dev/check_manifest.py`
     does. Exit 1 on any problem, 0 otherwise.
-  - `.codex/hooks.json` has no `additionalContextLimit` unless Paweł sets a value under
-    "Vault map size in Codex" in `design.md`.
+  - `.codex/hooks.json` has no `additionalContextLimit` (Paweł's decision, "Vault map
+    size in Codex" in `design.md`).
 
   Done when the 1.1 tests pass. `tests/run_tests.py` already runs `python -m unittest` in
   `dev/`, so it picks the tests up.

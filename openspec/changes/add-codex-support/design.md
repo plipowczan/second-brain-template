@@ -435,10 +435,9 @@ release contains them.
 
 ## Migration Plan
 
-1. Implement on this branch, on top of `main`. Release in a minor version (`0.4.0`), or in
-   the next `0.3.x` patch release if Paweł prefers (Open Questions).
+1. Implement on this branch, on top of `main`. Release in `0.4.0` (Open Questions).
 2. Existing bases get the stubs and the hook with `/b:upgrade`. A base that ran the
-   migration first deletes the paths listed in D8. The changelog's "Existing bases"
+   migration first copies its output aside and deletes the paths listed in D8. The changelog's "Existing bases"
    paragraph says so, together with the rule to edit a stub by hand.
 3. The upgrade of the demo base `second-brain-demo-recipes` checks it on a real base.
 4. Rollback: tags never move, so a defect gets a new patch release. A base reverts its
@@ -446,26 +445,26 @@ release contains them.
 
 ## Open Questions
 
+Paweł answered all of them on 2026-11-16, each as the EGM review recommended.
+
+- **Stub or full copy?** (D3, added by the EGM review.) *Decided:* a stub per skill. The
+  full copy stays the fallback if task 0.3 shows that Codex does not follow a stub, and
+  Paweł is asked before it is taken.
 - **Ship the generator to bases?** If it shipped as a script in `brain-upgrade`, an owner
-  could regenerate the Codex files after editing a skill. Paweł decided on `dev/` for now
-  (2026-11-09). Worth revisiting if owners who use Codex edit skills.
-  *EGM review (2026-11-16):* with stubs (D3), a base needs the generator only when an
-  owner adds a skill or edits a description, and a stub is a short file. Recommendation:
-  keep it in `dev/`.
-- **Version.** Ship in `0.3.x` or wait for `0.4.0`? Nothing depends on it.
-  *EGM review:* `0.3.0` was tagged on 2026-11-13, so the choice is now `0.3.1` or
-  `0.4.0`. This change adds a feature, and `CONTRIBUTING.md` keeps patch releases for
-  defects. Recommendation: `0.4.0`.
+  could regenerate the Codex files after editing a skill. With stubs, a base needs it
+  only when an owner adds a skill or edits a description, and a stub is a short file.
+  *Decided:* the generator stays in `dev/` (first on 2026-11-09, confirmed). Worth
+  revisiting if owners who use Codex edit skills often.
+- **Version.** `0.3.0` was tagged on 2026-11-13, so the choice was `0.3.1` or `0.4.0`.
+  This change adds a feature, and `CONTRIBUTING.md` keeps patch releases for defects.
+  *Decided:* `0.4.0`.
 - **Vault map size in Codex.** The hook prints the whole `vault-map.md`. In the
   maintainer's own base (the `brain` repository) it is 22 KB, roughly 5,500 to 7,500
   tokens, two to three times Codex's default limit of 2,500 tokens.
-  `additionalContextLimit` in `.codex/hooks.json` can raise the limit (the Codex source
-  shows no upper bound). Raise it, and to what, or leave the default and the overflow to a
-  file? Claude Code caps hook output too, so the size of the map may deserve its own task.
-  *EGM review:* a new base's map is small, Codex keeps the head and tail of a long one,
-  and `AGENTS.md` tells the agent to read the map file anyway. Recommendation: leave the
-  default (no key in the file), and give the map size its own task.
-- **Start from a subfolder.** Is the base-root rule of D5 acceptable, or should the hook
-  use the git-root form and give up ZIP bases and the `cmd.exe` fallback?
-  *EGM review:* no reviewer argued for the git-root form. Recommendation: keep the
-  base-root rule; task 0.3 checks that a session started in `content/` still starts.
+  `additionalContextLimit` in `.codex/hooks.json` can raise the limit. A new base's map is
+  small, Codex keeps the head and tail of a long one, and `AGENTS.md` tells the agent to
+  read the map file anyway. *Decided:* leave the default, with no key in the file. The
+  size of the map, which Claude Code caps too, gets its own task outside this change.
+- **Start from a subfolder.** The base-root rule of D5, or the git-root form, which gives
+  up ZIP bases and the `cmd.exe` fallback? *Decided:* the base-root rule. Task 0.3 checks
+  that a session started in `content/` still starts.
