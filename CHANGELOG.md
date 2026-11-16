@@ -18,7 +18,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
   relative path, so the vault map loads in the root folder of any clone, and of a base
   downloaded as a ZIP. In Codex, start a skill by name, `$brain-ingest` for `/b:ingest`,
   or pick it from `/skills`; `ENVIRONMENTS.md` has the details. Claude Code does not read
-  the new files.
+  the new files. The template's own tests fail when a stub or the hook file is out of
+  date; in a base, `tests/run_tests.py` only names that check in its SKIP line.
 - **`/b:watch`: a recurring status check for tool notes.** A tool note goes out of date
   without anyone noticing: the project ships a rewrite, gets archived, renamed or
   relicensed. `/b:watch` (the `brain-watch` skill) checks every `type: tool` note in two

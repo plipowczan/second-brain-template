@@ -108,14 +108,14 @@ with `ALL PASS`.
   `.codex/hooks.json` by name and commit them together, with the `Added` entry in
   `CHANGELOG.md`. Done when the check exits 0, `python dev/check_manifest.py` passes, and
   `git status` shows nothing else under `.agents/` or `.codex/`.
-- [ ] 3.3 In `tests/run_tests.py`, run the check right after `dev/check_manifest.py` with
+- [x] 3.3 In `tests/run_tests.py`, run the check right after `dev/check_manifest.py` with
   the existing `run()` helper, and name it in the SKIP message. Done when
   `python tests/run_tests.py` ends with `ALL PASS`, fails after one byte of a stub is
   changed, and passes again after the change is reverted.
-- [ ] 3.4 In a scratch clone, commit a `.codex/config.toml`. Expected:
+- [x] 3.4 In a scratch clone, commit a `.codex/config.toml`. Expected:
   `python dev/check_manifest.py` fails and names it ("matches no class"). Delete the
   scratch clone.
-- [ ] 3.5 `git diff main -- .claude/hooks/load_vault_map.py .claude/settings.json` is
+- [x] 3.5 `git diff main -- .claude/hooks/load_vault_map.py .claude/settings.json` is
   empty, and a Claude Code session in a scratch clone still starts with the vault map.
 
 ## 4. Docs (D6, D8)
