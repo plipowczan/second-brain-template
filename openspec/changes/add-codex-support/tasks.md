@@ -142,17 +142,17 @@ with `ALL PASS`.
   - after deleting a template skill, delete its stub after the next upgrade (D8);
   - keep `.agents/` and `.codex/` even without Codex: deleting them brings back a
     "restore?" row at every upgrade.
-- [ ] 4.2 In `README.md`, section "Works beyond Claude Code", add one line: in Codex,
+- [x] 4.2 In `README.md`, section "Works beyond Claude Code", add one line: in Codex,
   start a skill by name, for example `$brain-ingest` for `/b:ingest`; details in
   `ENVIRONMENTS.md`. `README.md` is seeded, so this line reaches new bases only.
-- [ ] 4.3 In `AGENTS.template.md`, under "Workflows", add one sentence: an agent without
+- [x] 4.3 In `AGENTS.template.md`, under "Workflows", add one sentence: an agent without
   slash commands treats `/b:<name>` as the `brain-<name>` skill.
-- [ ] 4.4 In `CONTRIBUTING.md`:
+- [x] 4.4 In `CONTRIBUTING.md`:
   - under "Author tools in `dev/`", add the generator and what the check fails on;
   - under "Before you commit", say: edit skills only in `.claude/skills/`, then run the
     generator; and name the check in step 2 among what `tests/run_tests.py` runs;
   - in the class table, add `.agents/skills/**` and `.codex/hooks.json` to the owned row.
-- [ ] 4.5 Complete the `CHANGELOG.md` entry with an "Existing bases" paragraph. It says:
+- [x] 4.5 Complete the `CHANGELOG.md` entry with an "Existing bases" paragraph. It says:
   - the upgrade adds one stub per skill and `.codex/hooks.json`, which Claude Code does
     not read;
   - in Codex, the owner trusts the project and approves the hook in `/hooks`, once per

@@ -20,6 +20,27 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
   or pick it from `/skills`; `ENVIRONMENTS.md` has the details. Claude Code does not read
   the new files. The template's own tests fail when a stub or the hook file is out of
   date; in a base, `tests/run_tests.py` only names that check in its SKIP line.
+
+  Existing bases: `/b:upgrade` adds one stub per skill and `.codex/hooks.json`, which
+  Claude Code does not read. Keep them even if you never use Codex: deleting them brings
+  back a `restore?` row at every upgrade. To use Codex, open the base's root folder in it,
+  trust the project and approve the hook in `/hooks`, once per clone. After you add a
+  skill or edit a skill's description, edit its stub by hand (`ENVIRONMENTS.md` shows the
+  file); an edit to a skill's body needs nothing. `AGENTS.template.md` now tells an agent
+  without slash commands to read `/b:<name>` as the `brain-<name>` skill; your `AGENTS.md`
+  gets that sentence only when you re-render it. If you deleted a template skill, the
+  upgrade adds its stub anyway, and the stub tells Codex the skill was removed: delete
+  `.agents/skills/<skill>/` after the upgrade and commit.
+
+  If you ran Codex's `/import` in this base, clean up before the upgrade, or it stops on
+  conflicts. First copy `.agents/` and `.codex/` to a folder outside the base, and carry
+  any edit you made there over to `.claude/skills/<skill>/SKILL.md`,
+  `.claude/settings.json` or a skill of your own. Then delete `.agents/skills/<skill>/`
+  for each template skill and `.codex/hooks.json` (required), and every
+  `.agents/skills/source-command-*`, `.codex/hooks/` and `.codex/agents/` (advised: the
+  wrappers double the skill list and the rest is broken). If that output was committed,
+  delete it with `git rm -r` and commit the deletion. Keep your own skills under
+  `.agents/skills/`: the upgrade leaves them alone.
 - **`/b:watch`: a recurring status check for tool notes.** A tool note goes out of date
   without anyone noticing: the project ships a rewrite, gets archived, renamed or
   relicensed. `/b:watch` (the `brain-watch` skill) checks every `type: tool` note in two
