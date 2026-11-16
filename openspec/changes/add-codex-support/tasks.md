@@ -120,7 +120,7 @@ with `ALL PASS`.
 
 ## 4. Docs (D6, D8)
 
-- [ ] 4.1 In `ENVIRONMENTS.md`, add a `## Codex` section after "Key cross-tool facts" and
+- [x] 4.1 In `ENVIRONMENTS.md`, add a `## Codex` section after "Key cross-tool facts" and
   link it from the Codex row of the tool matrix. Update the "Verified" date, and the
   Codex source link, which now redirects to `learn.chatgpt.com/docs`. The section says:
   - skills come from the stubs in `.agents/skills/`, which point at `.claude/skills/`; the
@@ -198,7 +198,7 @@ with `ALL PASS`.
   the paths D8 lists with `git rm -r`, commit, and run `plan` and `apply`. Record the
   result in `review.md`. Done when `apply` completes and commits, and every stub under
   `.agents/skills/` equals the template's.
-- [ ] 6.5 In a scratch clone with the generated files, open Codex as in the first step of
+- [x] 6.5 In a scratch clone with the generated files, open Codex as in the first step of
   0.3. Run `$brain-reindex`: it runs its script. Run `$brain-onboard`: it renders
   `CLAUDE.md` and `AGENTS.md` once each. Run one `brain-research*` skill: record what the
   agent does where the skill says `Task` and `AskUserQuestion`. Record the results in

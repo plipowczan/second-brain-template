@@ -17,8 +17,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
   `.codex/hooks.json` runs the same `.claude/hooks/load_vault_map.py` as Claude Code, by a
   relative path, so the vault map loads in the root folder of any clone, and of a base
   downloaded as a ZIP. In Codex, start a skill by name, `$brain-ingest` for `/b:ingest`,
-  or pick it from `/skills`; `ENVIRONMENTS.md` has the details. Claude Code does not read
-  the new files. The template's own tests fail when a stub or the hook file is out of
+  or pick it from `/skills`. `ENVIRONMENTS.md` has the details, including what was tried
+  with the `brain-research*` skills, which Codex runs with its own subagents and question
+  form. Claude Code does not read the new files. The template's own tests fail when a stub or the hook file is out of
   date; in a base, `tests/run_tests.py` only names that check in its SKIP line.
 
   Existing bases: `/b:upgrade` adds one stub per skill and `.codex/hooks.json`, which

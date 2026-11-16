@@ -197,3 +197,29 @@ Codex files pass `python -B dev/build_codex_files.py --check`; full integration 
 interactive Codex behavior were not verified."
 
 Checks: `tests/run_tests.py` — ALL PASS on 57cc7e5; the record commit changed no code.
+
+## Sessions in Codex — 2026-11-16 (task 6.5)
+
+Paweł's sessions in Codex TUI 0.169.0 on Windows 11 (PowerShell), in the scratch clone
+`C:\Projects\kb-codex-trial` at 9310d59: the 21 generated stubs and `.codex/hooks.json`.
+Read back from the session logs in `~/.codex/sessions/`.
+
+| step | result |
+|---|---|
+| Session in the clone root | Pass. The vault map arrives as context at session start; asked for the first row of the Folders table without reading files, Codex quotes `REFERENCE` and runs no tool. Its skill list has all 21 stubs under the project root `.agents/skills`. The "Hook failed" lines come from the maintainer's untrusted plugin hooks. |
+| `$brain-reindex` | Pass. Codex reads `.claude/skills/brain-reindex/SKILL.md`, runs `python .claude/skills/brain-reindex/scripts/build_indexes.py` (`OK notes=2 edges=4 …`); the three indexes change only in `updated:`. |
+| `$brain-onboard` | Pass. Codex reads the source `SKILL.md` and asks the six interview questions one at a time in its own question tool (`request_user_input`), where the skill says `AskUserQuestion`. `render.py` runs once for each of `CLAUDE.md`, `AGENTS.md` and `content/WRITING_STYLE.md`; no `{{` is left. Then `stamp`, `prune-author`, the topic folders, the reindex and a commit. The sandbox stopped `git switch` and `git commit` until Paweł approved them. |
+| `$brain-research` (new session) | Pass. Codex reads the source `SKILL.md`. `AskUserQuestion` becomes Codex's question tool (items and fields, time range, field file, agent split). Where the skill launches a background `web-search-agent` with `Task`, Codex starts its own subagent (`spawn_agent`, `/root/web_research`, forked from the session), waits for it, and uses its report. It writes `outline.yaml` and `fields.yaml` under `content/_raw/research-workspaces/`, the skill's `validate_json.py` passes ("4 apps, 11 fields, 2 agents x 2 apps"), and it reindexes. |
+
+Found on the way:
+
+- The onboarding answer "main branch: `main`" made Codex run `git switch main`. The scratch
+  clone sat on `change/add-codex-support`, so git created `main` from `origin/main`, which has
+  no Codex files, and the stubs left the working tree. A base cloned from the template is on
+  `main` already, so this is the scratch setup. The Codex files were checked out again
+  (fe89142 in the clone) before the research session.
+- Codex does not read `.claude/agents/web-search-agent.md`: the subagent follows only the
+  skill's prompt. The other four `brain-research*` skills were not run.
+
+`ENVIRONMENTS.md` (task 4.1) records both: what `brain-research` does in Codex, and that
+Codex asks before a skill writes to `.git`.
