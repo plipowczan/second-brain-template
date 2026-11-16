@@ -336,6 +336,9 @@ class BuildCodexFilesTest(unittest.TestCase):
             "comment line inside the value": (
                 "---\nname: gamma\ndescription: Use for export\n  #tag requests.\n---\n",
                 "description"),
+            "description from a merge key": (
+                "---\nname: gamma\n<<:\n  description: Use for export #tag requests.\n---\n",
+                "description"),
         }
         for case, (source, field) in cases.items():
             with self.subTest(case):
@@ -349,6 +352,9 @@ class BuildCodexFilesTest(unittest.TestCase):
             "plain with a blank line": "---\nname: gamma\ndescription: Says one thing\n\n  and another.\n---\n",
             "`#` with no space before it": "---\nname: gamma\ndescription: Use for C# notes.\n---\n",
             "quoted, then a comment": "---\nname: gamma\ndescription: 'Says export #tag.' # a note\n---\n",
+            "comment line of its own before the next key": (
+                "---\nname: gamma\ndescription: Use for export requests.\n"
+                "# Configuration for tools follows\nallowed-tools: Read\n---\n"),
             "CRLF source": "---\r\nname: gamma\r\ndescription: Plain.\r\n---\r\n",
         }
         for case, source in cases.items():

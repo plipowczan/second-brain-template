@@ -14,7 +14,7 @@ under `.agents/skills/` (paths the manifest excludes aside).
   - `.agents/skills/` holds a folder or a file with no source skill;
   - a source frontmatter is not valid YAML, lacks a string `name` or `description`, or
     a comment follows an unquoted description, so YAML reads less of it than the file
-    holds;
+    holds, or the description comes from a merge key (`<<`);
   - a path this script writes runs through a symbolic link or junction.
 Write mode fails on the last two kinds and then writes nothing.
 
@@ -103,25 +103,32 @@ def key_at(lines: list[str], index: int) -> str | None:
     return None
 
 
-def comment_after_plain(src: str, key: str) -> bool:
-    """True when `key`'s value is an unquoted (plain) scalar and a YAML comment follows it
-    before the next entry. YAML then drops the text from that ` #` on, on its line and on
-    any line after it. Read from YAML's own nodes, so a tag, an anchor or a quoted key
-    makes no difference. A quoted or block value keeps its `#`, so it is never cut."""
+def description_cut(src: str, read: str) -> str | None:
+    """Why YAML may read less of the description than the file holds, or None. `src` is
+    the frontmatter, `read` the description YAML read from it.
+
+    Read from YAML's own nodes, so a tag, an anchor or a quoted key makes no difference.
+    A quoted or block value keeps its `#`. An unquoted (plain) one is cut by a comment
+    that follows it on its last line, or on an indented line before the next entry; a
+    comment line at column 0 ends the value and is not part of it."""
     root = yaml.compose(src, Loader=yaml.SafeLoader)
-    if not isinstance(root, yaml.MappingNode):
-        return False
     value = None
     for k, v in root.value:  # the last entry wins, as in YAML
-        if isinstance(k, yaml.ScalarNode) and k.value == key:
+        if isinstance(k, yaml.ScalarNode) and k.value == "description":
             value = v
+    if value is None:
+        return "comes from a merge key (<<), not a line of its own; write it as `description:`"
     if not isinstance(value, yaml.ScalarNode) or value.style is not None:
-        return False
+        return None
     end = value.end_mark.index
     # Between a value and the next node there is only white space and comments.
     starts = [n.start_mark.index for pair in root.value for n in pair]
     stop = min((s for s in starts if s >= end), default=len(src))
-    return "#" in src[end:stop]
+    last, *after = src[end:stop].split("\n")
+    if "#" in last or any(ln[:1] in (" ", "\t") and "#" in ln for ln in after):
+        return (f"YAML reads only its first {len(read)} characters (a ' #' in an unquoted "
+                f"value starts a comment); wrap the value in single quotes")
+    return None
 
 
 def frontmatter_problems(rel: str, text: str | None) -> list[str]:
@@ -153,10 +160,9 @@ def frontmatter_problems(rel: str, text: str | None) -> list[str]:
         elif not isinstance(value, str) or not value.strip():
             out.append(f"{where}: {key}: must be a non-empty string, YAML reads {value!r}")
     desc = data.get("description")
-    if isinstance(desc, str) and comment_after_plain("\n".join(lines), "description"):
-        out.append(f"{where}: description: YAML reads only its first {len(desc)} "
-                   f"characters (a ' #' in an unquoted value starts a comment); wrap the "
-                   f"value in single quotes")
+    cut = description_cut("\n".join(lines), desc) if isinstance(desc, str) else None
+    if cut:
+        out.append(f"{where}: description: {cut}")
     return out
 
 
