@@ -261,3 +261,23 @@ Test changes:
 Checks: `dev/test_build_codex_files.py` — 20/20 (the anchor, tag and quoted-key cases
 failed before the fix); every source frontmatter under `.claude/skills/` passes;
 `python dev/build_codex_files.py --check` — ok; `tests/run_tests.py` — ALL PASS.
+
+## Round 8 — 2026-11-16 — reviewed ce31f93
+
+Two passes, as in round 6. `codex review --base origin/main`: clean ("No actionable
+regressions were identified in the changes"). Adversarial review, asked to test the
+round-7 fix and the whole branch: `needs-attention`, two findings, and "no additional
+concrete generator, documentation, or upgrade defects found".
+
+| id | sev | where | finding | outcome |
+|---|---|---|---|---|
+| R8-1 | P2 | dev/build_codex_files.py:115-119 | A description inherited through a YAML merge key (`<<:` holding `description: Use for export #tag requests.`) is cut by YAML, but the check looks only at direct entries, so `--check` and write mode pass it | fixed in 6417eea: a description that is not a `description:` entry of its own fails the check, as the reviewer offered; no skill uses merge keys |
+| R8-2 | P2 | dev/build_codex_files.py:120-124 | A comment line at column 0 between a whole description and the next key is reported as a cut, so valid frontmatter fails CI and blocks writing | fixed in 6417eea: only a comment on the value's last line, or on an indented line after it, counts; a column-0 line ends a plain scalar in YAML |
+
+Test changes:
+- `dev/test_build_codex_files.py` — R8-1: the merge-key case joins `test_check_fails_on_bad_frontmatter`
+- `dev/test_build_codex_files.py` — R8-2: a description followed by a comment line of its own joins `test_whole_descriptions_pass`
+
+Checks: `dev/test_build_codex_files.py` — 20/20 (both new cases failed before the fix);
+every source frontmatter under `.claude/skills/` passes; `python dev/build_codex_files.py
+--check` — ok; `tests/run_tests.py` — ALL PASS.
