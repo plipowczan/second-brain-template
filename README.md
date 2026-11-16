@@ -57,6 +57,8 @@ any tool where an AI assistant can reach your files: Claude Code, Claude Desktop
 - **Commands go in the agent's chat.** In Claude Code / Claude Desktop (Code)
   they run directly as `/b:onboard`, `/b:ingest`. In other tools, ask in a sentence:
   *"follow the instructions in `.claude/commands/b/ingest.md`."*
+- **In Codex, start a skill by name:** `$brain-ingest` for `/b:ingest`. Details in
+  [`ENVIRONMENTS.md`](ENVIRONMENTS.md#codex).
 - **No terminal needed.** Git without commands: tell the agent "save my changes,"
   use the panel buttons (VS Code–based tools), or use a cloud mode where the agent
   opens the pull request itself.

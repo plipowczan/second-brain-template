@@ -33,12 +33,17 @@ your own knowledge base, you don't need this file: run `/b:onboard` (see the
 
 ## Before you commit
 
+Edit a skill only in `.claude/skills/`, never its stub in `.agents/skills/`. After you add,
+rename or delete a skill, or change a `SKILL.md` frontmatter, run
+`python dev/build_codex_files.py` and commit what it writes with the change.
+
 1. `pip install -r requirements.txt` (PyYAML) once per environment.
 2. `python tests/run_tests.py` must end with `ALL PASS` (exit code 0). It builds a
    throwaway vault and exercises reindex, lint, gaps and refactor, adopts and upgrades a
    synthetic old base with `brain-upgrade`, and runs the curate and brain-upgrade unit
-   suites. Here (where `dev/` exists) it also runs `dev/check_manifest.py` and the `dev/`
-   tests. It takes a few minutes, mostly git in temporary repositories.
+   suites. Here (where `dev/` exists) it also runs `dev/check_manifest.py`,
+   `python dev/build_codex_files.py --check` and the `dev/` tests. It takes a few
+   minutes, mostly git in temporary repositories.
 3. If you changed a skill's scripts, also run that skill's own unit tests: `python -m
    unittest` from `.claude/skills/<skill>/scripts/`, or all of them at once with
    `python tests/run_skill_tests.py`. `tests/run_tests.py` runs only the curate and
@@ -74,7 +79,7 @@ there.
 |-------|-------|---------------|----------------|
 | author | `openspec/**`, `CONTRIBUTING.md`, `CLAUDE.local.md`, `dev/**` | Specs, these rules, release tools | Never: `export-ignore` keeps them out of archives, `/b:onboard` deletes them from a clone, `brain-upgrade` never copies them |
 | rendered | `CLAUDE.md` ← `CLAUDE.template.md`, `AGENTS.md` ← `AGENTS.template.md`, `content/WRITING_STYLE.md` ← `content/WRITING_STYLE.template.md` | Instruction templates with `{{PLACEHOLDERS}}` | `/b:onboard` renders them and deletes the templates; `brain-upgrade` re-renders a file only on request and only while it is untouched |
-| owned | `.claude/**`, `.githooks/**`, `.github/**`, `tests/**`, `.kb-manifest.json`, `.editorconfig`, `.gitattributes`, `.gitignore`, `.npmrc`, `.prettierrc`, `package.json`, `requirements.txt`, `schema.yml`, `ENVIRONMENTS.md`, `LIMITS.md`, `CHANGELOG.md`, `LICENSE` | Workflows and their scripts, automation, config, documentation | Kept current by `brain-upgrade`. A file the owner edited is kept, and they are asked only when the template changed it too |
+| owned | `.claude/**`, `.agents/skills/**`, `.codex/hooks.json`, `.githooks/**`, `.github/**`, `tests/**`, `.kb-manifest.json`, `.editorconfig`, `.gitattributes`, `.gitignore`, `.npmrc`, `.prettierrc`, `package.json`, `requirements.txt`, `schema.yml`, `ENVIRONMENTS.md`, `LIMITS.md`, `CHANGELOG.md`, `LICENSE` | Workflows and their scripts, automation, config, documentation | Kept current by `brain-upgrade`. A file the owner edited is kept, and they are asked only when the template changed it too |
 | seeded | `content/**`, `README.md` | Starter content and the product page | Copied once with the clone; from then on it belongs to the owner, and upgrades never write it |
 
 The manifest's `exclude` list names files that never ship, even when they sit in a
@@ -116,6 +121,14 @@ a note or anything else that belongs to the base.
   in every commit reachable from HEAD, with the releases each state belongs to.
   `--release` also indexes the staged tree as the release being made; `--check` only
   reports whether the file is current.
+- `dev/build_codex_files.py` — writes the Codex files from the skills: one stub per
+  skill at `.agents/skills/<skill>/SKILL.md` (the source's frontmatter and a pointer to
+  `.claude/skills/<skill>/SKILL.md`) and `.codex/hooks.json`, and deletes any other file
+  under `.agents/skills/`. `--check` writes nothing and fails when a stub or the hook file
+  is stale or missing, when `.agents/skills/` holds a folder or file with no source skill,
+  or when a source frontmatter is not valid YAML, lacks a string `name` or `description`,
+  or loses part of an unquoted description to YAML (a ` #` starts a comment), or when a
+  path it writes runs through a symbolic link. `tests/run_tests.py` runs the check.
 - `dev/release_notes.py X.Y.Z` — prints that version's `CHANGELOG.md` section for the
   GitHub Release notes.
 

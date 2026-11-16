@@ -178,15 +178,18 @@ def main():
     check("brain-upgrade unit tests pass", r.returncode == 0, r.stderr[-3000:])
 
     # Template source only: dev/ (author class) never reaches an instance, and its
-    # check of every tracked file would fail there.
+    # checks of every tracked file and of the Codex files would fail there.
     if DEV.is_dir():
         r = run(DEV / "check_manifest.py", cwd=str(ROOT))
         check("dev/check_manifest.py passes", r.returncode == 0, r.stdout + r.stderr)
+        r = run(DEV / "build_codex_files.py", ["--check"], cwd=str(ROOT))
+        check("dev/build_codex_files.py --check passes", r.returncode == 0, r.stdout + r.stderr)
         r = subprocess.run([sys.executable, "-m", "unittest", "-v"],
                            cwd=str(DEV), capture_output=True, text=True)
         check("dev unit tests pass", r.returncode == 0, r.stderr)
     else:
-        print("SKIP - dev/check_manifest.py (no dev/: not the template source)")
+        print("SKIP - dev/check_manifest.py and dev/build_codex_files.py --check "
+              "(no dev/: not the template source)")
 
     print("---")
     if failures:

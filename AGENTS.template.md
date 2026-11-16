@@ -127,6 +127,8 @@ Each workflow is a skill with a matching slash command:
 - **IMPORT** (`/b:import`) — import a brain-pack bundle from another base: validate, triage collisions, adapt placement to this vault's taxonomy, stamp provenance, update indexes, write a report; at most 2 prompts per run.
 - **UPGRADE** (`/b:upgrade`) — pull a newer template release into this base: dry run with the changelog, one review table, apply, one commit; adopts a base without `.kb-template.json` first. Never touches notes in `content/`.
 
+An agent without slash commands, such as Codex, treats `/b:<name>` as the `brain-<name>` skill: `/b:ingest` is `brain-ingest`.
+
 ## Safety Rules
 
 - Never modify `.obsidian/` or `.claude/` internals unless the task is about them.

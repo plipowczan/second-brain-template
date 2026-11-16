@@ -1,6 +1,6 @@
 ---
 name: brain-export
-description: Use when user says "export [[Note]] ...", "export #tag", "export FOLDER", "export --public ...", "wyeksportuj notatki", "create a bundle/pack of notes". Packs selected wiki notes into a portable zip bundle (manifest + notes) importable into any other brain via /import. Two privacy levels - me (default, verbatim) and --public (redaction pipeline for bundles leaving your trust boundary). Read-only for the vault (public level writes one local report).
+description: 'Use when user says "export [[Note]] ...", "export #tag", "export FOLDER", "export --public ...", "wyeksportuj notatki", "create a bundle/pack of notes". Packs selected wiki notes into a portable zip bundle (manifest + notes) importable into any other brain via /b:import. Two privacy levels - me (default, verbatim) and --public (redaction pipeline for bundles leaving your trust boundary). Read-only for the vault (public level writes one local report).'
 ---
 
 # EXPORT

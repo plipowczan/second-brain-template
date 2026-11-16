@@ -8,6 +8,40 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
 ## [Unreleased]
 
 ### Added
+- **Codex gets the skills and the session hook.** Codex reads `AGENTS.md`, but not
+  `.claude/skills/` or `.claude/settings.json`, so in Codex a base had its instructions
+  and none of its workflows. Now each skill has a stub at
+  `.agents/skills/<skill>/SKILL.md`, where Codex looks: the skill's frontmatter, unchanged,
+  and one instruction, to read and follow `.claude/skills/<skill>/SKILL.md`. Each skill
+  keeps one text, for both agents, and its scripts stay where they are.
+  `.codex/hooks.json` runs the same `.claude/hooks/load_vault_map.py` as Claude Code, by a
+  relative path, so the vault map loads in the root folder of any clone, and of a base
+  downloaded as a ZIP. In Codex, start a skill by name, `$brain-ingest` for `/b:ingest`,
+  or pick it from `/skills`. `ENVIRONMENTS.md` has the details, including what was tried
+  with the `brain-research*` skills, which Codex runs with its own subagents and question
+  form. Claude Code does not read the new files. The template's own tests fail when a stub or the hook file is out of
+  date; in a base, `tests/run_tests.py` only names that check in its SKIP line.
+
+  Existing bases: `/b:upgrade` adds one stub per skill and `.codex/hooks.json`, which
+  Claude Code does not read. Keep them even if you never use Codex: deleting them brings
+  back a `restore?` row at every upgrade. To use Codex, open the base's root folder in it,
+  trust the project and approve the hook in `/hooks`, once per clone. After you add a
+  skill or edit a skill's description, edit its stub by hand (`ENVIRONMENTS.md` shows the
+  file); an edit to a skill's body needs nothing. `AGENTS.template.md` now tells an agent
+  without slash commands to read `/b:<name>` as the `brain-<name>` skill; your `AGENTS.md`
+  gets that sentence only when you re-render it. If you deleted a template skill, the
+  upgrade adds its stub anyway, and the stub tells Codex the skill was removed: delete
+  `.agents/skills/<skill>/` after the upgrade and commit.
+
+  If you ran Codex's `/import` in this base, clean up before the upgrade, or it stops on
+  conflicts. First copy `.agents/` and `.codex/` to a folder outside the base, and carry
+  any edit you made there over to `.claude/skills/<skill>/SKILL.md`,
+  `.claude/settings.json` or a skill of your own. Then delete `.agents/skills/<skill>/`
+  for each template skill and `.codex/hooks.json` (required), and every
+  `.agents/skills/source-command-*`, `.codex/hooks/` and `.codex/agents/` (advised: the
+  wrappers double the skill list and the rest is broken). If that output was committed,
+  delete it with `git rm -r` and commit the deletion. Keep your own skills under
+  `.agents/skills/`: the upgrade leaves them alone.
 - **`/b:watch`: a recurring status check for tool notes.** A tool note goes out of date
   without anyone noticing: the project ships a rewrite, gets archived, renamed or
   relicensed. `/b:watch` (the `brain-watch` skill) checks every `type: tool` note in two
@@ -45,6 +79,18 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
   Existing bases: nothing to do; `/b:upgrade` brings the new skill. `content/_privacy.md`
   is yours, so its starter text is unchanged in your base: names that must not even be
   committed go in `content/_privacy.local.md`, under a `## Always cut` heading.
+
+### Fixed
+- **Two skill descriptions are read whole again.** In `brain-export`, an unquoted ` #`
+  started a YAML comment, so the skill list showed 49 of the description's 452
+  characters. In `brain-ingest`, a `: ` made the frontmatter invalid YAML, which some
+  parsers repair and others reject. Both descriptions are now quoted, with the same text.
+  The `brain-export` and `brain-import` descriptions also name the template's commands,
+  `/b:import` and `/b:export`, instead of `/import` and `/export`: in Codex, `/import` is
+  the command that converts a Claude Code project.
+
+  Existing bases: nothing to do; `/b:upgrade` brings the fix. If you edited one of these
+  three `SKILL.md` files, the upgrade asks what to keep.
 
 ### Security
 - **`/b:watch` writes what web pages say as text, not as markup.** The status box is
