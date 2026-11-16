@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python .claude/hooks/load_vault_map.py"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -16,6 +16,8 @@
     },
     "owned": [
       ".claude/**",
+      ".agents/skills/**",
+      ".codex/hooks.json",
       ".githooks/**",
       ".github/**",
       "tests/**",

@@ -103,8 +103,8 @@ with `ALL PASS`.
 
 ## 3. Manifest and Codex files (D3, D5, D7)
 
-- [ ] 3.1 Add `.agents/skills/**` and `.codex/hooks.json` to `owned` in `.kb-manifest.json`.
-- [ ] 3.2 Run the generator. Stage `.kb-manifest.json`, `.agents/skills/` and
+- [x] 3.1 Add `.agents/skills/**` and `.codex/hooks.json` to `owned` in `.kb-manifest.json`.
+- [x] 3.2 Run the generator. Stage `.kb-manifest.json`, `.agents/skills/` and
   `.codex/hooks.json` by name and commit them together, with the `Added` entry in
   `CHANGELOG.md`. Done when the check exits 0, `python dev/check_manifest.py` passes, and
   `git status` shows nothing else under `.agents/` or `.codex/`.
