@@ -2,23 +2,15 @@
 
 ### Requirement: Codex files are template-owned
 
-The owned class SHALL cover `.agents/**` and `.codex/**`. The generated skill copies and
-the Codex hook SHALL reach a new base with the clone and an existing base through
-brain-upgrade, like any owned file. Paths in those folders that no template version
-shipped SHALL stay the base's own.
+The owned class SHALL cover `.agents/skills/**` and `.codex/hooks.json`, and no other path
+under `.agents/` or `.codex/`. The generated skill stubs and `.codex/hooks.json` SHALL
+reach a new base with the clone and an existing base through `brain-upgrade`, like any
+owned file.
 
 #### Scenario: Existing base upgrades to the release that adds them
 - **WHEN** a base on an earlier release runs `/b:upgrade` to the release that adds `.agents/skills/` and `.codex/hooks.json`
 - **THEN** the plan adds them as new template files, and nothing under `content/` changes
 
-#### Scenario: The base's own Codex skill
-- **WHEN** a base has `.agents/skills/my-skill/SKILL.md`, a path no template version shipped
-- **THEN** brain-upgrade neither changes nor deletes it
-
-#### Scenario: A base that ran Codex's migration
-- **WHEN** a base holds untracked migration output at the template's new paths, and the owner deletes it as the changelog entry says, keeping an own `.agents/skills/my-skill/`
-- **THEN** `/b:upgrade` applies and commits, every copy under `.agents/skills/` equals the template's, and `my-skill` is unchanged
-
-#### Scenario: Migration output in the template source
-- **WHEN** a file under `.agents/skills/` that the generator did not write exists in the template checkout, tracked or not
-- **THEN** the generator's check exits non-zero and names it, so it cannot be committed by accident
+#### Scenario: Another Codex file is committed in the template
+- **WHEN** a contributor commits `.codex/config.toml` or `.codex/agents/web-search-agent.toml` to the template
+- **THEN** `dev/check_manifest.py` fails and names the file, because it matches no class

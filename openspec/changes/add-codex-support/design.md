@@ -4,85 +4,98 @@
 
 Claude Code reads skills from `.claude/skills/<name>/SKILL.md`, slash commands from
 `.claude/commands/`, and its session hook from `.claude/settings.json`, which runs
-`python "$CLAUDE_PROJECT_DIR/.claude/hooks/load_vault_map.py"`. Codex reads `AGENTS.md`
-and looks for skills and hooks elsewhere (D2, D5). Today the template ships only
-`AGENTS.md` for it.
+`python "$CLAUDE_PROJECT_DIR/.claude/hooks/load_vault_map.py"`. The hook prints the vault
+map (`content/_indexes/vault-map.md`, the index of the base's notes) into the session.
+Codex reads `AGENTS.md` and looks for skills and hooks elsewhere (D2, D5). Today the
+template ships only one file for Codex: `AGENTS.template.md`, which onboarding renders into
+`AGENTS.md`.
 
-What exists, checked on 2026-11-09 in the maintainer's checkout (untracked, created by
-Codex's migration on 2026-10-15):
+The migration output (see the proposal's Why), checked on 2026-11-09 in the maintainer's
+checkout of this repository. That checkout is not the maintainer's own base, which is the
+separate `brain` repository.
 
 | Path | Content | State |
 |------|---------|-------|
 | `.agents/skills/brain-*`, `excalidraw-diagram` | 20 copies of the skills, scripts and tests included | Every `.claude` became `.Codex` and every `CLAUDE` became `AGENTS` or `Codex`: script paths that exist nowhere, `brain-onboard` renders `AGENTS.md` twice and looks for `Codex.template.md`. Stale since PR #14: `brain-upgrade` still says `plan --source`, two test files missing. |
 | `.agents/skills/source-command-b-*` | 19 skills of one line each: "Use the `brain-qa` skill …" | Wrappers of `.claude/commands/b/*.md`, which are already one-line pointers to a skill. |
-| `.codex/hooks.json` | SessionStart runs `python '<absolute path of the checkout>\.codex\hooks\load_vault_map.py'` | Absolute path: works in this one folder only. |
+| `.codex/hooks.json` | SessionStart runs `python '<absolute path of the checkout>\.codex\hooks\load_vault_map.py'` | Absolute path: works in this one folder only. Otherwise the same shape as `.claude/settings.json`, with no matcher. |
 | `.codex/hooks/load_vault_map.py` | Byte-identical to `.claude/hooks/load_vault_map.py` | A second copy of the same script. |
 | `.codex/agents/web-search-agent.toml` | `.claude/agents/web-search-agent.md` converted | Points at `.Codex/agents/web-search-modules/`. |
 
-Facts about the skills that shape the design:
+Facts about the skills that shape the design, checked on `main` at `08fa2c1` on
+2026-11-16:
 
-- Every command in a `SKILL.md` calls its script by the repository-root path
+- There are 21 skills; `brain-watch` is the newest. Every command in a `SKILL.md` calls
+  its script by the repository-root path
   (`python .claude/skills/brain-lint/scripts/lint_scan.py`). Those paths exist in every
-  base, so a copy elsewhere can call the same scripts.
-- A few descriptive lines name a script relative to the skill (`scripts/bundle.py` in the
-  `brain-export` table, `scripts/build_indexes.py` and `scripts/upgrade.py` in prose).
-- Only `excalidraw-diagram` reads files next to its `SKILL.md`: `README.md` and three
-  Markdown files under `references/`. It runs its renderer from
-  `.claude/skills/excalidraw-diagram/references`, a repository-root path.
-- 22 lines in the skills mention `CLAUDE.md`. In a base, `CLAUDE.md` exists and is a
-  pointer to `AGENTS.md`, so the mentions hold for Codex too. In `brain-onboard` and
-  `brain-upgrade` `CLAUDE.md` means that very file, which must be rendered.
-- Frontmatter: all 20 skills have `name` and `description`; the five `brain-research*`
-  skills also have `allowed-tools` and `user-invocable`.
+  base.
+- Some prose names a file relative to the skill's folder (`scripts/bundle.py` in
+  `brain-export`, `references/color-palette.md` in `excalidraw-diagram`). Claude Code
+  reads such a path against the skill's folder, which it gives the agent as the skill's
+  base directory.
+- Several lines mention `CLAUDE.md`. In a base, `CLAUDE.md` exists and points to
+  `AGENTS.md`, so the mentions hold for Codex too. In `brain-onboard` and `brain-upgrade`,
+  `CLAUDE.md` means the file itself, which must be rendered.
+- Every skill has `name` and `description` in its frontmatter; the five `brain-research*`
+  skills also have `allowed-tools` and `user-invocable`. Parsed with PyYAML, two
+  frontmatters are broken (D4).
+- Skill text names the `/b:*` commands, and `AGENTS.template.md` lists the workflows by
+  command only.
 
 ## Goals / Non-Goals
 
 **Goals:**
 
-- A Codex user of a base gets the same 20 skills, in the same version as Claude Code.
-- One place to edit a skill. A stale copy fails CI before it can ship.
-- The session hook works in every clone, wherever it lives.
-- What the migration left in the maintainer's checkout is replaced, not shipped.
+- An owner who works in Codex gets every template skill and reads the same skill text as
+  in Claude Code.
+- One place to edit a skill. A stale Codex file fails CI before it can ship.
+- The session hook works in the root of every clone, wherever the clone lives.
+- The migration output in the maintainer's checkout is replaced, not shipped.
 
 **Non-Goals:**
 
 - Codex agents converted from `.claude/agents/`.
 - Native files for Copilot, Cursor, Antigravity.
-- Regenerating copies inside a base.
+- Regenerating Codex files inside a base.
 - Rewriting skills for Codex's tool names.
 
 ## Decisions
 
-### D1. The copies are generated, by an author tool in `dev/`
+### D1. The Codex files are generated, by an author tool in `dev/`
 
-`dev/build_codex_skills.py` writes `.agents/skills/` from `.claude/skills/`. Like
-`dev/build_known_hashes.py`, it has a `--check` mode that writes nothing and exits
-non-zero with the paths that differ. `tests/run_tests.py` runs the check where `dev/`
-exists, next to `dev/check_manifest.py`, so the `Tests` workflow runs it on Ubuntu and
-Windows for every pull request.
+`dev/build_codex_files.py` (the generator) writes the stubs under `.agents/skills/` (D3)
+and `.codex/hooks.json` (D5). Like `dev/build_known_hashes.py`, it has a `--check` mode
+(the check) that writes nothing and exits non-zero with the paths that differ. It is
+built on the same `kbtemplate` module as `dev/check_manifest.py`: the manifest decides
+which skills ship, and files are compared the way the stamp hashes compare them
+(`kbtemplate.content_hash`, which ignores line endings). It parses frontmatter with
+PyYAML, which `requirements.txt` already lists and CI installs. `dev/` never ships, so no
+base needs the generator or PyYAML for it.
+
+`tests/run_tests.py` runs the check where `dev/` exists, next to `dev/check_manifest.py`,
+so the `Tests` workflow runs it on Linux and Windows for every pull request.
 
 The check fails when:
 
-- a copy differs from its source (compared after normalising line endings, like the
-  stamp hashes, so a Windows checkout does not fail);
-- a skill under `.claude/skills/` has no copy;
-- `.agents/skills/` holds a directory or file with no source (this catches the
-  `source-command-*` wrappers and any leftover file of the migration);
-- a source `SKILL.md` names a non-Markdown file of its skill by a relative path
-  (`scripts/…`, `references/…`) without the `.claude/skills/<skill>/` prefix (D3). A bare
-  file name with no folder (`render.py` in `brain-onboard`, `yt_fetch.py` in
-  `brain-ingest`, `lint_links.py` in `brain-lint`) is a name, not a path, and passes: it
-  points at no folder the copy lacks, and the command that runs the script carries the
-  full path;
-- a source frontmatter is not valid YAML, or its `name` or `description` is outside
-  Codex's limits (D4);
-- `.codex/hooks.json` holds an absolute path or a command other than the one in D5.
+- a stub or `.codex/hooks.json` differs from what the generator would write, or is
+  missing;
+- `.agents/skills/` holds a directory or file with no source skill (this catches the
+  `source-command-*` wrappers and any other leftover of the migration);
+- a source frontmatter is not valid YAML, lacks a string `name` or `description`, or YAML
+  reads less of the description than the file holds (D4).
 
-*Alternatives considered.* Symlinks from `.agents/skills` to `.claude/skills`: git on
-Windows checks them out as small text files unless symlinks are enabled, and "Download
-ZIP" drops them, while the README promises a base works from a ZIP. A config key that
-points Codex at `.claude/skills/`: see D2. A copy step in the release process only:
-copies would drift between releases and nothing would say so.
+Write mode fails on the same frontmatter errors and then writes nothing. Otherwise it
+writes every stub and the hook, and deletes files under `.agents/skills/` that have no
+source, so one run leaves the check passing.
+
+*Alternatives considered.*
+
+- Symlinks from `.agents/skills` to `.claude/skills`: git on Windows checks them out as
+  small text files unless symlinks are enabled, and "Download ZIP" drops them, while the
+  README promises a base works from a ZIP.
+- A config key that points Codex at `.claude/skills/`: none exists (D2).
+- A copy step in the release process only: the files would drift between releases and
+  no check would report it.
 
 ### D2. Where Codex looks: `.agents/skills/` in the repository
 
@@ -93,211 +106,351 @@ redirects to `learn.chatgpt.com/docs/*`) and the `openai/codex` source at `0598a
 - Codex scans `.agents/skills/` in every folder from the project root (found by `.git`)
   down to the session's folder, plus `~/.agents/skills/` and the system locations
   ([build-skills](https://learn.chatgpt.com/docs/build-skills)).
-- It does not read `.claude/skills/`, and no `config.toml` key adds a skill folder. The
-  only extra-root mechanism is an app-server call for client integrators.
-- A project `.codex/skills/` also works, but only the source shows it, so the template
-  uses the documented `.agents/skills/`.
-- Repository skills load without the project trust that hooks need (source only).
+- It does not read `.claude/skills/`, and no `config.toml` key adds a skill folder. Only
+  Codex's app-server API, meant for programs that embed Codex, can add another folder.
+- A project `.codex/skills/` also works, but only the Codex source shows it, so the
+  template uses the documented `.agents/skills/`.
+- Repository skills load without the project trust that hooks need (Codex source; the
+  Codex docs do not say).
 
-So a copy in `.agents/skills/` is the only way, short of symlinks (D1).
+So a file in `.agents/skills/` is the only documented way, short of symlinks (D1).
 
-### D3. A copy holds what the agent reads, not what it runs
+A base from "Download ZIP" has no `.git`. The design assumes that Codex then treats the
+session's folder as the project root, so a session started in the base root finds
+`.agents/skills/`. Neither the Codex docs nor the check above settle it; task 0.3 tries
+it. If it fails, `ENVIRONMENTS.md` tells the owner of a ZIP base to run `git init` once.
 
-For each skill, the copy holds `SKILL.md` and every other `*.md` file of the skill, at the
-same relative path, byte for byte. Today that is 20 `SKILL.md` files plus the
-`excalidraw-diagram` `README.md` and its three `references/*.md`. No scripts, tests,
-`known-hashes.json` or renderer: the skills already call them by their path under
-`.claude/skills/`, so one copy of the code serves both agents and its tests run once.
+### D3. A stub per skill points at the source
 
-The few relative mentions of scripts (`scripts/bundle.py` in `brain-export`,
-`scripts/build_indexes.py` in `brain-reindex`, `scripts/upgrade.py` in `brain-upgrade`)
-become repository-root paths in the source skills. They would mislead a Codex agent
-reading the copy, which has no `scripts/` folder. The generator's check then keeps it so.
-Bare file names in prose (`render.py`, `yt_fetch.py`, `lint_links.py`, `bundle.py`) stay
-as they are; the check reads only mentions with a folder (D1), so these three skills are
-the whole source edit.
+For each skill that ships, the generator writes one file, `.agents/skills/<skill>/SKILL.md`
+(a stub):
 
-*Alternative considered.* Copy the whole skill folder: 40-odd code files twice in every
-base, two copies of each script that an owner can edit apart, and `known-hashes.json`
-(the history index, the largest file in the template) twice.
+```markdown
+---
+<the source's frontmatter lines, unchanged>
+---
 
-### D4. No text is rewritten, frontmatter included
+This skill's instructions are in `.claude/skills/<skill>/SKILL.md`. Read that file and
+follow it. Its folder, `.claude/skills/<skill>/`, is this skill's base directory.
+```
 
-The copy equals its source. No `CLAUDE.md` → `AGENTS.md`, no `.claude` → anything. The
-migration shows the cost: one blind replacement broke onboarding and every script call.
-The mentions of `CLAUDE.md` are true in a base, which has both files.
+Codex lists the skill and picks it by its frontmatter, as for any skill. When the skill
+starts, the agent reads the source file, which is the text Claude Code reads. A relative
+path in it resolves against the same folder in both agents. Nothing else is written under
+`.agents/skills/<skill>/`.
 
-Frontmatter stays as it is too: Codex ignores keys it does not know (`allowed-tools`,
-`user-invocable`) without a warning. It needs a non-empty `description`, a `name` of at
-most 64 characters, and shows the model at most 1024 characters of a description. The 20
-skills have names of 8–25 characters and descriptions of 49–429, about 5,000 characters
-together, inside the catalog budget Codex documents (2% of the context window, or 8,000
-characters).
+What this buys:
 
-One source frontmatter is not valid YAML: the `brain-ingest` description contains an
-unquoted `: `. Codex's parser repairs such a line (it quotes a scalar that holds `: `), and
-Claude Code reads it, but the copies should not lean on a repair heuristic. Task 1.1
-quotes that description in the source, and the check (D1) parses every frontmatter as
-YAML and checks `name` and `description` against Codex's limits.
+- **One body per skill.** An owner's edit to a skill reaches both agents. An upgrade shows
+  a skill change once, not once per copy.
+- **No source edits for Codex.** Scripts, `references/` and relative mentions stay where
+  they are; no copy lacks them.
+- **Small Codex files.** A stub changes only when its skill's frontmatter changes.
 
-Claude Code tool names in skill text (`AskUserQuestion`, `Task`) stay. A Codex agent asks
-in the chat where a skill says to use `AskUserQuestion`. The `brain-research*` skills,
-which fan out to parallel agents, are best effort in Codex, as they already are in tools
-without web search.
+What it costs:
 
-### D5. The session hook runs the Claude Code hook script, by a relative path
-
-What Codex offers (docs, [hooks](https://learn.chatgpt.com/docs/hooks), and source):
-
-- `<repo>/.codex/hooks.json` with the same JSON shape as Claude Code's `hooks` block. Hooks
-  are on by default; the old `codex_hooks` feature flag is an alias that is no longer
-  needed.
-- The command runs in the session's folder. There is no project-folder variable like
-  `$CLAUDE_PROJECT_DIR`; stdin carries JSON with `cwd`.
-- On Windows the command runs in PowerShell (`pwsh`, else Windows PowerShell), and falls
-  back to `cmd.exe /C`. `commandWindows` can override it.
-- Plain stdout of a SessionStart hook becomes context, up to `additionalContextLimit`
-  tokens (default 2,500). Above that, Codex writes the output to a temporary file and keeps
-  its head and tail.
-- A project hook runs only once the user trusts the project **and** approves the hook in
-  `/hooks` (Settings → Hooks in the app). The approval is stored per absolute path of
-  `hooks.json`, so every clone approves once. A change to the command string asks again;
-  a change to the script does not.
-
-**Decision.** `.codex/hooks.json` holds one SessionStart hook (matcher
-`startup|resume|clear|compact`) whose command is
-`python .claude/hooks/load_vault_map.py`:
-
-- **No absolute path, no second script.** It runs the file Claude Code runs. The script
-  takes `$CLAUDE_PROJECT_DIR` when set and the current folder otherwise, which in Codex
-  is the base root, so it needs no change.
-- **Shell-agnostic.** A relative path is the one form that bash, PowerShell, Windows
-  PowerShell and cmd all read the same way, so no `commandWindows` is needed. `python` is
-  the interpreter `.claude/settings.json` already uses.
-- **Works without git.** It needs no git, so it works in a base from "Download ZIP".
-- **Stable.** The command never needs to change, so owners approve it once per clone.
-
-Its limit: it works only when Codex is started in the base root. Started in a
-subfolder, the hook fails, which Codex reports without blocking the session, and
-`AGENTS.md` still tells the agent to read the vault map first. Every skill already runs
-its scripts from the base root, so this is the same rule as before. `ENVIRONMENTS.md`
-says: open the base's root folder in Codex, trust it, approve the hook in `/hooks`.
+- **One more file read** each time a skill starts in Codex.
+- **It relies on the agent following the pointer**, which CI cannot test. Codex's own
+  migration relies on the same thing: each of its wrapper skills is one line, "Use the
+  `brain-qa` skill …". Task 0.3 tries a stub in a real session before any code is
+  written.
+- **The frontmatter is in two places.** An owner who edits a description, or adds a
+  skill, writes the stub by hand (D8).
 
 *Alternatives considered.*
 
-- The pattern in Codex's docs,
+- **A full copy of each skill's Markdown** (the first version of this design): the copy
+  holds `SKILL.md` and the skill's other `*.md` files, byte for byte, and Codex gets the
+  instructions without a second read. But in a base the copies drift. An owner's edit to
+  a skill never reaches Codex unless they copy it by hand. An upgrade shows each skill
+  change twice, and a hand copy means two conflicts for every later change. The copies
+  also lack the skill's scripts and other files, so relative mentions must become
+  repository-root paths, and the check needs a rule for them. This is the fallback if
+  task 0.3 shows that Codex does not follow a stub; that rule then needs its own design
+  and review.
+- **A copy of the whole skill folder:** every script twice in every base, two copies an
+  owner can edit separately, and `known-hashes.json`, the largest file in the template,
+  twice.
+
+### D4. No text is rewritten; two frontmatters are fixed at the source
+
+A stub's frontmatter is the source's, unchanged: no `CLAUDE.md` → `AGENTS.md`, no
+`.claude` → anything. The migration shows the cost of a rewrite: one blind replacement
+broke onboarding and every script call. The mentions of `CLAUDE.md` are true in a base,
+which has both files.
+
+Codex reads `name` and `description` and ignores keys it does not know (`allowed-tools`,
+`user-invocable`) without a warning. It needs a non-empty `description` and a `name` of
+at most 64 characters, and it shows the model at most 1024 characters of a description.
+On `main` the longest name has 25 characters and the longest description 452, so the
+check does not test these limits. All descriptions together hold about 5,200 characters,
+inside the budget the Codex docs give the skill list (2% of the context window, or 8,000
+characters).
+
+Parsed with PyYAML on `main`, two source frontmatters are broken:
+
+- **`brain-export`:** the unquoted description contains `"export #tag"`. In YAML, a space
+  before `#` starts a comment, so YAML reads 49 of the description's 452 characters.
+  Claude Code's skill list shows the cut text today, and Codex would too.
+- **`brain-ingest`:** the description contains `touch: shows`, which is not valid YAML.
+  Codex's parser repairs such a line and Claude Code reads it, but the fix should not
+  depend on a repair.
+
+Task 2.1 quotes both descriptions. The check then keeps every frontmatter whole: it fails
+when YAML reads less of a description than the line holds.
+
+Two descriptions also tell the user to run `/import` and `/export` (`brain-export`,
+`brain-import`). In Codex, `/import` is the migration command. Task 2.2 writes
+`/b:import` and `/b:export`, the names of the template's own commands.
+
+Claude Code tool names in skill text stay. Where a skill says to use `AskUserQuestion`,
+Codex has no such tool, and the agent is expected to ask in the chat. The five
+`brain-research*` skills start parallel agents with Claude Code's `Task` tool, which Codex
+does not have. Task 6.4 runs one of them in Codex and records what happens. Until then
+the template does not promise them in Codex, and `ENVIRONMENTS.md` says so.
+
+### D5. The session hook runs the Claude Code hook script, by a relative path
+
+What Codex offers (Codex docs, [hooks](https://learn.chatgpt.com/docs/hooks), and Codex
+source):
+
+- `<repo>/.codex/hooks.json` with the same JSON shape as the `hooks` block of
+  `.claude/settings.json`. Hooks are on by default; the old `codex_hooks` feature flag
+  still works but is no longer needed.
+- The command runs in the session's folder. There is no project-folder variable like
+  `$CLAUDE_PROJECT_DIR`; stdin carries JSON with `cwd`.
+- On Windows the command runs in PowerShell (`pwsh`, else Windows PowerShell); when
+  neither is found, in `cmd.exe /C`. `commandWindows` can override it.
+- Plain stdout of a SessionStart hook is added to the model's context, up to
+  `additionalContextLimit` tokens (default 2,500). Above that, Codex writes the output to
+  a temporary file and keeps its head and tail in context.
+- A project hook runs only once the owner trusts the project **and** approves the hook in
+  `/hooks` (Settings → Hooks in the app). Codex stores the approval per absolute path of
+  `hooks.json`, so the owner approves once per clone. Codex asks again when the command
+  string changes, not when the script changes.
+
+**Decision.** The generator writes `.codex/hooks.json` with exactly this content:
+
+```json
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python .claude/hooks/load_vault_map.py"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+It has the shape of `.claude/settings.json` and of the file Codex's own migration wrote.
+It has no matcher, so it runs at every kind of session start.
+
+- **No absolute path, no second script.** It runs the file Claude Code runs. The script
+  takes `$CLAUDE_PROJECT_DIR` when set and the current folder otherwise, which is the base
+  root when Codex starts there, so the script needs no change.
+- **Shell-agnostic.** A relative path is the one form that bash, PowerShell, Windows
+  PowerShell and cmd all read the same way, so no `commandWindows` is needed. `python` is
+  the interpreter `.claude/settings.json` already uses.
+- **Works without git**, so a base from "Download ZIP" runs it.
+- **Stable.** The command does not depend on where the clone lives, so the owner approves
+  it once per clone.
+
+Its limit: it works only when Codex starts in the base root. When Codex starts in a
+subfolder, the hook fails; Codex reports the failure and the session continues. `AGENTS.md`
+still tells the agent to read the vault map first. Every skill already runs its scripts
+from the base root, so this is the same rule as before. `ENVIRONMENTS.md` says: open the
+base's root folder in Codex, trust it, approve the hook in `/hooks`.
+
+An owner may add hooks of their own to this file. It is an owned file: the upgrade keeps
+the owner's edit and asks only if the template changes the file too, which this design
+does not plan.
+
+*Alternatives considered.*
+
+- The pattern in the Codex docs,
   `python "$(git rev-parse --show-toplevel)/.claude/hooks/load_vault_map.py"`, works from
   a subfolder. But it needs git, breaks under the `cmd.exe` fallback, and fails in a ZIP
   base.
-- What `/import` writes: an absolute path, the very defect of the migration output.
+- What `/import` writes: an absolute path, the defect of the migration output.
 - A copy of the script in `.codex/hooks/`: a second copy to keep equal, for no gain.
 
 ### D6. No wrappers for the slash commands
 
 `.claude/commands/b/*.md` are one-line pointers: "Use the `brain-qa` skill …". A wrapper
-skill per command doubles the skill list Codex shows and adds nothing. In Codex the user
-starts a skill by name: Codex starts it when the message mentions it as `$brain-ingest`,
-or from the `/skills` list; skills do not become `/name` commands. Custom prompts, Codex's
-old equivalent of commands, were deprecated in `0.117.0` and removed in `0.118.0`
-(2026-03-31), and they were never repository-scoped, so there is nothing else to ship.
-`ENVIRONMENTS.md` and the README's "Works beyond Claude Code" section say this, with
-`/b:ingest` → `$brain-ingest` as the example.
+skill per command doubles the skill list Codex shows and adds nothing. A stub (D3) is not
+such a wrapper: there is one per skill, under the skill's own name, so the list does not
+grow.
 
-### D7. The Codex paths are owned files
+In Codex the owner starts a skill by name: Codex starts it when the message mentions it
+as `$brain-ingest`, or from the `/skills` list; skills do not become `/name` commands.
+Custom prompts, Codex's old equivalent of commands, were deprecated in `0.117.0` and
+removed in `0.118.0` (2026-03-31), and they were never repository-scoped, so there is
+nothing else to ship.
 
-`.agents/**` and `.codex/**` join the owned class in `.kb-manifest.json`. They ship with
-the clone and reach an existing base with `/b:upgrade`, and the owner's edits are kept
-like in any owned file. The template-manifest spec already says that class patterns do
-not claim a base's own files, so an owner's `.agents/skills/my-skill/` or `.agents/rules/`
-(Antigravity) stays theirs.
+Skill text keeps naming the `/b:*` commands. `AGENTS.template.md` gets one sentence under
+"Workflows": an agent without slash commands treats `/b:<name>` as the `brain-<name>`
+skill. `AGENTS.md` reaches the Codex agent in every session. For the owner,
+`ENVIRONMENTS.md` and the README's "Works beyond Claude Code" section give `/b:ingest` →
+`$brain-ingest` as the example.
 
-`dev/check_manifest.py` needs no change: the new tracked files match the owned pattern.
-`known-hashes.json` picks them up at the release, as for any new file.
+### D7. Two narrow owned patterns
+
+`.agents/skills/**` and `.codex/hooks.json` join the owned class in `.kb-manifest.json`.
+They ship with the clone and reach an existing base with `/b:upgrade`, and the owner's
+edits are kept as in any owned file. The template-manifest spec already says that class
+patterns do not claim a base's own files, so an owner's `.agents/skills/my-skill/` stays
+theirs.
+
+Any other file under `.agents/` or `.codex/` matches no class, so `dev/check_manifest.py`
+fails if it is committed. That covers the migration's `.codex/hooks/` and
+`.codex/agents/`, a personal `.codex/config.toml`, and Antigravity's `.agents/rules/`. A
+future Codex file the template wants to ship needs one more pattern, and the manifest
+check asks for it.
+
+`dev/check_manifest.py` needs no change. `known-hashes.json` picks the new files up at the
+release, as for any new file.
+
+*Alternative considered.* `.agents/**` and `.codex/**`, with the check failing on
+anything under them that the generator does not write: more code to police paths the
+template does not ship, when the manifest check already does it.
 
 ### D8. What an existing base gets
 
-At the upgrade to the release with this change, the plan adds about 25 files under
-`.agents/skills/` and `.codex/`. Nothing under `content/`, no rendered file. For an owner
-who uses only Claude Code nothing changes.
+At the upgrade to the release with this change, the plan adds one stub per template skill
+and `.codex/hooks.json`, and updates the skills whose frontmatter tasks 2.1 and 2.2 fix.
+Nothing under `content/` changes, and no rendered file. `AGENTS.md` gets the sentence from
+D6 only when the owner re-renders it, which `/b:upgrade` offers only for an untouched
+file; the changelog says so.
 
-An owner who edits a skill in `.claude/skills/` and also uses Codex has two copies to keep
-in step, without the generator (it lives in `dev/`, which never ships). The changelog
-entry and `ENVIRONMENTS.md` say so: copy the edited `SKILL.md` to `.agents/skills/` by
-hand. See Open questions.
+What an owner does after that:
 
-A base where the owner already ran Codex's migration has untracked files at the same
-paths. Codex's `/import` (Settings → Import in the app) copies `.claude/skills/` to
-`.agents/skills/` and skips any target that already exists. It turns `.claude/commands/`
-into `source-command-*` skills, rewrites "Claude" and `CLAUDE.md` in each `SKILL.md`, and
-writes `.codex/hooks.json` with absolute paths when that file is missing. Once the
-template ships `.agents/skills/` and `.codex/hooks.json`, a later `/import` leaves them
-alone. It still adds the wrapper skills, so the docs advise against running it in a base.
-An owner who ran it before upgrading has local files at the template's new paths, and the
-upgrade does not get past them on its own. The plan marks each one `conflict` ("new
-template file, but this base has its own file here"), and `apply` refuses any planned
-path with uncommitted work, untracked included (`planner.dirty_paths`), and writes
-nothing. Committing the migration output would not help either: the broken copies would
-then be the owner's own version, which the upgrade keeps or reports as a conflict.
+- **Uses only Claude Code:** nothing. Claude Code does not read the new files. Deleting
+  them is harmless but brings back a "restore?" row for each one at every later upgrade,
+  so `ENVIRONMENTS.md` says to keep them.
+- **Edits a skill's text:** nothing; the stub points at the edited file.
+- **Edits a skill's description, or adds a skill:** writes or edits the stub by hand, as
+  in D3. `ENVIRONMENTS.md` shows the file.
+
+**A base where the owner already ran the migration.** `/import` does five things:
+
+- It copies `.claude/skills/` to `.agents/skills/` and skips any target that already
+  exists.
+- It turns `.claude/commands/` into `source-command-*` skills.
+- It replaces "Claude" and `CLAUDE.md` in each copied `SKILL.md`.
+- It writes `.codex/hooks.json` with an absolute path when that file is missing.
+- It writes `.codex/hooks/` and `.codex/agents/`, as seen in the maintainer's checkout.
+
+Once the template ships stubs and `hooks.json`, a later `/import` leaves them alone. It
+still adds the wrapper skills, so `ENVIRONMENTS.md` advises against running it in a base.
+
+An owner who ran it before upgrading has their own files at the template's new paths. The
+upgrade lists each one as a conflict ("new template file, but this base has its own file
+here") and does not write over untracked work. Committing the migration output does not
+help: the broken copies would then be the owner's own version, which the upgrade keeps or
+reports as a conflict. Choosing "keep" on those rows lets the upgrade finish, but the
+broken copies stay live in Codex.
 
 So the upgrade has one step before it, in the changelog entry and `ENVIRONMENTS.md`:
-delete the migration output at the template's paths, that is `.agents/skills/<skill>/` for
-each of the 20 template skills, every `.agents/skills/source-command-*`, and
-`.codex/hooks.json`. Skills of the owner's own under `.agents/skills/` stay. The rest of
-the migration output (`.codex/hooks/`, `.codex/agents/`) is not in the upgrade's way;
-it is the owner's to delete. Task 6.2 proves the path end to end: after that step the
-upgrade applies and commits, every copy equals the template's, and an own skill is
-untouched.
+
+- **Required:** delete `.agents/skills/<skill>/` for each template skill, and
+  `.codex/hooks.json`. They stand at the template's paths and block the upgrade.
+- **Advised:** delete every `.agents/skills/source-command-*`, `.codex/hooks/` and
+  `.codex/agents/`. They do not block the upgrade, but the wrappers double the skill list
+  (D6) and the rest is broken.
+- The owner's own skills under `.agents/skills/` stay.
+
+Task 6.3 tests this end to end: after that step the upgrade applies and commits, every
+stub equals the template's, and the owner's own skill is untouched.
 
 ### D9. The migration output is deleted first
 
-The untracked `.agents/` and `.codex/` in the maintainer's checkout go before the
-implementation starts (task 0.1), all of it: none of it is reused, the generator writes
-the copies anew. The check from D1 fails on any file under `.agents/skills/` it did not
-write, so leaving them would fail every local test run in that checkout, which is the
-point: an accidental `git add -A` of migration output can no longer pass the tests.
-They were never committed, so there is nothing to revert and nothing in any base.
+Task 0.1 saves a copy of the migration output outside any repository, for task 6.3, and
+then deletes the untracked `.agents/` and `.codex/` folders in the maintainer's checkout.
+Nothing in them is reused; the generator writes new files. Until they are deleted, the
+check fails every local test run in that checkout, because `.agents/skills/` holds files
+with no source or with other content. That is intended: migration output cannot pass the
+tests there. The folders were never committed, so no release contains them.
 
 ## Risks / Trade-offs
 
-- **[Two copies of each `SKILL.md` in every base]** → About 25 small text files. The check
-  keeps them equal in the template. The alternative, symlinks, breaks on Windows and in
-  ZIP downloads.
-- **[Owners who edit a skill and use Codex get drift]** → Said in the changelog and
-  `ENVIRONMENTS.md`. Shipping the generator would fix it; it is an open question.
-- **[Codex's skill or hook format changes]** → The copies are plain Agent Skills files,
-  the hook is one JSON entry; a format change means a new generator rule, in one place.
-  Codex moves fast: custom prompts went from deprecated to removed in five days,
-  the docs moved domain, the hooks flag was renamed. The design leans only on documented
-  parts (`.agents/skills/`, `.codex/hooks.json`, plain stdout), and task 3.3 records the
-  Codex version it was tried with.
+- **[Codex does not follow a stub]** → Task 0.3 tries it before any code. If it fails,
+  the generator writes full copies instead (D3, fallback), and Paweł is asked again.
+- **[The frontmatter is in two places]** → The check keeps the copies equal in the
+  template. In a base, an owner who edits a description writes the stub by hand (D8). A
+  description changes rarely.
+- **[Codex's skill or hook format changes]** → A stub is a plain skill file and the hook
+  is one JSON entry, so a format change means a change to the generator, in one place.
+  Codex's formats change often: custom prompts were deprecated and removed one release
+  apart, the docs moved domain, and the hooks feature flag was replaced. The design leans
+  only on documented parts (`.agents/skills/`, `.codex/hooks.json`, plain stdout), and
+  task 0.3 records the Codex version it was tried with.
+- **[Security: the hook runs code from the base at every session start]** → Codex
+  approves the command string, not the script. A later release that changes
+  `load_vault_map.py` therefore runs at the next session without a new prompt, as the
+  Claude Code hook in `.claude/settings.json` does today. The owner consents to each
+  release when they upgrade, and what this repository tags is what runs ("What instances
+  trust" in `CONTRIBUTING.md`). Only `.codex/hooks.json` ships under `.codex/` (D7), so no
+  other Codex setting reaches a base.
 - **[The hook needs two approvals per clone (project trust, then `/hooks`)]** → Without
-  them only the hook is missing. Skills still load (per the source; the docs don't say),
-  and `AGENTS.md` still points at the vault map. `ENVIRONMENTS.md` names both steps.
-- **[A grown base's vault map exceeds Codex's default hook output limit]** → See Open
-  questions; until then Codex keeps the head and tail and saves the rest to a file.
-- **[Contributor forgets to run the generator]** → CI fails and names the copy; the fix
+  them only the hook is missing. Skills still load (per the Codex source; the Codex docs
+  do not say), and `AGENTS.md` still points at the vault map. `ENVIRONMENTS.md` names both
+  steps.
+- **[A large base's vault map exceeds Codex's default hook output limit]** → See Open
+  Questions. Until that question is settled, Codex keeps the head and tail of the map and
+  writes the output to a file.
+- **[The hook prints another project's map, or garbled text]** → The script prefers
+  `$CLAUDE_PROJECT_DIR` when it is set, so a Codex session started from a shell that
+  inherited it prints that project's map. On Windows the script writes stdout in the
+  system code page, which can garble or fail on characters outside it. Both already hold
+  for Claude Code; they are a separate issue, not part of this change.
+- **[Other tools may read `.agents/skills/` too]** → `ENVIRONMENTS.md` lists Copilot and
+  Cursor as reading `.claude/skills/`. If one of them also reads `.agents/skills/`, every
+  skill shows twice there, once as a stub that leads to the same text. Task 0.4 checks
+  both tools' docs and records the result.
+- **[A contributor forgets to run the generator]** → CI fails and names the file; the fix
   is one command.
-- **[Skills say "Claude"]** → A few lines say "Claude Code" where the agent could be Codex.
-  Harmless for the task; left as is to keep D4 simple.
+- **[Skills say "Claude"]** → A few lines say "Claude Code" where the agent could be
+  Codex. The agent can still follow them; D4 leaves the text unchanged.
 
 ## Migration Plan
 
-1. Implement on a branch, release in a minor version (`0.4.0` or with `0.3.x` if Paweł
-   prefers, nothing breaking).
-2. After the release, `/b:upgrade` brings the copies to existing bases; the
-   `second-brain-demo-recipes` upgrade checks it on a real base.
-3. Rollback: revert the commit in the template; a base reverts its upgrade commit.
+1. Implement on this branch, on top of `main`. Release in a minor version (`0.4.0`), or in
+   the next `0.3.x` patch release if Paweł prefers (Open Questions).
+2. Existing bases get the stubs and the hook with `/b:upgrade`. A base that ran the
+   migration first deletes the paths listed in D8. The changelog's "Existing bases"
+   paragraph says so, together with the rule to edit a stub by hand.
+3. The upgrade of the demo base `second-brain-demo-recipes` checks it on a real base.
+4. Rollback: tags never move, so a defect gets a new patch release. A base reverts its
+   upgrade commit or upgrades to that release.
 
 ## Open Questions
 
-- **Ship the generator to bases?** As a script in `brain-upgrade`, an owner could
-  regenerate after editing a skill. Paweł decided `dev/` for now (2026-11-09). Worth
-  revisiting if course participants on Codex edit skills.
+- **Ship the generator to bases?** If it shipped as a script in `brain-upgrade`, an owner
+  could regenerate the Codex files after editing a skill. Paweł decided on `dev/` for now
+  (2026-11-09). Worth revisiting if owners who use Codex edit skills.
+  *EGM review (2026-11-16):* with stubs (D3), a base needs the generator only when an
+  owner adds a skill or edits a description, and a stub is a short file. Recommendation:
+  keep it in `dev/`.
 - **Version.** Ship in `0.3.x` or wait for `0.4.0`? Nothing depends on it.
+  *EGM review:* `0.3.0` was tagged on 2026-11-13, so the choice is now `0.3.1` or
+  `0.4.0`. This change adds a feature, and `CONTRIBUTING.md` keeps patch releases for
+  defects. Recommendation: `0.4.0`.
 - **Vault map size in Codex.** The hook prints the whole `vault-map.md`. In the
-  maintainer's base it is 22 KB, several times Codex's default limit of 2,500 tokens.
-  `additionalContextLimit` in `.codex/hooks.json` can raise it (the source shows no upper
-  bound). Raise it, and to what, or leave the default and the spill? Claude Code caps hook
-  output too, so the size of the map may deserve its own task.
+  maintainer's own base (the `brain` repository) it is 22 KB, roughly 5,500 to 7,500
+  tokens, two to three times Codex's default limit of 2,500 tokens.
+  `additionalContextLimit` in `.codex/hooks.json` can raise the limit (the Codex source
+  shows no upper bound). Raise it, and to what, or leave the default and the overflow to a
+  file? Claude Code caps hook output too, so the size of the map may deserve its own task.
+  *EGM review:* a new base's map is small, Codex keeps the head and tail of a long one,
+  and `AGENTS.md` tells the agent to read the map file anyway. Recommendation: leave the
+  default (no key in the file), and give the map size its own task.
 - **Start from a subfolder.** Is the base-root rule of D5 acceptable, or should the hook
   use the git-root form and give up ZIP bases and the `cmd.exe` fallback?
+  *EGM review:* no reviewer argued for the git-root form. Recommendation: keep the
+  base-root rule; task 0.3 checks that a session started in `content/` still starts.

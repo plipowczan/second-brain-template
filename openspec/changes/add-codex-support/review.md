@@ -40,3 +40,37 @@ unverified."
 
 The round limit (3) is reached. The implementation, when it lands on this branch, starts
 its own rounds (task 7.1).
+
+## EGM review — 2026-11-16 — reviewed 8b7c574
+
+`/egm:egm-review` (EGM 0.1.0), all five stages in one run: zoom out, comprehension,
+critic (design, structure, style), a second zoom out, implementation readiness. Nine
+fresh-context reviewers; none read this file. The reports and the full traceability
+matrix are kept outside the repository, in the session notes of this review.
+
+The reviewers read the branch, whose base is older than `main`. Checked on `main` at
+`08fa2c1`: `brain-ingest` is invalid YAML there, `brain-export`'s description is cut to 49
+of 452 characters by an unquoted ` #` (on both), there are 21 skills, and `0.3.0` is
+tagged.
+
+| id | sev | finding | outcome |
+|---|---|---|---|
+| A1 | blocker | "Standard library only" in 2.2 contradicts parsing YAML | fixed: PyYAML allowed (D1) |
+| A2 | major | Pointer stubs never weighed; full copies drift in bases, need source edits and a path rule | fixed: a stub per skill (D3); full copy kept as the fallback |
+| A3 | major | The claims CI cannot test come last; ZIP base without `.git` unexplained | fixed: trial in Codex first (tasks 0.2-0.5); assumption in D2 |
+| A4 | major | The check targets the wrong skill and passes the real defect (`brain-export`) | fixed: both frontmatters quoted, one rule "read whole" (D4) |
+| A5 | major | `.codex/**` owned lets stray Codex files ship; the Why overstates the risk | fixed: owned patterns narrowed (D7) |
+| A6 | major | Hook file content open; a bespoke absolute-path detector | fixed: the generator writes the literal file (D5) |
+| A7 | major | Spec does not state the check's rules; four names for one tool; no Purpose | fixed: specs rewritten |
+| A8 | major | Facts measured before `main` moved | fixed: re-based on `main` |
+| A9 | major | Codex agent sees only `/b:*`; `/import` is Codex's migration command | fixed: one `AGENTS.template.md` sentence; two descriptions say `/b:import`, `/b:export` |
+| A10-A16 | major | Migration vs `/import`, "the docs", base-root condition, no security entry, owner workflow, other tools, "best effort", Migration Plan, D8/D9 density | fixed |
+| A17-A19 | major | Task order breaks the tests; no done conditions; generator interface open; 6.2 would install `v0.3.0` (no `--ref HEAD`) and 0.1 deletes its input | fixed: tasks rewritten |
+| A20-A21 | nit | Docs task details, wording, term drift | fixed |
+| R1-R9 | — | Check inside bases; symlink behaviour; precise path rule (moot with stubs); end-state tree and source pointers; closing the open questions now; Non-goals in one file; survey of every tool; hook encoding fix; absolute-path regexes | rejected with reasons in the matrix |
+
+The four open questions stay. Each now carries the review's recommendation: keep the
+generator in `dev/`; release in `0.4.0`; leave the hook output limit at its default;
+keep the base-root rule.
+
+Checks: `openspec validate add-codex-support --strict` — valid; `python dev/check_manifest.py` — ok.
