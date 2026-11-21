@@ -49,6 +49,8 @@ class VttCue:
 
 _VTT_TIME_RE = re.compile(r"^(\d{2}):(\d{2}):(\d{2})\.(\d{3})\s*-->")
 _VTT_TAG_RE = re.compile(r"<[^>]+>")
+# A timestamp inside a cue's text, before a word: YouTube's auto-captions carry them.
+_VTT_INLINE_TIME_RE = re.compile(r"<(?:\d+:)?\d{2}:\d{2}\.\d{3}>")
 
 
 def _vtt_time_to_seconds(h: str, m: str, s: str, ms: str) -> float:
@@ -72,10 +74,13 @@ def parse_vtt(vtt_text: str) -> list[VttCue]:
     """Parse WebVTT into a list of cues. Strips styling tags and timing tags.
 
     YouTube auto-captions roll: each cue repeats the previous cue's last line above the
-    new one, with a 10 ms cue between them that holds only the finished line. Lines a cue
-    repeats from the cue before it are dropped, so each line appears once, at the cue
-    that introduced it; consecutive identical cues coalesce the same way.
+    new one, with a 10 ms cue between them that holds only the finished line. In a file
+    that rolls, recognised by the inline word timestamps only auto-captions carry, lines a
+    cue repeats from the cue before it are dropped, so each line appears once, at the cue
+    that introduced it. Any other track keeps every line: a cue that opens with the
+    previous cue's last line says it again. In both, consecutive identical cues coalesce.
     """
+    rolling = _VTT_INLINE_TIME_RE.search(vtt_text) is not None
     cues: list[VttCue] = []
     prev: list[str] = []
     lines = vtt_text.splitlines()
@@ -97,7 +102,10 @@ def parse_vtt(vtt_text: str) -> list[VttCue]:
             i += 1
         if not text_parts:
             continue
-        new = text_parts[_repeated_lines(prev, text_parts):]
+        if rolling:
+            new = text_parts[_repeated_lines(prev, text_parts):]
+        else:
+            new = [] if " ".join(text_parts) == " ".join(prev) else text_parts
         prev = text_parts
         if new:
             cues.append(VttCue(start=start, text=" ".join(new)))

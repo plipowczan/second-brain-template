@@ -89,8 +89,9 @@ For a source the owner named and accepted in Phase 1, replace `--to VERSION` wit
 `--source SOURCE --allow-repository <repository>`. A folder, a zip or a clone without
 that option is refused, the archive `fetch` saved included.
 
-When the version range has a **BREAKING** entry, an untouched `AGENTS.md` is re-rendered
-by default, because the agent reads it in every session. Add `--rerender` when the owner
+When the release changed `AGENTS.template.md` since the base's `AGENTS.md` was rendered,
+an untouched `AGENTS.md` is re-rendered by default, because the agent reads it in every
+session. Add `--rerender` when the owner
 wants all of `CLAUDE.md`, `AGENTS.md` and `content/WRITING_STYLE.md` refreshed from the
 new templates. Add `--diff <path>` or
 `--diff all` to see changes; the plan is read-only, so re-running it is safe. An
@@ -123,7 +124,11 @@ Show the owner, in one message:
      that was skipped until now starts to run;
    - instruction files: re-render untouched ones? (default no, except `AGENTS.md` when
      the plan says it will be re-rendered: there the default is yes; an edited file is
-     only a proposal either way);
+     only a proposal either way). A file the plan calls **not provably untouched** has no
+     output hash since adoption, so upgrades can only propose. If the owner never edited
+     it, or does not need their edits, offer the way out: copy the plan's
+     `payload/render/<path>` over the file, commit it, and plan again. The file is then
+     current, `apply` records it, and later upgrades re-render it by default;
    - **QUESTION** lines: a value for each new placeholder.
 5. Seeded changes (starter content and `README.md` upstream) as information only.
 
