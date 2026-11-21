@@ -19,6 +19,6 @@ of `design.md` is open to his review in the pull request.
 
 - [x] 3.1 `CHANGELOG.md` under `[Unreleased]`, with an "Existing bases" paragraph per entry
 - [x] 3.2 `python tests/run_tests.py`, `python tests/run_skill_tests.py`, `openspec validate fix-upgrade-replay-findings --strict`
-- [ ] 3.3 Push the branch, open the PR, `Tests` green on Ubuntu and Windows
-- [ ] 3.4 Run the Codex review, record it in `review.md`, act on what holds up
-- [ ] 3.5 Report: PR number, tests and CI, what a `null`-hash base gets and its way out, what stayed unverified
+- [x] 3.3 Push the branch, open the PR, `Tests` green on Ubuntu and Windows
+- [x] 3.4 Run the Codex review, record it in `review.md`, act on what holds up
+- [x] 3.5 Report: PR number, tests and CI, what a `null`-hash base gets and its way out, what stayed unverified
