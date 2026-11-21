@@ -110,6 +110,16 @@ Today we're talking about Python.
                "00:00:03.000 --> 00:00:04.000\nNext line\n")
         self.assertEqual([c.text for c in parse_vtt(vtt)], ["Same line", "Next line"])
 
+    def test_track_that_does_not_roll_keeps_a_line_the_next_cue_repeats(self):
+        # No inline timestamps, so nothing rolls: a cue that opens with the previous cue's
+        # last line says it again. 0.3.0 dropped it ("A / B" + "B / C" gave "A B" + "C").
+        for start in ("00:00:04.000", "00:00:10.000"):  # back to back, and after a gap
+            with self.subTest(start=start):
+                vtt = ("WEBVTT\n\n00:00:01.000 --> 00:00:04.000\nWe try again,\nand again,\n\n"
+                       f"{start} --> 00:00:12.000\nand again,\nuntil it works.\n")
+                self.assertEqual([c.text for c in parse_vtt(vtt)],
+                                 ["We try again, and again,", "and again, until it works."])
+
     def test_format_seconds_to_mmss(self):
         from yt_fetch import format_timestamp
         self.assertEqual(format_timestamp(0), "0:00")

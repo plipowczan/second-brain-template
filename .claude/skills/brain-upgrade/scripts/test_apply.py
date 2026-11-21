@@ -158,13 +158,26 @@ class RerenderTest(ApplyCase):
         return fx.changelog("0.3.0", "0.2.0").replace("**BREAKING: change in 0.3.0**", "a change")
 
     def test_not_requested_is_not_written(self):
+        # The template is unchanged; only the owner's values are new, so the rendering differs.
+        values = json.loads((self.base / kt.ONBOARD_VALUES).read_text(encoding="utf-8"))
+        fx.write_tree(self.base, {kt.ONBOARD_VALUES: kt.dump_json({**values, "KB_OWNER": "New owner"})})
+        fx.git(self.base, "commit", "-qam", "new owner")
         before = (self.base / "AGENTS.md").read_bytes()
-        self.plan({"AGENTS.template.md": self.NEW, "CHANGELOG.md": self.not_breaking()})
+        self.plan()
         code, out, err = self.apply()
         self.assertEqual(code, 0, err)
         self.assertEqual((self.base / "AGENTS.md").read_bytes(), before)
-        self.assertNotEqual(self.stamp()["rendered"]["AGENTS.md"]["template_hash"],
-                            kt.content_hash(self.NEW.encode()))
+
+    def test_changed_template_without_a_breaking_entry_rewrites_agents(self):
+        style = (self.base / kt.WRITING_STYLE).read_bytes()
+        self.plan({"AGENTS.template.md": self.NEW, "CHANGELOG.md": self.not_breaking(),
+                   "content/WRITING_STYLE.template.md": "Language: {{PRIMARY_LANGUAGE}}\n\nnew\n"})
+        code, out, err = self.apply()
+        self.assertEqual(code, 0, err)
+        self.assertIn("New section.", (self.base / "AGENTS.md").read_text(encoding="utf-8"))
+        self.assertEqual((self.base / kt.WRITING_STYLE).read_bytes(), style)
+        self.assertEqual(self.stamp()["rendered"]["AGENTS.md"]["template_hash"],
+                         kt.content_hash(self.NEW.encode()))
 
     def test_breaking_release_rewrites_agents_and_leaves_the_rest(self):
         style = (self.base / kt.WRITING_STYLE).read_bytes()
@@ -183,10 +196,44 @@ class RerenderTest(ApplyCase):
 
     def test_breaking_release_owner_declines(self):
         before = (self.base / "AGENTS.md").read_bytes()
-        self.plan({"AGENTS.template.md": self.NEW})
+        self.plan({"AGENTS.template.md": self.NEW, "CHANGELOG.md": self.not_breaking()})
         code, out, err = self.apply({"rerender": []})
         self.assertEqual(code, 0, err)
         self.assertEqual((self.base / "AGENTS.md").read_bytes(), before)
+        self.assertNotEqual(self.stamp()["rendered"]["AGENTS.md"]["template_hash"],
+                            kt.content_hash(self.NEW.encode()))
+        code, out, err = self.commit()
+        self.assertEqual(code, 0, err)
+        # The next dry run offers it again, the base already at 0.3.0.
+        plan = self.plan({"AGENTS.template.md": self.NEW, "CHANGELOG.md": self.not_breaking()})
+        e = {x["path"]: x for x in plan["rendered"]}["AGENTS.md"]
+        self.assertFalse(plan["up_to_date"])
+        self.assertEqual((e["requested"], e["by_default"], e["writable"]), (True, True, True))
+
+    def test_null_hash_proposal_taken_whole_follows_the_template_later(self):
+        # The way out for a base whose stamp says output_hash: null (adopted from an older
+        # rendering): copy the proposal over AGENTS.md once, commit, plan again.
+        stamp = self.stamp()
+        stamp["rendered"]["AGENTS.md"]["output_hash"] = None
+        fx.write_tree(self.base, {kt.STAMP: kt.dump_json(stamp)})
+        fx.git(self.base, "commit", "-qam", "adopted from an older rendering")
+        plan = self.plan({"AGENTS.template.md": self.NEW, "CHANGELOG.md": self.not_breaking()})
+        self.assertEqual({x["path"]: x for x in plan["rendered"]}["AGENTS.md"]["status"], "edited")
+        proposal = (Path(plan["payload"]) / "render/AGENTS.md").read_bytes()
+        fx.write_tree(self.base, {"AGENTS.md": proposal})
+        fx.git(self.base, "commit", "-qam", "take the AGENTS.md proposal")
+        plan = self.plan({"AGENTS.template.md": self.NEW, "CHANGELOG.md": self.not_breaking()})
+        self.assertEqual({x["path"]: x for x in plan["rendered"]}["AGENTS.md"]["status"], "current")
+        code, out, err = self.apply()
+        self.assertEqual(code, 0, err)
+        self.assertEqual(self.stamp()["rendered"]["AGENTS.md"]["output_hash"], kt.content_hash(proposal))
+        code, out, err = self.commit()
+        self.assertEqual(code, 0, err)
+        newer = self.NEW + "\nNewer section.\n"
+        self.plan({"AGENTS.template.md": newer, "CHANGELOG.md": self.not_breaking()})
+        code, out, err = self.apply()
+        self.assertEqual(code, 0, err)
+        self.assertIn("Newer section.", (self.base / "AGENTS.md").read_text(encoding="utf-8"))
 
     def test_hand_edited_file_is_never_written(self):
         fx.write_tree(self.base, {"AGENTS.md": b"# mine\n"})

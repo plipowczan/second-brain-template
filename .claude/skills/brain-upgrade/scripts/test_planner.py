@@ -207,31 +207,69 @@ class RenderedTest(PlannerCase):
         self.assertEqual((e["status"], e["writable"], e["requested"], e["template_changed"]),
                          ("writable", True, True, True))
 
-    def test_not_requested_only_reports(self):
-        p = self.plan("0.2.1", changes={"AGENTS.template.md": self.NEW_AGENTS})
+    def change_values(self, **values):
+        """New answers in .kb-onboard.json: the rendering changes, the template does not."""
+        self.edit(kt.ONBOARD_VALUES, json.dumps({**fx.VALUES, **values}, indent=2) + "\n")
+
+    def test_unchanged_template_only_reports(self):
+        self.change_values(KB_OWNER="New owner")
+        p = self.plan("0.3.0")  # the fixture's 0.3.0 is marked BREAKING
         e = self.rendered(p)["AGENTS.md"]
-        self.assertEqual((e["requested"], e["template_changed"]), (False, True))
+        self.assertEqual((e["status"], e["template_changed"], e["requested"]),
+                         ("writable", False, False))
         self.assertIn("re-render on request", planner.summary(p))
 
-    def test_breaking_entry_requests_agents_only(self):
+    def test_changed_template_requests_agents_only(self):
         changes = {"AGENTS.template.md": self.NEW_AGENTS, "CLAUDE.template.md": "@AGENTS.md\n\nnew\n",
                    "content/WRITING_STYLE.template.md": "Language: {{PRIMARY_LANGUAGE}}\n\nnew\n"}
-        p = self.plan("0.3.0", changes=changes)  # the fixture's 0.3.0 is marked BREAKING
+        p = self.plan("0.3.0", changes=changes)
         e = self.rendered(p)
         self.assertEqual({k: v["requested"] for k, v in e.items()},
                          {"AGENTS.md": True, "CLAUDE.md": False, kt.WRITING_STYLE: False})
         self.assertEqual(e["AGENTS.md"]["status"], "writable")
-        self.assertIn("this update has a BREAKING entry", planner.summary(p))
+        self.assertIn("AGENTS.md: template text changed upstream; will be re-rendered by default",
+                      planner.summary(p))
 
-    def test_breaking_entry_leaves_an_edited_file_a_proposal(self):
+    def test_changed_template_leaves_an_edited_file_a_proposal(self):
         self.edit("AGENTS.md", "# Test KB\n\nmy notes\n")
-        e = self.rendered(self.plan("0.3.0", changes={"AGENTS.template.md": self.NEW_AGENTS}))["AGENTS.md"]
+        p = self.plan("0.3.0", changes={"AGENTS.template.md": self.NEW_AGENTS})
+        e = self.rendered(p)["AGENTS.md"]
         self.assertEqual((e["requested"], e["status"], e["writable"]), (True, "edited", False))
+        self.assertIn("edited by hand", planner.summary(p))
 
-    def test_no_breaking_entry_in_the_range(self):
+    def test_changed_template_without_a_breaking_entry(self):
+        # A base upgraded across 0.2.0 by an engine that re-rendered nothing by default still
+        # lists the old command names, and 0.2.1 -> 0.3.0 holds no breaking entry.
         cl = fx.changelog("0.3.0", "0.2.0").replace("**BREAKING: change in 0.3.0**", "a change")
         p = self.plan("0.3.0", changes={"AGENTS.template.md": self.NEW_AGENTS, "CHANGELOG.md": cl})
-        self.assertFalse(self.rendered(p)["AGENTS.md"]["requested"])
+        self.assertFalse(any(x["breaking"] for block in p["changelog"]
+                             for s in block["sections"] for x in s["entries"]))
+        e = self.rendered(p)["AGENTS.md"]
+        self.assertEqual((e["requested"], e["by_default"], e["status"]), (True, True, "writable"))
+
+    def test_changed_template_without_render_inputs_stays_up_to_date(self):
+        # A second clone of a base that never committed .kb-onboard.json: nothing can be
+        # rendered, so a default request would leave the base "not up to date" for good.
+        (self.base / kt.ONBOARD_VALUES).unlink()
+        fx.git(self.base, "add", "-A")
+        fx.git(self.base, "commit", "-q", "-m", "no render inputs")
+        p = self.plan("0.2.0", changes={"AGENTS.template.md": self.NEW_AGENTS})
+        e = self.rendered(p)["AGENTS.md"]
+        self.assertEqual((e["status"], e["template_changed"], e["requested"]), ("no-values", True, False))
+        self.assertTrue(p["up_to_date"])
+
+    def test_null_output_hash_is_a_proposal_that_says_why(self):
+        # Adoption records null when the file is not the release's rendering: an older
+        # rendering and an owner's edit look the same.
+        stamp = kt.read_stamp(self.base)
+        stamp["rendered"]["AGENTS.md"]["output_hash"] = None
+        self.edit(kt.STAMP, kt.dump_json(stamp).decode("utf-8"))
+        p = self.plan("0.3.0", changes={"AGENTS.template.md": self.NEW_AGENTS})
+        e = self.rendered(p)["AGENTS.md"]
+        self.assertEqual((e["requested"], e["status"], e["writable"]), (True, "edited", False))
+        line = next(x for x in planner.summary(p).splitlines() if x.strip().startswith("AGENTS.md:"))
+        self.assertIn("not provably untouched", line)
+        self.assertNotIn("edited by hand", line)
 
     def test_rerender_requests_all_three(self):
         changes = {"AGENTS.template.md": self.NEW_AGENTS}
