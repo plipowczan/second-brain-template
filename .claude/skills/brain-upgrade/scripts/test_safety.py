@@ -351,6 +351,63 @@ class LinkTest(SafetyCase):
         self.assertEqual(note.read_text(encoding="utf-8"), self.HOOK_V1)
 
 
+class LinkDetectionTest(unittest.TestCase):
+    """kt.is_link and kt.link_in_path on their own: a junction counts as a link on every
+    Python a base may run, not only on 3.12+, where os.path.isjunction arrived."""
+
+    def setUp(self):
+        self.tmp = fx.TempDir()
+        self.root = self.tmp.path
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def junction(self, link: Path, target: Path):
+        import _winapi
+        _winapi.CreateJunction(str(target), str(link))
+
+    def test_plain_file_and_folder_are_not_links(self):
+        (self.root / "folder").mkdir()
+        (self.root / "folder" / "file.md").write_text("x\n", encoding="utf-8")
+        self.assertFalse(kt.is_link(self.root / "folder"))
+        self.assertFalse(kt.is_link(self.root / "folder" / "file.md"))
+        self.assertIsNone(kt.link_in_path(self.root, "folder/file.md"))
+
+    def test_missing_path_is_not_a_link(self):
+        self.assertFalse(kt.is_link(self.root / "missing"))
+        self.assertFalse(kt.is_link(self.root / "missing" / "deeper.md"))
+
+    @unittest.skipUnless(os.name == "nt", "junctions exist only on Windows")
+    def test_junction_is_a_link(self):
+        (self.root / "notes").mkdir()
+        (self.root / "notes" / "hook.py").write_text("x\n", encoding="utf-8")
+        self.junction(self.root / "hooks", self.root / "notes")
+        self.assertTrue(kt.is_link(self.root / "hooks"))
+        self.assertEqual(kt.link_in_path(self.root, "hooks/hook.py"), "hooks")
+
+    @unittest.skipUnless(os.name == "nt", "junctions exist only on Windows")
+    def test_junction_whose_target_is_gone_is_a_link(self):
+        (self.root / "notes").mkdir()
+        self.junction(self.root / "hooks", self.root / "notes")
+        (self.root / "notes").rmdir()
+        self.assertTrue(kt.is_link(self.root / "hooks"))
+        self.assertEqual(kt.link_in_path(self.root, "hooks/hook.py"), "hooks")
+
+    @unittest.skipUnless(os.name == "nt", "junctions exist only on Windows")
+    def test_junction_found_on_a_python_without_isjunction(self):
+        # Python 3.8-3.11 have no os.path.isjunction. Take it away here, so the runs on a
+        # newer Python (CI's "3.x") cover what an owner with 3.11 gets.
+        (self.root / "notes").mkdir()
+        self.junction(self.root / "hooks", self.root / "notes")
+        saved = os.path.__dict__.pop("isjunction", None)
+        try:
+            self.assertTrue(kt.is_link(self.root / "hooks"))
+            self.assertEqual(kt.link_in_path(self.root, "hooks/hook.py"), "hooks")
+        finally:
+            if saved is not None:
+                os.path.isjunction = saved
+
+
 class DirtyBookkeepingTest(SafetyCase):
     def test_uncommitted_stamp_is_not_overwritten(self):
         for staged in (False, True):
