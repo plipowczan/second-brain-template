@@ -1,7 +1,7 @@
 name: Tests
 
 # Runs the template's checks on every push to main and every pull request into it,
-# on Linux and Windows:
+# on Linux and Windows with the newest Python, and on Windows with Python 3.11:
 #   1. tests/run_tests.py: the integration suite (a throwaway vault through reindex,
 #      lint, gaps, refactor and the curate unit tests).
 #   2. tests/run_skill_tests.py: every skill's own unit tests. Tests that need a tool
@@ -30,11 +30,18 @@ concurrency:
 
 jobs:
   test:
-    name: test (${{ matrix.os }})
+    # The extra Windows job on Python 3.11 covers bases that run an older Python than
+    # "3.x": 3.11 is the newest without os.path.isjunction, which the link checks once
+    # relied on, so a junction went unnoticed there.
+    name: test (${{ matrix.os }}${{ matrix.python != '3.x' && format(', Python {0}', matrix.python) || '' }})
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
+        python: ["3.x"]
+        include:
+          - os: windows-latest
+            python: "3.11"
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -46,7 +53,7 @@ jobs:
 
       - uses: actions/setup-python@v7
         with:
-          python-version: "3.x"
+          python-version: ${{ matrix.python }}
 
       - name: Install Python deps
         run: pip install -r requirements.txt

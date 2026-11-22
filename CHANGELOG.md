@@ -5,6 +5,33 @@ who have cloned the template and want to pull improvements into their own base.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are ISO (UTC).
 
+## [Unreleased]
+
+### Security
+- **`/b:upgrade` sees Windows junctions on Python 3.11 and older too.** The upgrade
+  refuses to read or write through a symbolic link or a Windows junction, so that a link
+  can never lead it into your notes under `content/`. It recognised a junction only
+  through `os.path.isjunction`, which Python has had since 3.12. On Windows with Python
+  3.11 or older a junction went unnoticed: with `.claude/hooks` as a junction into
+  `content/`, the dry run did not stop, and `apply` could write the template's files
+  through it into your notes. Symbolic links were caught on every Python, and Linux and
+  macOS have no junctions. The check now reads the junction mark itself, on every Python.
+  The template's tests now also run on Windows with Python 3.11, so a function that older
+  Pythons lack shows up as a failing test.
+
+  Existing bases: nothing to do before you upgrade. `/b:upgrade` runs the engine of the
+  version it installs, so the upgrade to this version already checks junctions. The
+  `Tests` workflow it brings runs a third job, Windows with Python 3.11, on each push to
+  `main` and each pull request; delete that `include:` entry in
+  `.github/workflows/tests.yml` if you don't want it. If you upgraded on Windows with
+  Python 3.11 or older and keep junctions in your base, list them from the base's root
+  folder in PowerShell with
+  `Get-ChildItem -Recurse -Force -Attributes ReparsePoint | Select-Object FullName, LinkType, Target`.
+  A junction among the template's own files (under `.claude/`, `.agents/`, `.github/` and
+  the like) that points into `content/` may have let an earlier upgrade overwrite the
+  notes there: check those notes with `git status` and `git log` and restore any change
+  you did not make.
+
 ## [0.4.0] - 2026-11-16
 
 Codex gets the template's skills and its session hook, from the same files Claude Code

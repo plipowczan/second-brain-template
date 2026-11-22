@@ -62,8 +62,10 @@ rename or delete a skill, or change a `SKILL.md` frontmatter, run
    the workflow would open an index-refresh pull request.
 
 `.github/workflows/tests.yml` runs `tests/run_tests.py` and `tests/run_skill_tests.py` (every
-skill's own unit tests) on Linux and Windows for every push to `main` and every pull request
-into it, and checks that `.githooks/pre-commit` blocks a note without frontmatter. Run the
+skill's own unit tests) on Linux and Windows with the newest Python, and on Windows with
+Python 3.11, for every push to `main` and every pull request into it, and checks that
+`.githooks/pre-commit` blocks a note without frontmatter. Bases run whatever Python their
+owner has, so don't use a function newer than 3.11 in a script without a fallback. Run the
 same checks locally before you push: CI tells you after the fact, and a red pull request is
 not merged. Node is needed only for the optional `npm run format` (Prettier).
 

@@ -111,8 +111,17 @@ def case_collisions(paths) -> list[tuple[str, str]]:
 
 
 def is_link(p: Path) -> bool:
-    isjunction = getattr(os.path, "isjunction", None)  # Python 3.12+
-    return p.is_symlink() or bool(isjunction and isjunction(p))
+    """A symbolic link or a Windows junction. The junction check reads the reparse tag
+    itself, as os.path.isjunction does: that function exists only from Python 3.12, and
+    a base may run 3.8-3.11. A path that does not exist is not a link."""
+    if p.is_symlink():
+        return True
+    if os.name != "nt":
+        return False
+    try:
+        return os.lstat(p).st_reparse_tag == stat.IO_REPARSE_TAG_MOUNT_POINT
+    except (OSError, ValueError):
+        return False
 
 
 def link_in_path(root: Path, rel: str) -> str | None:
