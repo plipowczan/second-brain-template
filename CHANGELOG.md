@@ -5,7 +5,11 @@ who have cloned the template and want to pull improvements into their own base.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are ISO (UTC).
 
-## [Unreleased]
+## [0.4.1] - 2026-11-22
+
+A patch release. An untouched `AGENTS.md` now follows every change to its template, and
+YouTube transcripts keep lines that a manual subtitle track repeats. On Windows with
+Python 3.11 or older, `/b:upgrade` now also refuses to write through a junction.
 
 ### Fixed
 - **An untouched `AGENTS.md` follows every change to its template.** `/b:upgrade`
