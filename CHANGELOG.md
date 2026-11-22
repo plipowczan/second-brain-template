@@ -7,6 +7,40 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
 
 ## [Unreleased]
 
+### Fixed
+- **An untouched `AGENTS.md` follows every change to its template.** `/b:upgrade`
+  re-rendered `AGENTS.md` by default only when the versions it crossed held an entry
+  marked breaking, and neither `0.3.0` nor `0.4.0` has one. So a base that went through
+  the `0.2.0` command rename with an older engine still listed `/ingest` instead of
+  `/b:ingest`, and no base got the `0.4.0` sentence about `/b:<name>` in Codex unless the
+  owner asked for a re-render. Now the plan re-renders an untouched `AGENTS.md` whenever
+  its template differs from the one it was rendered from, whatever the versions hold.
+  The plan says so, and you can still keep the file (`"rerender": []`); the next upgrade
+  asks again. A file you edited is never written: you get the difference as a proposal,
+  as before. `CLAUDE.md` and `content/WRITING_STYLE.md` still change only when you ask.
+  The plan now also tells the two kinds of proposal apart: `edited by hand`, or `not
+  provably untouched` when the base was adopted from an older rendering of `AGENTS.md` and
+  the stamp has no output hash for it.
+
+  Existing bases: nothing to do. The upgrade to the release that carries this fix brings
+  `AGENTS.md` up to date if you never edited it. If the plan calls your `AGENTS.md` `not
+  provably untouched` and you never edited it, or do not need your edits, take the
+  proposal whole once: copy `render/AGENTS.md` from the plan's payload folder over
+  `AGENTS.md`, commit, and plan again. From then on upgrades keep it current. The
+  `brain-upgrade` skill offers this step.
+- **YouTube transcripts keep lines that a manual subtitle track repeats.** Since `0.3.0`,
+  `yt_fetch.py` dropped any line a caption repeated from the caption before it. That is
+  right for auto-captions, which roll and show each line twice, but a manual track that
+  opened a caption with the previous caption's last line lost it: `A / B` then `B / C`
+  became `A B` and `C`. Now only a track with the word timings that auto-captions carry
+  is treated as rolling. Every other track keeps all its lines, and only a caption that
+  repeats the previous one whole is merged, as before `0.3.0`.
+
+  Existing bases: `/b:upgrade` brings the fix (`brain-ingest`: `scripts/yt_fetch.py` and
+  its tests). Transcripts already in `content/_raw/processed/` stay as they are. For the
+  full text of a video with manual subtitles, re-run `yt_fetch.py <url> --out-dir <a temp
+  folder>` and replace the transcript below the archive's frontmatter.
+
 ### Security
 - **`/b:upgrade` sees Windows junctions on Python 3.11 and older too.** The upgrade
   refuses to read or write through a symbolic link or a Windows junction, so that a link

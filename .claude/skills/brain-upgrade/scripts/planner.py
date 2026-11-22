@@ -127,7 +127,9 @@ def plan_rendered(instance: Path, manifest: kt.Manifest, new_files: dict[str, by
     `new_files` is the tree whose templates would be rendered now (the source).
     `previous` holds the stamp's rendered entries (upgrade). For an adoption,
     `adopt_files` is release R's tree: the stamp entry is decided against R's rendering.
-    `by_default` names the outputs requested even though the owner did not ask.
+    `by_default` names the outputs requested even though the owner did not ask, whenever
+    their template differs from the one the stamp says they were rendered from and apply
+    can act on them.
     Returns (entries, payload {key: bytes}, questions).
     """
     values = read_values(instance)
@@ -136,8 +138,8 @@ def plan_rendered(instance: Path, manifest: kt.Manifest, new_files: dict[str, by
     for out, template in sorted(manifest.rendered.items()):
         tpl = new_files.get(template)
         L = local(instance, out)
-        e = {"path": out, "template": template, "L": L, "requested": requested or out in by_default,
-             "by_default": out in by_default and not requested,
+        e = {"path": out, "template": template, "L": L, "requested": requested,
+             "by_default": False,
              "S_template": kt.content_hash(tpl) if tpl is not None else None,
              "rendered": None, "missing": [], "status": None, "entry": None}
         prev = previous.get(out)
@@ -151,6 +153,9 @@ def plan_rendered(instance: Path, manifest: kt.Manifest, new_files: dict[str, by
                         "output_hash": L if r_out is not None and kt.content_hash(r_out) == L else None}
             e["requested"] = False
         e["entry"] = prev
+        # The stamp keeps the hash of the template the file was last rendered from, also
+        # when an upgrade did not re-render it, so a skipped re-render is offered again.
+        e["template_changed"] = bool(prev) and tpl is not None and prev.get("template_hash") != e["S_template"]
         if tpl is None:
             e["status"] = "no-template"
         elif values is None:
@@ -174,9 +179,13 @@ def plan_rendered(instance: Path, manifest: kt.Manifest, new_files: dict[str, by
                     e["status"] = "writable"
                 else:
                     e["status"] = "edited"
+        # Only where apply can act: write the file, ask for a value, or show a proposal.
+        # Without render inputs a default request would keep the base from being up to date.
+        if (adopt_files is None and out in by_default and e["template_changed"] and not requested
+                and e["status"] in ("writable", "missing-values", "edited")):
+            e["requested"] = e["by_default"] = True
         if tpl is not None:
             payload[f"template/{template}"] = tpl
-        e["template_changed"] = bool(prev) and tpl is not None and prev.get("template_hash") != e["S_template"]
         e["untouched"] = bool(prev and prev.get("output_hash") and prev["output_hash"] == L)
         if adopt_files is not None:
             e["writable"] = False
@@ -344,10 +353,6 @@ def write_paths(plan: dict) -> list[str]:
     return sorted(set(paths))
 
 
-def has_breaking(changelog: list[dict]) -> bool:
-    return any(e["breaking"] for block in changelog for s in block["sections"] for e in s["entries"])
-
-
 def renamed_to(old: str, candidates) -> str | None:
     """`old`'s new name among `candidates`: the same file name, with one folder that
     gained a prefix (skills/lint/ -> skills/brain-lint/) or one inserted folder
@@ -429,12 +434,12 @@ def plan_upgrade(instance: Path, source: sources.Source, *, rerender: bool = Fal
     plan["info"]["seeded"] = seeded_info(source, stamp.get("seeded"))
     plan["info"]["ignored"] = source.by_class()[None]
 
-    # The agent reads AGENTS.md in every session, so after a breaking release an untouched
-    # copy follows without being asked. content/WRITING_STYLE.md stays on request: notes
-    # are never touched unless the owner says so.
+    # The agent reads AGENTS.md in every session, so an untouched copy follows its template
+    # without being asked, whatever the version range holds. content/WRITING_STYLE.md stays
+    # on request: notes are never touched unless the owner says so.
     entries, rpayload, questions = plan_rendered(
         instance, source.manifest, source.files, stamp["rendered"], rerender,
-        by_default=(AGENTS,) if has_breaking(plan["changelog"]) else ())
+        by_default=(AGENTS,))
     payload.update(rpayload)
     plan["rendered"], plan["questions"] = entries, questions
     plan["render_py"] = kt.content_hash(rpayload["render.py"]) if "render.py" in rpayload else None
@@ -702,7 +707,10 @@ def render_note(e: dict, mode: str) -> str:
                 "; differs from the new template (see --diff)")
     if s == "writable":
         if e.get("by_default"):
-            return changed + 'will be re-rendered: this update has a BREAKING entry (to keep it, "rerender": [])'
+            return changed + 'will be re-rendered by default (to keep it as it is, "rerender": [])'
         return changed + ("will be re-rendered" if e["requested"] else
                           "untouched; re-render on request (--rerender)")
+    if e["entry"] and e["entry"].get("output_hash") is None:
+        return changed + ("not provably untouched (no output hash since adoption): only a "
+                          "proposal (see --diff), never written")
     return changed + "edited by hand: only a proposal (see --diff), never written"
