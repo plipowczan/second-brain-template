@@ -40,10 +40,14 @@ apply as they are, because the files were byte-identical to the measured "before
 - Level 1 header `— read for search/navigation` → `— search it with a pattern`, and its
   `Read only the folder sections you need.` → the measured sentence about pattern search.
 - Level 2: the measured sentence about searching for a note's title. Its header stays.
-- Rules 1, 2, 4 and 5 in the measured wording. The measured base's rule 1 also exempts
-  workflows that name their note or only run a script, and its rule 5 names a value the
-  indexes do not carry; the template's rules never had those sentences, and this change
-  does not add them.
+- Rules 1, 2 and 4 in the measured wording. The measured base's rule 1 also exempts
+  workflows that name their note or only run a script; the template's rule 1 never had
+  that sentence, and this change does not add it.
+- Rule 5 keeps the measured condition in the template's shorter sentence: "Search the
+  notes under `content/` directly only after the catalog found nothing — use indexes
+  first." The measured base's rule 5 is longer: it also names a value the indexes do not
+  carry and the scanners that read `content/` by design, which the template's rule never
+  had.
 
 Alternative: rewrite the rules for the template's tone. Rejected: the measurement would
 no longer describe the shipped text.
