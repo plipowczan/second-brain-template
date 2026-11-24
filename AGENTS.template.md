@@ -44,23 +44,25 @@ Sub-patterns within topics: `BOOKS/`, `TOOLS/`, `KNOWLEDGE/INFO/`, `KNOWLEDGE/HO
 
 Three index files exist. Read them in order, stopping when you have enough info.
 
-### Level 0: `_indexes/vault-map.md` — read FIRST on every operation
+### Level 0: `_indexes/vault-map.md` — the map
 Bird's-eye view: folder table (note counts, types, top tags), tag cloud, last 10 changes.
 Always fits in context.
 
-### Level 1: `_indexes/catalog.md` — read for search/navigation
+### Level 1: `_indexes/catalog.md` — search it with a pattern
 One line per note: `- **Title** | type | date | [tags] | summary | → link-targets or -`.
-Read only the folder sections you need.
+Search it with a pattern and read the matching lines; read a folder section only when a
+pattern finds nothing.
 
 ### Level 2: `_indexes/graph.md` — read for link traversal
-Outgoing and incoming wikilinks per note. Read only when following link chains.
+Outgoing and incoming wikilinks per note. Search it for a note's title when following
+link chains; do not read it whole.
 
 ### Navigation Rules
-1. ALWAYS read `vault-map.md` first for any KB operation.
-2. For search: scan vault-map tags/folders → read matching sections of `catalog.md`.
+1. Read `vault-map.md` first for an operation that writes or reorganizes notes, unless it is already in your context. A question starts from the catalog (rule 2).
+2. For search: search `catalog.md` with a pattern built from the question's key terms, in the vault's language and the question's, with synonyms. Read a folder section only when the patterns find nothing.
 3. For a specific note: find entry in `catalog.md` → read the note.
-4. For related notes: read `graph.md` → follow link chains.
-5. NEVER grep the entire `content/` directory — use indexes first.
+4. For related notes: search `graph.md` for the note → follow link chains.
+5. Search the notes under `content/` directly only after the catalog found nothing — use indexes first.
 6. If any index is missing or stale: run a full reindex before proceeding.
 
 ### Auto-Update Rules (after EVERY write)

@@ -1,1 +1,5 @@
-Use the `brain-qa` skill to research the topic provided and synthesize an answer from the vault. Substantive answers are saved to `content/_outputs/answers/`; pass `--no-save` to answer without writing.
+Answer the question below from the vault with the `brain-qa` workflow. Its full text is included here, so do not load the skill again. Substantive answers are saved to `content/_outputs/answers/`; pass `--no-save` to answer without writing.
+
+If the workflow text is missing below (a session started in a subfolder of the base does not include it), load the `brain-qa` skill instead.
+
+@.claude/skills/brain-qa/SKILL.md
