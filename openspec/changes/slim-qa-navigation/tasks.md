@@ -36,5 +36,5 @@ measured base.
   the cost of a question, with the aggregate figures, and what an existing base does.
 - [x] 4.2 `openspec validate slim-qa-navigation --strict` passes.
 - [x] 4.3 `python tests/run_tests.py` ends with `ALL PASS`.
-- [ ] 4.4 Open a pull request into `main` with the before/after table in its description.
+- [x] 4.4 Open a pull request into `main` with the before/after table in its description.
   The maintainer merges it.
