@@ -21,6 +21,9 @@ measured base.
 - [x] 2.1 Apply the measured diff to `.claude/commands/b/qa.md`: the new instruction and
   the file reference `@.claude/skills/brain-qa/SKILL.md` with an ASCII `@`. Verify that
   the result is the measured "after".
+- [x] 2.2 Add one sentence after the measured instruction: when the workflow text is
+  missing (a session started in a subfolder of the base), load the `brain-qa` skill
+  (design D5). Verify that removing that sentence gives the measured "after" again.
 
 ## 3. Agent instructions
 

@@ -85,12 +85,19 @@ instead of a copy of its text, so the workflow stays in one file and a question 
 the command still reaches the same text through the skill. Codex does not use
 `.claude/commands/`, so it is unaffected.
 
+The file reference resolves against the folder the session started in, so a session
+started in a subfolder of the base (for example `content/`) gets the command without the
+skill text, while the command still says not to load the skill. One sentence after the
+measured instruction covers that case: if the workflow text is missing, load the
+`brain-qa` skill instead. It is not part of the measured text. From the base root the text
+is included, so the sentence does not apply there and the measured result stands.
+
 ## Risks / Trade-offs
 
 - [The measurement ran without the session-start hook] → An instance already has the map
-  in context, so there the change removes a second read of the map rather than the only
-  one, and the saving is smaller. If accuracy held with no map in context at all, it holds
-  with the map in context.
+  in context, so there the change removes the skill's second read of the map rather than
+  the only one; that case was not measured. If accuracy held with no map in context at
+  all, it should hold with the map in context.
 - [One base, one model, 40 questions] → The fallback in step 2 is kept whole (D4), so a
   base whose titles do not match the question's words still gets the map, the sections
   and a direct search before "not covered".

@@ -22,7 +22,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
   view, two notes that agree may rest on the same source, a note not read is a gap) now
   apply to every answer from the skill itself. `/b:qa` includes the skill text, so the
   agent no longer loads the skill in a call of its own; a question asked without the
-  command, and Codex, use the skill as before. The Navigation Protocol in `AGENTS.md`
+  command, Codex, and `/b:qa` in a session started in a subfolder of the base (where the
+  text is not included) use the skill as before. The Navigation Protocol in `AGENTS.md`
   says the same: the map comes first only for work that writes or reorganizes notes, and
   a question starts from the catalog.
 
@@ -31,8 +32,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
   does not cover this"), text read from the vault −63 %, input the model processed −18 to
   −23 % from the new protocol and a further −8 to −14 % from the command, and the 40
   questions cost 6.75 instead of 8.91 USD. That base had no session-start hook. In a base
-  made from this template the hook already puts the map in context, so there the change
-  removes the second read of the map, and the saving is smaller.
+  made from this template the session-start hook already puts the map in context, so
+  there the change removes the skill's second read of the map; that case was not
+  measured.
 
   Existing bases: nothing to do. `/b:upgrade` brings the skill and the command; if you
   edited either, it asks what to keep. An `AGENTS.md` you never edited is re-rendered by

@@ -70,13 +70,18 @@ certainty.
 ### Requirement: The q&a command carries the skill text
 
 The `/b:qa` command file SHALL include the text of `.claude/skills/brain-qa/SKILL.md` by
-file reference and SHALL tell the agent not to load the skill again. The skill text SHALL
-live only in that `SKILL.md`. A question asked without the command SHALL reach the same
-workflow through the skill.
+file reference and SHALL tell the agent not to load the skill again. It SHALL also tell
+the agent to load the brain-qa skill when the included text is missing. The skill text
+SHALL live only in that `SKILL.md`. A question asked without the command SHALL reach the
+same workflow through the skill.
 
 #### Scenario: Question through the command
-- **WHEN** the user runs `/b:qa` with a question in Claude Code
+- **WHEN** the user runs `/b:qa` with a question in Claude Code, in a session started in the base root
 - **THEN** the agent follows the brain-qa workflow from the included text without a separate call that loads the skill
+
+#### Scenario: Session started in a subfolder of the base
+- **WHEN** the user runs `/b:qa` in a session started in a subfolder of the base, so the file reference does not include the skill text
+- **THEN** the agent loads the brain-qa skill and follows its workflow
 
 #### Scenario: Question without the command
 - **WHEN** the user asks "what do my notes say about X" without the command, or works in Codex, which has no commands
