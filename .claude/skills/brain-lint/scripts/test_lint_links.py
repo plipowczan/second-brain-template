@@ -7,6 +7,54 @@ from pathlib import Path
 
 LINT_LINKS = Path(__file__).resolve().parent / "lint_links.py"
 
+# A vault that exercises every rule of lint_links.py: aliases, headings, a pipe escaped
+# inside a table, a link that differs only in case, links inside code, attachments,
+# templates, a self-link, duplicate file names in two folders, non-ASCII names, and the
+# folders and files the script skips. Invented names only.
+FIXTURE = {
+    "T/Hub.md": "# Hub\n[[Target]] [[T/Target]] [[Target|alias]] [[Target#Part]] [[Target]]\n"
+                "| a | [[Leaf\\|shown]] |\n[[lonely-lower]] [[Missing Note]] [[pic.png]]\n"
+                "[[templates/Note Template]] [[ATTACHMENTS/scan.pdf]] [[Zażółć]]\n",
+    "T/Target.md": "# Target\nBack to [[Hub]].\n```\n[[Only In Code]]\n```\nand `[[Inline Code]]`\n",
+    "T/Leaf.md": "# Leaf\nNo links here.\n",
+    "T/Self.md": "# Self\nSee [[Self]].\n",
+    "T/Lonely-Lower.md": "# Lonely lower\n",
+    "T/Zażółć.md": "# Zażółć\n[[gęś]]\n",
+    "A/Dup.md": "# Dup A\n[[Dup]]\n",
+    "B/Dup.md": "# Dup B\n[[B/Dup]] [[Nowhere/Else]]\n",
+    "Root Note.md": "# Root\n[[Leaf]] [[]] [[ ]]\n",
+    "_privacy.md": "# Privacy\n[[Hub]]\n",
+    "WRITING_STYLE.md": "# Style\n[[Leaf]]\n",
+    "T/Draft.template.md": "# Template\n[[Leaf]]\n",
+    "_outputs/answers/a.md": "# Answer\n[[Lonely-Lower]]\n",
+    "_raw/inbox/x.md": "[[Self]]\n",
+    "ATTACHMENTS/inside.md": "[[Leaf]]\n",
+    "templates/Note Template.md": "# T\n[[Leaf]]\n",
+    ".obsidian/x.md": "[[Leaf]]\n",
+}
+
+# Recorded from lint_links.py as it was before it became importable (2026-11-27, the
+# commit that adds this test). A rewrite must print the same.
+GOLDEN = {
+    "broken": {
+        "content/B/Dup.md": ["Nowhere/Else"],
+        "content/T/Hub.md": ["Missing Note"],
+        "content/T/Zażółć.md": ["gęś"],
+    },
+    "orphan_count": 1,
+    "orphans": ["Root Note"],
+}
+
+
+def build_fixture(root):
+    """Write FIXTURE under <root>/content and return that folder."""
+    content = Path(root) / "content"
+    for rel, text in FIXTURE.items():
+        path = content / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text, encoding="utf-8")
+    return content
+
 
 def run_in(vault):
     r = subprocess.run([sys.executable, str(LINT_LINKS)], cwd=vault,
@@ -25,6 +73,21 @@ class TestUnderscoreFiles(unittest.TestCase):
             (content / "T" / "_draft.md").write_text("# Draft\n", encoding="utf-8")
             (content / "T" / "Lonely.md").write_text("# Lonely\n", encoding="utf-8")
             self.assertEqual(run_in(d)["orphans"], ["Lonely"])
+
+
+class TestGoldenOutput(unittest.TestCase):
+    """Pins what the script prints, so a rewrite cannot change it unnoticed. Compared as
+    parsed JSON: the order of `broken` follows os.walk, which differs between systems."""
+
+    def test_fixture_output_is_unchanged(self):
+        with tempfile.TemporaryDirectory() as d:
+            build_fixture(d)
+            self.assertEqual(run_in(d), GOLDEN)
+
+    def test_empty_vault(self):
+        with tempfile.TemporaryDirectory() as d:
+            (Path(d) / "content").mkdir()
+            self.assertEqual(run_in(d), {"broken": {}, "orphan_count": 0, "orphans": []})
 
 
 if __name__ == "__main__":
