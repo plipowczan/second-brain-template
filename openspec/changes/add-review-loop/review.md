@@ -30,3 +30,17 @@ description, the engine's single write under `content/`, today's backup, the com
 body, lint's type source, `mkdtemp`, the union driver, lint's 10-note floor, the
 `0.3.0` and `0.4.0` precedents). The Quartz ignore list and the metrics of the
 maintainer's base were checked by the session that wrote the design.
+
+## Round 1 — 2026-11-27 — reviewed 96ec41e
+
+Codex review of the pull request against `main`.
+
+| id | sev | where | finding | outcome |
+|---|---|---|---|---|
+| R1-1 | P2 | .claude/skills/brain-upgrade/scripts/upgrade.py:972-974 | Undo writes a file the update deleted without its executable bit | fixed in cef02f1 |
+| R1-2 | P2 | .claude/skills/brain-review/scripts/review_data.py:396-401 | Thin notes of the touched folders are picked from lists `metrics.py` already cut to 20 | fixed in cef02f1 |
+
+Test changes:
+- `.claude/skills/brain-upgrade/scripts/test_undo.py` — R1-1: one new test (POSIX only) that a deleted executable comes back executable; no existing test changed
+- `.claude/skills/brain-lint/scripts/test_metrics.py` — R1-2: one new test that `--folder` picks a folder's notes before the cut; no existing test changed
+- `.claude/skills/brain-review/scripts/test_review_data.py` — R1-2: one new test that the touched folders go to `metrics.py` and its `in_folders` is used; no existing test changed
