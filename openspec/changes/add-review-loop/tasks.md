@@ -128,7 +128,7 @@ paths from it.
   once; the first-run steps of design D11 (delete the `fetch` folders, the `.gitignore`
   line, the `undo` command); edited skills write no log rows; learning sessions are
   committed; old log rows keep paths from before a rename.
-- [ ] 8.4 `python tests/run_tests.py` and `python tests/run_skill_tests.py` green locally
+- [x] 8.4 `python tests/run_tests.py` and `python tests/run_skill_tests.py` green locally
   on Windows with the newest Python and with Python 3.11.
 
 ## 9. Trial and pull request
@@ -137,7 +137,7 @@ paths from it.
   base itself): bring the branch's skills in, then `/b:review`, `/b:learn --quiz`,
   `/b:ingest --backlog` on a few sources, the log rows, the metrics file; record the
   result in the pull request.
-- [ ] 9.2 Pull request; Codex review run and every finding resolved; CI green.
+- [x] 9.2 Pull request; Codex review run and every finding resolved; CI green.
 
 ## Follow-up (not in this change)
 

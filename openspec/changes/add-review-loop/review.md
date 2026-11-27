@@ -44,3 +44,5 @@ Test changes:
 - `.claude/skills/brain-upgrade/scripts/test_undo.py` — R1-1: one new test (POSIX only) that a deleted executable comes back executable; no existing test changed
 - `.claude/skills/brain-lint/scripts/test_metrics.py` — R1-2: one new test that `--folder` picks a folder's notes before the cut; no existing test changed
 - `.claude/skills/brain-review/scripts/test_review_data.py` — R1-2: one new test that the touched folders go to `metrics.py` and its `in_folders` is used; no existing test changed
+
+Checks: `python tests/run_tests.py` and `python tests/run_skill_tests.py` ALL PASS on Windows with Python 3.13 and 3.11 (2 POSIX-only tests skipped); the skill suites also with an 8.3 short-name temp directory; CI green on ubuntu-latest, windows-latest and windows-latest with Python 3.11.
