@@ -28,7 +28,10 @@ and of the git-ignored content/_privacy.local.md, parsed and matched as
 brain-watch does: HTML comments are ignored, each term also matches joined,
 hyphenated and underscored, and without diacritics when that leaves at least
 four letters ("Łąka Wiśnia" → laka-wisnia), case does not matter, and a term
-never matches inside a longer word.
+never matches inside a longer word. Each line and file path is checked as
+written, in NFC and without diacritics, as brain-reindex's oplog.py checks a
+log row: a decomposed (NFD) name, as macOS writes it, and a name written with
+the diacritics its listed term leaves out are hits too.
 
 Pattern set v1 (extend from real misses, see design OQ1). Deliberately
 conservative — false positives erode trust in the sweep:
@@ -131,13 +134,40 @@ def mask(text, terms):
     return text
 
 
+# --- The sweep's own matching, over the functions above. A line is checked in three
+# forms, as brain-reindex/scripts/oplog.py checks a log row (private_check).
+
+def text_forms(text):
+    """text as written, in NFC (text and file names from macOS come decomposed, which a
+    term as written does not match) and folded (a name written with the diacritics its
+    listed term leaves out)."""
+    nfc = unicodedata.normalize("NFC", text)
+    return text, nfc, fold(nfc)
+
+
+def term_hit(text, terms):
+    """Whether text holds a private term in any of its text_forms()."""
+    return any(private_hit(form, terms) for form in text_forms(text))
+
+
+def mask_all(text, terms):
+    """text with every term that term_hit() finds replaced by [private]: masked as
+    written and in NFC, then folded and masked again when a term still shows there."""
+    if not terms:
+        return text
+    text = mask(unicodedata.normalize("NFC", mask(text, terms)), terms)
+    if private_hit(fold(text), terms):
+        text = mask(fold(text), terms)
+    return text
+
+
 # --- Sweep
 
 def excerpt(line, start, terms=()):
     """The line with private terms masked, cut to 100 characters around start when long.
     Masking comes first, so the cut can never leave part of a term in the excerpt."""
-    masked = mask(line, terms)
-    start = len(mask(line[:start], terms))
+    masked = mask_all(line, terms)
+    start = len(mask_all(line[:start], terms))
     text = masked.strip()
     if len(text) > 120:
         s = max(0, start - 40)
@@ -146,14 +176,14 @@ def excerpt(line, start, terms=()):
 
 
 def scan_file(path: Path, rel: str, hits: list, terms=()) -> None:
-    if terms and private_hit(rel, terms):
+    if terms and term_hit(rel, terms):
         hits.append({"file": rel, "line": 0, "class": "private-term", "context": "(file path)"})
     for lineno, line in enumerate(path.read_text(encoding="utf-8", errors="replace").splitlines(), 1):
         for cls, rx in PATTERNS:
             for m in rx.finditer(line):
                 hits.append({"file": rel, "line": lineno, "class": cls,
                              "context": excerpt(line, m.start(), terms)})
-        if terms and private_hit(line, terms):
+        if terms and term_hit(line, terms):
             hits.append({"file": rel, "line": lineno, "class": "private-term",
                          "context": excerpt(line, 0, terms)})
 

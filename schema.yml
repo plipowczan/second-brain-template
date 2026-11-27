@@ -9,6 +9,9 @@ types:
   tool:
     required: [title, date, type, tags, summary]
   book-note:
+    # source: / sources: (optional) hold where the notes came from, as on every note: a
+    # path under _raw/, a URL or a description. The book itself is the title and the
+    # Author: line in the body.
     required: [title, date, type, tags]
   answer-note:
     required: [title, date, type, summary]

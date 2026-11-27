@@ -18,7 +18,8 @@ EXCLUDE = {"_raw", "_indexes", "_outputs", "_graveyard", "templates", ".obsidian
 # Non-note markdown files at the content root (meta docs + unrendered templates).
 EXCLUDE_FILES = {"WRITING_STYLE.md", "WRITING_STYLE_ANALYSIS.md", "_index.md"}
 WIKILINK = re.compile(r"\[\[([^\]]+)\]\]")
-NOW = datetime.datetime.now().replace(microsecond=0).isoformat() + "Z"
+# UTC, as the Z says: local time with a Z put every `updated:` hours off outside UTC.
+NOW = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def rel(path: str) -> str:
