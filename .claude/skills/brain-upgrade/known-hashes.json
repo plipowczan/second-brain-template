@@ -28,7 +28,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".agents/skills/brain-curate/SKILL.md": {
@@ -59,7 +64,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".agents/skills/brain-enhance/SKILL.md": {
@@ -90,7 +100,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".agents/skills/brain-export/SKILL.md": {
@@ -121,7 +136,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".agents/skills/brain-gaps/SKILL.md": {
@@ -152,7 +172,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".agents/skills/brain-import/SKILL.md": {
@@ -183,13 +208,23 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".agents/skills/brain-ingest/SKILL.md": {
    "sha256:c8898d217d7ab583382c556026837ec7b04f41641487d7ffe5edf93b88f6b617": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ],
    "sha256:d05a73f917874c715ec9255870dbb6302b4a5c351436c539b9da4e7e1c123be0": [
     109,
@@ -222,7 +257,12 @@
   ".agents/skills/brain-learn/SKILL.md": {
    "sha256:78efb38fddc5889037d829105700be90cad9292eec70a997b70cac9227f7e397": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".agents/skills/brain-lint/SKILL.md": {
@@ -253,7 +293,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".agents/skills/brain-onboard/SKILL.md": {
@@ -284,7 +329,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".agents/skills/brain-output/SKILL.md": {
@@ -315,7 +365,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".agents/skills/brain-qa/SKILL.md": {
@@ -346,7 +401,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".agents/skills/brain-refactor/SKILL.md": {
@@ -377,7 +437,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".agents/skills/brain-reindex/SKILL.md": {
@@ -408,7 +473,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".agents/skills/brain-research-add-fields/SKILL.md": {
@@ -439,7 +509,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".agents/skills/brain-research-add-items/SKILL.md": {
@@ -470,7 +545,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".agents/skills/brain-research-deep/SKILL.md": {
@@ -501,7 +581,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".agents/skills/brain-research-report/SKILL.md": {
@@ -532,7 +617,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".agents/skills/brain-research/SKILL.md": {
@@ -563,13 +653,23 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".agents/skills/brain-review/SKILL.md": {
    "sha256:ef1ec15e9a7d337d107c4b991f2d2e6c714761b8deb4353c5abb48b6aca6f88c": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".agents/skills/brain-upgrade/SKILL.md": {
@@ -600,7 +700,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".agents/skills/brain-watch/SKILL.md": {
@@ -631,7 +736,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".agents/skills/excalidraw-diagram/SKILL.md": {
@@ -662,7 +772,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/agents/AGENTS.md": {
@@ -752,7 +867,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ],
    "sha256:aa0bd88be224cfd3ddc17ba8a2baa8f9a591ccad36c507a01a3a17eaeeac3b97": [
     11,
@@ -925,7 +1045,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ],
    "sha256:bff7f64ad7d332ea9bccb69d22d49e1a651659c134c08f014dfd643b69e9c656": [
     9,
@@ -1061,7 +1186,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/agents/web-search-modules/chinese-tech.md": {
@@ -1192,7 +1322,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/agents/web-search-modules/general-web.md": {
@@ -1323,7 +1458,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/agents/web-search-modules/github-debug.md": {
@@ -1454,7 +1594,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/agents/web-search-modules/stackoverflow.md": {
@@ -1585,7 +1730,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/commands/b/compile.md": {
@@ -1713,7 +1863,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/commands/b/curate.md": {
@@ -1841,7 +1996,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/commands/b/enhance.md": {
@@ -1969,7 +2129,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/commands/b/export.md": {
@@ -2097,7 +2262,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/commands/b/gaps.md": {
@@ -2225,7 +2395,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/commands/b/import.md": {
@@ -2353,7 +2528,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/commands/b/ingest.md": {
@@ -2481,13 +2661,23 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/commands/b/learn.md": {
    "sha256:a1fd23f96de6a8f314c4626251d833966b52355a1be8c90f3830118d9a71ec93": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/commands/b/lint.md": {
@@ -2615,7 +2805,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/commands/b/onboard.md": {
@@ -2743,7 +2938,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/commands/b/output.md": {
@@ -2871,7 +3071,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/commands/b/qa.md": {
@@ -2949,7 +3154,12 @@
    "sha256:d146eb528a047cf8c350413a969531032e9f3570e19ff5b0feecdef0672b33d7": [
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ],
    "sha256:ee8a358714244b395a54848ad17c22bbeb673dd79919eb261eaeb31e80533adb": [
     81,
@@ -3131,7 +3341,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/commands/b/reindex.md": {
@@ -3259,7 +3474,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/commands/b/research-add-fields.md": {
@@ -3387,7 +3607,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/commands/b/research-add-items.md": {
@@ -3515,7 +3740,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/commands/b/research-deep.md": {
@@ -3643,7 +3873,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/commands/b/research-report.md": {
@@ -3771,7 +4006,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/commands/b/research.md": {
@@ -3899,13 +4139,23 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/commands/b/review.md": {
    "sha256:a5762b376588cc095d9378e3134fdc4a98154b814145545277f6b4a29c2f8b33": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/commands/b/upgrade.md": {
@@ -4016,7 +4266,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/commands/b/watch.md": {
@@ -4061,7 +4316,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/commands/compile.md": {
@@ -4390,7 +4650,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/settings.json": {
@@ -4530,7 +4795,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/brain-compile/SKILL.md": {
@@ -4662,13 +4932,23 @@
    ],
    "sha256:e44dcfc03d3b072727e0ee87e2ab30fabb82376c272f8388284d5783619afec5": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/brain-curate/SKILL.md": {
    "sha256:17f128dcc6ba7befa5169498736475cd1bf89732d9e973c1c4531ca2374c1b85": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ],
    "sha256:669aee54df67c9f0b2506b31e96a555dba510956f9cf16b5b3afe8d6137fbada": [
     11,
@@ -4922,7 +5202,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/brain-curate/scripts/curate_score.py": {
@@ -5050,7 +5335,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/brain-curate/scripts/test_curate_links.py": {
@@ -5178,7 +5468,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/brain-curate/scripts/test_curate_score.py": {
@@ -5306,13 +5601,23 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/brain-enhance/SKILL.md": {
    "sha256:1c1ee6f8e17599a564dd31a7ea00a4c44ac9bb5a1658a9ee7e011ebf93e7ad40": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ],
    "sha256:7ceb815143a56541bbd62fd9315ff999f20167288157ae6b3d0c9d58aa4f1fd4": [
     81,
@@ -5478,7 +5783,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ],
    "sha256:c24bc1e375c8b90e6485135b67ba724e5665dd28bf4e90c69336c2621d5a26dd": [
     11,
@@ -5698,10 +6008,26 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/brain-export/scripts/privacy_sweep.py": {
+   "sha256:24b36a4c69e582dcdcd769dbe4a4b2662af45c90c1d06455338604819d967714": [
+    139,
+    140
+   ],
+   "sha256:764784b796618b3b7fa1598f6001c240459e3eadaaf62550678028f87c42eaa5": [
+    136
+   ],
+   "sha256:7a5252c148599d58c56276684ad7845ba36851ea33f591a6a30633f36f1fe353": [
+    137,
+    138
+   ],
    "sha256:dd163cf4f170ed805f8c0c1491980f1d40a55b364e6d33753a6b90d43437665f": [
     11,
     13,
@@ -5958,10 +6284,22 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/brain-export/scripts/test_privacy_sweep.py": {
+   "sha256:10ee306d52f388e3c8ac6ef0c833fe4b4cfbb7457f7d9bf23f852a8ccab1c920": [
+    137,
+    138
+   ],
+   "sha256:3132d220680fd10b2d054bdcfc8c28ead8a867aa4afe0564db4507afb374a8b9": [
+    136
+   ],
    "sha256:a2808004e51320ad9b3b06a74c792b3e0008d44f1f2c0b73ee65aab2aaf62b21": [
     103,
     104,
@@ -6091,6 +6429,10 @@
    ],
    "sha256:ce85a7d220a4ac42dd47fd78340063dbef3a5b2b5a752d71a682b63165746828": [
     102
+   ],
+   "sha256:fbac5b4f947c74ddefea2f3e26b6e89f43186390566713520e6c5ba5d409717e": [
+    139,
+    140
    ]
   },
   ".claude/skills/brain-gaps/SKILL.md": {
@@ -6220,7 +6562,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/brain-gaps/scripts/gaps.py": {
@@ -6350,7 +6697,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/brain-gaps/scripts/test_gaps.py": {
@@ -6480,13 +6832,23 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/brain-import/SKILL.md": {
    "sha256:585ce3cfb3b1c05b72675d5e87a4f15a95ea60659858abb8de361c8f30533a41": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ],
    "sha256:815f1835e34fd7624505e65026dcf38a8e481664a698f44e96bea5b83fbc25d2": [
     11,
@@ -6744,6 +7106,13 @@
     79,
     80
    ],
+   "sha256:c0ce251b206b1edb99662d1aedd1aad77f438151f73f012404d085f1aa107f03": [
+    136,
+    137,
+    138,
+    139,
+    140
+   ],
    "sha256:f125c1aee1d2f113f89af79d998cf485cb4e3166ad265e46fd304d5c93c2990e": [
     81,
     82,
@@ -6882,19 +7251,34 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/brain-ingest/scripts/inbox_order.py": {
    "sha256:d37f2b3c07ca79801f4aa585a16eef93f0d4ea664af343ece6cc5756d3b335f3": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/brain-ingest/scripts/test_inbox_order.py": {
    "sha256:77c6ed941425edb81ebbe3bf7a281696516121c38f2ee44fb482f65e75099ae8": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/brain-ingest/scripts/test_yt_fetch.py": {
@@ -7030,7 +7414,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/brain-ingest/scripts/test_yt_fetch_start.py": {
@@ -7107,7 +7496,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/brain-ingest/scripts/yt_fetch.py": {
@@ -7123,7 +7517,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ],
    "sha256:4660032e5791ae5165818e12bf1e976401f6de538e1758bd211caff05b89813b": [
     66,
@@ -7251,7 +7650,12 @@
   ".claude/skills/brain-learn/SKILL.md": {
    "sha256:26f457ea7be27e57db3ed04070d4c502622499820f968ebfd624bfdbe083a074": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/brain-lint/SKILL.md": {
@@ -7383,7 +7787,12 @@
    ],
    "sha256:d944d7f223da6c4f808feb07e61326c5bf9dcfbf96a0b5a647fd45c16b94ba2f": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/brain-lint/scripts/lint_links.py": {
@@ -7515,7 +7924,12 @@
    ],
    "sha256:dafe3594f89907f6d8aa54731b3a8173fcda7925e3515668258c551ca5eec170": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/brain-lint/scripts/lint_scan.py": {
@@ -7651,7 +8065,12 @@
    ],
    "sha256:d40bab82b17c71855a2af675ec4de39f443d46d7dadab7e8f69526e245e8a946": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ],
    "sha256:f50745e825150bcfd9b54f9a19b9f27624f19c0b0db8bca6318a55a3444d0f96": [
     83,
@@ -7662,12 +8081,24 @@
    "sha256:8c7453943b1ebc9469508459adeec6760805385a53b4c2b3702318ce3b99ff14": [
     134,
     135
+   ],
+   "sha256:b4e3c8634b371cf500b6ae94df901db366ab6e0d0c0ea1ec6f034efe174228fb": [
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/brain-lint/scripts/test_lint_links.py": {
    "sha256:9339e4a389de95ac6e8ba160dafd36c36cdbee391a23f0289c7d138484313f60": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ],
    "sha256:99ed16a9970e8b649519fc83628bae92bf0ea8cdced055120fe25c6aa32911bb": [
     52,
@@ -7757,7 +8188,12 @@
   ".claude/skills/brain-lint/scripts/test_lint_scan.py": {
    "sha256:3e3699ba776daf11418db02b507ecd6d31b55cbc7ef1543392b53153e35700f4": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ],
    "sha256:8a16b570e77414b9e91c9291d2f7fd6b9d436acb1868cd4ae20abe0c075d244a": [
     52,
@@ -7895,6 +8331,13 @@
    ]
   },
   ".claude/skills/brain-lint/scripts/test_metrics.py": {
+   "sha256:4064c43a140ec94876d735d44e15028cfa500a2e08696f863aaf9894f207b6a9": [
+    136,
+    137,
+    138,
+    139,
+    140
+   ],
    "sha256:8219039ed25b8adf67ac29fb51df696f3fb68ea1711c64746e08f3a7c752664a": [
     134,
     135
@@ -7945,7 +8388,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ],
    "sha256:8ef22212e03b059d4d5cab5a38f47e51ad50b92fc42948b3d696a761ae0c1e7b": [
     25,
@@ -8159,7 +8607,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/brain-onboard/scripts/test_render.py": {
@@ -8287,7 +8740,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/brain-output/SKILL.md": {
@@ -8415,14 +8873,24 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/brain-qa/SKILL.md": {
    "sha256:171bc4baa222a11bbb032bb0f5b4fdf66682c240c0e80de6a34505325b8030a2": [
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ],
    "sha256:728ef345a7b4c5bf74df1c101aa69532c152b004a838f1318e0c447fe10bc9cf": [
     81,
@@ -8677,7 +9145,12 @@
    ],
    "sha256:ee8dfd0755605eb30861acc2913b99268de9d5df47a248bc721054b997295c18": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/brain-refactor/scripts/refactor.py": {
@@ -8805,7 +9278,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/brain-refactor/scripts/test_refactor.py": {
@@ -8933,7 +9411,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/brain-reindex/SKILL.md": {
@@ -9061,10 +9544,22 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/brain-reindex/scripts/build_indexes.py": {
+   "sha256:225ae7b022f11ba971540e51a8d585e3ea0eebcf08220630e0b122b66688d291": [
+    136,
+    137,
+    138,
+    139,
+    140
+   ],
    "sha256:30330f22e64f70ad33660ea94ee925fcba39349efc290de34873df1eb14d75c0": [
     11,
     13
@@ -9197,19 +9692,36 @@
   ".claude/skills/brain-reindex/scripts/oplog.py": {
    "sha256:b2f24392a69fc27e3b029054c24b736ac3d89a299ef7ec4f2f20236f8eb56f23": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/brain-reindex/scripts/test_log_merge.py": {
    "sha256:37fdda6afdbbd4e76368a34d873283c724d04b59cea93f222497058cf4bb121c": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/brain-reindex/scripts/test_oplog.py": {
    "sha256:57bbf5f18f87e49185f05fdb1fc01c8c76700f297a7b5499c7e04887cd5a7753": [
     134,
-    135
+    135,
+    136,
+    137,
+    138
+   ],
+   "sha256:c3722019fd4c0e9b16bd956db9f25398e2abdf17bf9f5383eb0853528c30180a": [
+    139,
+    140
    ]
   },
   ".claude/skills/brain-research-add-fields/SKILL.md": {
@@ -9337,7 +9849,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/brain-research-add-items/SKILL.md": {
@@ -9465,7 +9982,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/brain-research-deep/SKILL.md": {
@@ -9593,7 +10115,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/brain-research-report/SKILL.md": {
@@ -9721,7 +10248,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/brain-research/SKILL.md": {
@@ -9849,7 +10381,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/brain-research/validate_json.py": {
@@ -9977,25 +10514,51 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/brain-review/SKILL.md": {
+   "sha256:ace3b7bb207477248c4cfa0618f647845cffe99e05d6be4d570044be38305b89": [
+    138,
+    139,
+    140
+   ],
    "sha256:de550e0d004afdbbc34588aff3ec4fd70805d7b4489c2625a159dced70dd78fe": [
     134,
-    135
+    135,
+    136,
+    137
    ]
   },
   ".claude/skills/brain-review/scripts/review_data.py": {
    "sha256:157f6b9104971642a592bb43438acec39f8242edaf97483f343815ac36945875": [
     134,
-    135
+    135,
+    136,
+    137
+   ],
+   "sha256:f15ea6de55415da409579bcfa7afa185f87344000580fd9b54833c63c8da315a": [
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/brain-review/scripts/test_review_data.py": {
    "sha256:4b9745f4e539f24f78c903897679a8a4db03767c9e4f39fafc8eeef5c8194ac3": [
     134,
-    135
+    135,
+    136,
+    137
+   ],
+   "sha256:d7ae026f4d8228d16d8bb6ae9a4723867bef2509e38d51d34cd0374df613091d": [
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/brain-upgrade/SKILL.md": {
@@ -10120,13 +10683,23 @@
    ],
    "sha256:fe62f4c1da3446e5f2c98b59c44fe099278254c79d1626e7aa1a401e285e00b0": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/brain-upgrade/scripts/fixtures.py": {
    "sha256:1b006ecc6a08a7332407ec5bc292db54bad305d19d26cf67898ea001fec520cf": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ],
    "sha256:3c736cd1b1697e81054555407af2c1829ac7f869caf2e0d0834411ac4907358b": [
     68,
@@ -10377,7 +10950,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/brain-upgrade/scripts/planner.py": {
@@ -10392,7 +10970,12 @@
    ],
    "sha256:05703869244fdd993850b055864d7b3b17bfa7b325c2053f495464db0cb29852": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ],
    "sha256:1893ea3d684bd173cced50dff65753f222639d2745a3f84596d6c0cc83487e1f": [
     40,
@@ -10607,7 +11190,12 @@
    ],
    "sha256:6611f085375d0ee052778d298b5705b47d788f7500bba7e6d39dc8e3353685ba": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ],
    "sha256:bca1f74270f8856fedb2d4117a89cbb8f8e50823071ed8760150b9e0138912d3": [
     23,
@@ -10641,7 +11229,12 @@
   ".claude/skills/brain-upgrade/scripts/test_adopt.py": {
    "sha256:50a375dea9fb46dd969cbd439c9f4fae387b726bbefea6b5d21785ec146ccc17": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ],
    "sha256:639350d68fdce6807abdcc1f9578689dcd254507c38a0f10c438584862944b45": [
     68,
@@ -10878,7 +11471,12 @@
    ],
    "sha256:f15364b8329bfc29d6570549e1a758a9b75269afdd800cb72ee97a5b69db594e": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/brain-upgrade/scripts/test_executable.py": {
@@ -10940,13 +11538,23 @@
    ],
    "sha256:ab72440096a95a8c2fb4558ac203d1d67169f8aa58c682cb95b6d12c8b32ab1f": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/brain-upgrade/scripts/test_kbtemplate.py": {
    "sha256:3d136ec28fd0c17e829166d51740bb822545ca17ce2125effdf36fa003b8cf25": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ],
    "sha256:74a57d5720d1683a300e5d4aeb07d59d436a9e467d120fd01da1a7df6126df6d": [
     24,
@@ -11150,7 +11758,12 @@
    ],
    "sha256:db287b93fe485557c60be004a1514fa78bdeebd8df380dcef8c8f0d520dbaa6f": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ],
    "sha256:dd98ef6ac76eed07dab9e4dce3e1fed7241bbd937306681d061c56f7577ab74b": [
     23,
@@ -11304,7 +11917,12 @@
    ],
    "sha256:d4675ceaf4aedd23dbc04f21a17390707ca95e4cfc3d47a1e0a9e6ec768b36aa": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ],
    "sha256:da336b61cc172b8b148cd50fced9cd2758c4649477f18d11ef93ed14e8b6528f": [
     38,
@@ -11321,7 +11939,12 @@
   ".claude/skills/brain-upgrade/scripts/test_skill_path.py": {
    "sha256:5ae5218e4e24be2695b8c056174173063f38deebaf7c851646dd164ec90d45f7": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ],
    "sha256:749c27037b8103102abb7f1c616b215dc7c5b0d6dbb21f1804d7eff458607052": [
     68,
@@ -11383,7 +12006,12 @@
   ".claude/skills/brain-upgrade/scripts/test_sources.py": {
    "sha256:be331b5c633f0233d45f212ee01132feba73480952b983af6407f03c7a85a894": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ],
    "sha256:ce3f95124828a3d28c24ee15603058102d851f83501a3e7e3633b042225300d2": [
     22,
@@ -11609,19 +12237,34 @@
    ],
    "sha256:d3fbb30fedd1a57910ce94a45cb00711d93e7a2409d2d12f4062d60b50d595dd": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/brain-upgrade/scripts/test_temp_folders.py": {
    "sha256:962deb1f37535ee295efdf22fc29ecf18f4f42a002c0df6850de3d57e4615d25": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/brain-upgrade/scripts/test_undo.py": {
    "sha256:db963558d26d9fe73fa6882403854f8650bc84e8364856e91f40d5f5caeae64e": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/brain-upgrade/scripts/upgrade.py": {
@@ -11758,7 +12401,12 @@
    ],
    "sha256:d80dd23103815e02f34b8a4fcbcc0174ab489cd9c3db200a1c872215da23f6fb": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ],
    "sha256:f392d626157569d2b29b96fb92fb2a2bdff7c2bf75cb39aa2b136d7e981aa342": [
     38,
@@ -11771,7 +12419,8 @@
   ".claude/skills/brain-watch/SKILL.md": {
    "sha256:2a11d1a913a15ece2ef9a584c14e76978ff31d890e74d5df929ca2c7366f09c7": [
     134,
-    135
+    135,
+    136
    ],
    "sha256:4b6af24c4f5aad67010cfadeb54a0140bbb8e864e7a292aeb45d7a4c2aed6139": [
     103
@@ -11821,6 +12470,12 @@
    ],
    "sha256:bd99d16a2ecb52ed18479bf5fc46dbf8289e9cdfa8d0fd1299936feea84425a3": [
     95
+   ],
+   "sha256:f59764bf68323a6ea6a9465adb838ad7bff4ba336fb347c6f739b62439cf2a4b": [
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/brain-watch/fields.yaml": {
@@ -11865,7 +12520,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/brain-watch/scripts/test_watch.py": {
@@ -11910,10 +12570,19 @@
     132,
     133,
     134,
-    135
+    135,
+    136
    ],
    "sha256:8ff839695fcfdd9a3ac11c5c1a08cd2237fb4207b977010542ab81358175eaa3": [
     96
+   ],
+   "sha256:9d44ce91ca487f46e057d69e7b2f15e4e748c616e3badddf3f608e2d8536f410": [
+    137,
+    138
+   ],
+   "sha256:a19433682b46e29f75300ed512eb72c503fc256c5bfbd3493c02af61d298e9f3": [
+    139,
+    140
    ],
    "sha256:bab199ac1bae04f12a381b21c2d66b961528fe7ee3072d7d992fe145ba7ca004": [
     99
@@ -11965,7 +12634,8 @@
     132,
     133,
     134,
-    135
+    135,
+    136
    ],
    "sha256:42fd8ea5511674d436d6a191c6e67cd60bf846ecfd9d6901d066a113b3f12526": [
     102
@@ -11977,8 +12647,16 @@
     100,
     101
    ],
+   "sha256:df25c996b024c7b5b4787e576c5704256c2bb21ad9d78c34c6ee40c922d2ed18": [
+    139,
+    140
+   ],
    "sha256:e339bae247e7456d5cb4789687c5ebc2e58b5aa61c45ab11a462aa5205081abd": [
     103
+   ],
+   "sha256:f614b77c857499d54240b251579406be9a48541939f53dd9d9f2b886472f95e4": [
+    137,
+    138
    ],
    "sha256:ff4569e0492709da0f4f49b7746f24cf21a48a504815ca21873cbff9edd4aa31": [
     95
@@ -12218,7 +12896,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/excalidraw-diagram/README.md": {
@@ -12358,7 +13041,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/excalidraw-diagram/SKILL.md": {
@@ -12498,7 +13186,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/excalidraw-diagram/references/color-palette.md": {
@@ -12638,7 +13331,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/excalidraw-diagram/references/element-templates.md": {
@@ -12778,7 +13476,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/excalidraw-diagram/references/json-schema.md": {
@@ -12918,7 +13621,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/excalidraw-diagram/references/pyproject.toml": {
@@ -13058,7 +13766,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/excalidraw-diagram/references/render_excalidraw.py": {
@@ -13198,7 +13911,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/excalidraw-diagram/references/render_template.html": {
@@ -13338,7 +14056,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".claude/skills/export/SKILL.md": {
@@ -13875,7 +14598,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".editorconfig": {
@@ -14015,7 +14743,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".gitattributes": {
@@ -14159,7 +14892,12 @@
    ],
    "sha256:a76963df453e33bea062c68d8e46e5aa178d287e6d47ef149e1ec6c6de151929": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".githooks/pre-commit": {
@@ -14301,7 +15039,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".github/workflows/kb-maintain.yml": {
@@ -14400,7 +15143,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ],
    "sha256:b79f2b1924763bf57171f53b0d0fb1acc95c65a6d57e2d70cb5f7a67c72c79e2": [
     78
@@ -14455,7 +15203,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ],
    "sha256:93a10d5d596e4c28c598d30a59b11eda31b35bdb73606963e2563b44fbe1738b": [
     62,
@@ -14573,7 +15326,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ],
    "sha256:48bbc6d879264c72e5dfb11d55dd6af835b328b940a37bf9ff7cea1fcfa8a5f9": [
     15,
@@ -14717,6 +15475,9 @@
     130,
     131
    ],
+   "sha256:30fa267d41aa7e1aec3c7db46a9f38986312dca04becd19720836b8de98dbc0b": [
+    140
+   ],
    "sha256:48c579980e452089d4a3bc4493570ad1dfaa017d96ee557f9586574090ffe317": [
     109,
     110,
@@ -14805,7 +15566,11 @@
     90
    ],
    "sha256:ded5a94b91879ebe659a4a35ad4fde4d363b8e96f419f54d00acdff2e97f1eb1": [
-    135
+    135,
+    136,
+    137,
+    138,
+    139
    ],
    "sha256:dfac586e72780299b762ae4c62f16606f0b2d80353939c22fcdde9348b32444a": [
     68,
@@ -14958,7 +15723,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   ".prettierrc": {
@@ -15098,7 +15868,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "CHANGELOG.md": {
@@ -15114,6 +15889,9 @@
    "sha256:0d2abcb1f4cc62452d64e898f4bdc08c06f2ea002c047e597f823b615b9c3282": [
     133
    ],
+   "sha256:120dcb042b38446b73b694dcbad91c799a9e82a0648e8b6aa1df4b6379adb86e": [
+    140
+   ],
    "sha256:159a0b67d1f4ae328a6aa51ec784aed4d654ca2fa8c07cc29bdf80dda2d6f613": [
     20
    ],
@@ -15125,6 +15903,9 @@
    ],
    "sha256:224b5647295b50820b9a524082cd32019980eab6f1e5adcb0b0b488ba60fc653": [
     132
+   ],
+   "sha256:22b4b64edd05407e9f573c43e4422f909cd7c95014e8e926267bf509ada20844": [
+    138
    ],
    "sha256:259c4831aebae751b1f9c0a0256645e3756ff9435d875522c26838b058242b26": [
     11,
@@ -15154,6 +15935,9 @@
    ],
    "sha256:30de01bd47befcdf30ab71ffda509dc6e2fa6dd49a82d08a9a874745fcfdc546": [
     14
+   ],
+   "sha256:3108bdabc9b539b68b4d12937c0600274605be263f1c1031595cda3e94cd24cc": [
+    136
    ],
    "sha256:31fa0d46e82e235bfe3487b27ef68b2534a3481f2c783f0c3c089d948e7c6566": [
     6
@@ -15225,6 +16009,9 @@
    ],
    "sha256:689e97d912c1106ea375a4f8322e13d27e12a1546b18c823b0902e05ee5cdfd3": [
     7
+   ],
+   "sha256:68d2a552ff7982caeb85b55a52dead00d2de86e58c91d46924ee66f28ef7317e": [
+    139
    ],
    "sha256:763fad8c5a7c49ee89de79d7cc34e2342acd50fa6b6f09774376ee9c45f226dd": [
     111,
@@ -15300,6 +16087,9 @@
    ],
    "sha256:c0d9af3fa0ffda75a4fe87edbe83fb7f79c047a3ce31210be73a2a358207110c": [
     43
+   ],
+   "sha256:c3a1511b65bf50ba956fc85df8f2b19a02f210a442a71a0fc534f69bf5921540": [
+    137
    ],
    "sha256:c998e3c3a916c4e4c83bc2210ec6095a26b2c0718803dc82218769b23f815ddd": [
     54
@@ -15399,7 +16189,12 @@
    ],
    "sha256:3ac25095a39ac92b4b57eeb0d191c52e8ef1df188ec07b1b8c8b9f23f254bc86": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ],
    "sha256:433bac31398bfbdae351ca3248b61bc46b2c7359daabe8504f56bb108f0765a3": [
     57,
@@ -15624,7 +16419,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ],
    "sha256:ce2013aa73a2e1bdd62ee4c19032c20fbcdd398d9fe99059651e16167b81486e": [
     8,
@@ -15782,7 +16582,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "LIMITS.md": {
@@ -15842,7 +16647,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "dev/build_codex_files.py": {
@@ -15883,7 +16693,12 @@
    ],
    "sha256:d3fddb263f46de1b177d3c08a2cfd372b479310763e95c39ac060c592f28dcc9": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "dev/build_known_hashes.py": {
@@ -15995,7 +16810,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "dev/check_manifest.py": {
@@ -16112,7 +16932,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "dev/release_notes.py": {
@@ -16223,7 +17048,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "dev/test_build_codex_files.py": {
@@ -16264,7 +17094,12 @@
    ],
    "sha256:f1b6efb65acc2f9995d6316ae76146406afccaf23f6ca1f99a52d3b360aaeeca": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "dev/test_check_manifest.py": {
@@ -16383,7 +17218,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/add-codex-support/.openspec.yaml": {
@@ -16758,7 +17598,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/add-quality-guards/README.md": {
@@ -16819,7 +17664,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/add-quality-guards/design.md": {
@@ -16872,7 +17722,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ],
    "sha256:23926f183ff202b757e4089f18e0a313e47d0cca4b79c34117f8204fbd9281ff": [
     80,
@@ -16945,7 +17800,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/add-quality-guards/review.md": {
@@ -17004,7 +17864,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ],
    "sha256:f41e8f5ee3899844b8f9e5d5d34b10080453d24798db5d587dfa2e0bdb0716f2": [
     88
@@ -17068,7 +17933,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/add-quality-guards/specs/contradiction-markers/spec.md": {
@@ -17129,7 +17999,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/add-quality-guards/specs/ingest-coverage/spec.md": {
@@ -17190,7 +18065,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/add-quality-guards/specs/ingest-plan/spec.md": {
@@ -17251,7 +18131,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/add-quality-guards/specs/lint-report/spec.md": {
@@ -17312,7 +18197,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/add-quality-guards/specs/method-limits/spec.md": {
@@ -17373,7 +18263,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/add-quality-guards/specs/source-traceability/spec.md": {
@@ -17436,7 +18331,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/add-quality-guards/tasks.md": {
@@ -17486,7 +18386,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ],
    "sha256:14bb2f145a558025d0752e536b76daf49fe58263f1824925e7efab2d21fc37d9": [
     81
@@ -17511,85 +18416,155 @@
   "openspec/changes/add-review-loop/.openspec.yaml": {
    "sha256:d80b853b48e4aa975645172ad7ef5fa151e0123233d254d536f1f288336f6023": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/add-review-loop/README.md": {
    "sha256:bdf19c9ca280c59487bb1908595c171efaa34fbee1e3e856ea5253b4bcc2d6e1": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/add-review-loop/design.md": {
    "sha256:501ae201ab79dcbf2cec5c6d0732c7c190137795e1427bf6dfe97c227ae24a95": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/add-review-loop/proposal.md": {
    "sha256:ddca0681032fcf652c2ff2cf3cd2bdeb9e87d596c89970058ce86d24851b012e": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/add-review-loop/review.md": {
    "sha256:5fba84ae956d8d27d5c464db84674e4f8c857b700e23a24a4d2877bca9bc7e77": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/add-review-loop/specs/ingest-backlog/spec.md": {
    "sha256:8bc919a4fe7102c72c9a38ed268525cb6b899456394986185a3d2f2dee3d5307": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/add-review-loop/specs/learning-sessions/spec.md": {
    "sha256:0e0b097745d3c79c3538b3b69c4ecc66691c972d93f5e7c29ba840304e66fe99": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/add-review-loop/specs/onboarding-note-types/spec.md": {
    "sha256:b998f77b4a52f90d1c7f8a9bcab8b7b15b5ca6fd3f5b735f7597655c94d173e6": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/add-review-loop/specs/operation-log/spec.md": {
    "sha256:6ad49de955665f0cf40256d8b86dbb0c996b00ef72014fa6d7212b74a16eaa1d": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/add-review-loop/specs/periodic-review/spec.md": {
    "sha256:2d84ec52ea8e3713172b9826bcdf6468074e2bcdc3fb9675f2df2044cd3b0505": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/add-review-loop/specs/skill-descriptions/spec.md": {
    "sha256:bd801f8bad3f2b5ddb66340a3d9283810e1f482c71af0b8a8fb74aa5c60bcce0": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/add-review-loop/specs/template-upgrade/spec.md": {
    "sha256:75b627e9524cfd4b2b318b8ad1888749185aa0792378d000ffe575f89c93d4e3": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/add-review-loop/specs/vault-metrics/spec.md": {
    "sha256:bc7cdc0b6ecfe65b5c001d6c8d874a14f3cff75266a730b58df1bc32a67aa928": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/add-review-loop/tasks.md": {
    "sha256:26a606a9eebe4c01ab21d6fc7b2a5716a8bd00bb87b0dae0a29152cc25b70f2f": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/add-template-updates/.openspec.yaml": {
@@ -18232,7 +19207,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/archive/2026-10-13-add-template-updates/.openspec.yaml": {
@@ -18311,7 +19291,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/archive/2026-10-13-add-template-updates/README.md": {
@@ -18390,7 +19375,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/archive/2026-10-13-add-template-updates/design.md": {
@@ -18469,7 +19459,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/archive/2026-10-13-add-template-updates/proposal.md": {
@@ -18548,7 +19543,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/archive/2026-10-13-add-template-updates/review.md": {
@@ -18627,7 +19627,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/archive/2026-10-13-add-template-updates/specs/instance-stamp/spec.md": {
@@ -18706,7 +19711,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/archive/2026-10-13-add-template-updates/specs/template-adoption/spec.md": {
@@ -18785,7 +19795,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/archive/2026-10-13-add-template-updates/specs/template-manifest/spec.md": {
@@ -18864,7 +19879,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/archive/2026-10-13-add-template-updates/specs/template-releases/spec.md": {
@@ -18943,7 +19963,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/archive/2026-10-13-add-template-updates/specs/template-upgrade/spec.md": {
@@ -19022,7 +20047,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/archive/2026-10-13-add-template-updates/tasks.md": {
@@ -19101,7 +20131,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/archive/2026-11-05-fix-upgrade-path/.openspec.yaml": {
@@ -19159,7 +20194,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/archive/2026-11-05-fix-upgrade-path/README.md": {
@@ -19217,7 +20257,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/archive/2026-11-05-fix-upgrade-path/design.md": {
@@ -19275,7 +20320,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/archive/2026-11-05-fix-upgrade-path/proposal.md": {
@@ -19333,7 +20383,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/archive/2026-11-05-fix-upgrade-path/review.md": {
@@ -19391,7 +20446,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/archive/2026-11-05-fix-upgrade-path/specs/template-adoption/spec.md": {
@@ -19449,7 +20509,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/archive/2026-11-05-fix-upgrade-path/specs/template-manifest/spec.md": {
@@ -19507,7 +20572,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/archive/2026-11-05-fix-upgrade-path/specs/template-upgrade/spec.md": {
@@ -19565,7 +20635,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/archive/2026-11-05-fix-upgrade-path/tasks.md": {
@@ -19623,7 +20698,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/archive/2026-11-16-add-codex-support/.openspec.yaml": {
@@ -19639,7 +20719,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/archive/2026-11-16-add-codex-support/README.md": {
@@ -19655,7 +20740,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/archive/2026-11-16-add-codex-support/design.md": {
@@ -19671,7 +20761,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/archive/2026-11-16-add-codex-support/proposal.md": {
@@ -19687,7 +20782,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/archive/2026-11-16-add-codex-support/review.md": {
@@ -19702,7 +20802,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ],
    "sha256:7e2693e4884567186defdc9380bc34b4c38dd436951369ee1ea6ba89035bd495": [
     124
@@ -19721,7 +20826,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/archive/2026-11-16-add-codex-support/specs/template-manifest/spec.md": {
@@ -19737,7 +20847,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/archive/2026-11-16-add-codex-support/tasks.md": {
@@ -19753,7 +20868,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/archive/2026-11-21-fix-upgrade-replay-findings/README.md": {
@@ -19763,7 +20883,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/archive/2026-11-21-fix-upgrade-replay-findings/design.md": {
@@ -19773,7 +20898,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/archive/2026-11-21-fix-upgrade-replay-findings/proposal.md": {
@@ -19783,7 +20913,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/archive/2026-11-21-fix-upgrade-replay-findings/review.md": {
@@ -19793,7 +20928,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/archive/2026-11-21-fix-upgrade-replay-findings/specs/template-upgrade/spec.md": {
@@ -19803,7 +20943,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/archive/2026-11-21-fix-upgrade-replay-findings/tasks.md": {
@@ -19813,7 +20958,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/fix-upgrade-path/.openspec.yaml": {
@@ -19928,42 +21078,72 @@
    "sha256:0b89965c6919ee9f0b3679bc8491b3c9efd623f2ceac7e5bd3929eff87f22215": [
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/slim-qa-navigation/README.md": {
    "sha256:077e16e6a63ac0d0293ebcccfacd81deaf4dc7705c470e809c7721970acbb08a": [
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/slim-qa-navigation/design.md": {
    "sha256:80477d9d388adf85ed0ad3eb5b81b432d95731f6405d1371dbcc938a670a844a": [
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/slim-qa-navigation/proposal.md": {
    "sha256:cd56c627b9bcab8d8dd3ba9d03027e853e26d7a1a6d59d89bee703f06caef252": [
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/slim-qa-navigation/specs/qa-navigation/spec.md": {
    "sha256:a4b1a03c2fa312ed35a98ccdaf3f2bd4099eaef956d6c0f3ebd9eff1746e9e90": [
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/changes/slim-qa-navigation/tasks.md": {
    "sha256:0d71b43a666d4fd7dc0dd78c95a432e7c81b0acaa6247266aee031c8ab3e69f5": [
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/config.yaml": {
@@ -20082,7 +21262,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/specs/.gitkeep": {
@@ -20201,7 +21386,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/specs/codex-support/spec.md": {
@@ -20217,7 +21407,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/specs/instance-stamp/spec.md": {
@@ -20296,7 +21491,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/specs/template-adoption/spec.md": {
@@ -20377,7 +21577,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/specs/template-manifest/spec.md": {
@@ -20460,7 +21665,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/specs/template-releases/spec.md": {
@@ -20539,7 +21749,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "openspec/specs/template-upgrade/spec.md": {
@@ -20549,7 +21764,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ],
    "sha256:742c2efb8414d6503f84b2363474c0c2096551551a306fa09e8fe61415121cd7": [
     61,
@@ -20737,7 +21957,12 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ],
    "sha256:c37a11ca8f08cc8e9d3b54f14bf3d92de77f3e328835b639d85e9fcbe9e8ac5a": [
     0,
@@ -20904,10 +22129,22 @@
     132,
     133,
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "schema.yml": {
+   "sha256:0ab65129206ffb9172a6162365c7525d6d3546ee4d78eb3369845c02e22e40ea": [
+    136,
+    137,
+    138,
+    139,
+    140
+   ],
    "sha256:5920d2dc533de8cdd3e5714c235fce032ca3834ec9d759bc739892c92b6a32c8": [
     0,
     1,
@@ -21132,13 +22369,23 @@
    ],
    "sha256:ba10eeffe8640e29cb2b3e7059e39f1633b942eb80b949759ef0000c24754d0c": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ]
   },
   "tests/run_tests.py": {
    "sha256:4f4eb6567f2a94041eadc181c9437ab5b31f8e0d43cf96aea875c1ffc3d108b0": [
     134,
-    135
+    135,
+    136,
+    137,
+    138,
+    139,
+    140
    ],
    "sha256:69c0241784da18ee5b8786acf2f41ab2de82f5b3e53cf3db5808d607700fc58c": [
     3,
@@ -21305,7 +22552,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -21319,7 +22567,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -21333,7 +22582,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -21347,7 +22597,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -21361,7 +22612,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -21375,7 +22627,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -21389,7 +22642,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -21403,7 +22657,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -21417,7 +22672,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -21431,7 +22687,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -21445,7 +22702,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": "0.1.0"
   },
@@ -21458,7 +22716,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -21471,7 +22730,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -21484,7 +22744,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -21497,7 +22758,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -21510,7 +22772,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -21523,7 +22786,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -21536,7 +22800,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -21549,7 +22814,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -21562,7 +22828,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -21575,7 +22842,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -21588,7 +22856,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -21601,7 +22870,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -21614,7 +22884,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -21627,7 +22898,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -21640,7 +22912,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -21653,7 +22926,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -21666,7 +22940,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -21679,7 +22954,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -21692,7 +22968,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -21705,7 +22982,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -21718,7 +22996,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -21731,7 +23010,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -21744,7 +23024,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -21757,7 +23038,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -21770,7 +23052,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -21783,7 +23066,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -21796,7 +23080,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -21809,7 +23094,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -21822,7 +23108,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -21835,7 +23122,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -21848,7 +23136,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -21861,7 +23150,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -21874,7 +23164,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -21887,7 +23178,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -21900,7 +23192,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -21913,7 +23206,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -21926,7 +23220,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -21939,7 +23234,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -21952,7 +23248,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -21965,7 +23262,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -21978,7 +23276,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -21991,7 +23290,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22004,7 +23304,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22017,7 +23318,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22030,7 +23332,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22043,7 +23346,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22056,7 +23360,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22069,7 +23374,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22082,7 +23388,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22095,7 +23402,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": "0.2.0"
   },
@@ -22107,7 +23415,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22119,7 +23428,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22131,7 +23441,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22143,7 +23454,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22155,7 +23467,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": "0.2.1"
   },
@@ -22166,7 +23479,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22177,7 +23491,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22188,7 +23503,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22199,7 +23515,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22210,7 +23527,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22220,7 +23538,8 @@
    "in": [
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22230,7 +23549,8 @@
    "in": [
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22240,7 +23560,8 @@
    "in": [
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22250,7 +23571,8 @@
    "in": [
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22260,7 +23582,8 @@
    "in": [
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22270,7 +23593,8 @@
    "in": [
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22280,7 +23604,8 @@
    "in": [
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22291,7 +23616,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22302,7 +23628,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22313,7 +23640,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22324,7 +23652,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22335,7 +23664,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22346,7 +23676,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22357,7 +23688,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22368,7 +23700,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22379,7 +23712,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22390,7 +23724,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22401,7 +23736,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22412,7 +23748,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22423,7 +23760,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22434,7 +23772,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22445,7 +23784,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22456,7 +23796,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22467,7 +23808,8 @@
     "0.3.0",
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": "0.3.0"
   },
@@ -22477,7 +23819,8 @@
    "in": [
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22487,7 +23830,8 @@
    "in": [
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22497,7 +23841,8 @@
    "in": [
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22507,7 +23852,8 @@
    "in": [
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22517,7 +23863,8 @@
    "in": [
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22527,7 +23874,8 @@
    "in": [
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22537,7 +23885,8 @@
    "in": [
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22547,7 +23896,8 @@
    "in": [
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22557,7 +23907,8 @@
    "in": [
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22567,7 +23918,8 @@
    "in": [
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22577,7 +23929,8 @@
    "in": [
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22587,7 +23940,8 @@
    "in": [
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22597,7 +23951,8 @@
    "in": [
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22607,7 +23962,8 @@
    "in": [
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22617,7 +23973,8 @@
    "in": [
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22627,7 +23984,8 @@
    "in": [
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22637,7 +23995,8 @@
    "in": [
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22647,7 +24006,8 @@
    "in": [
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22657,7 +24017,8 @@
    "in": [
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22667,7 +24028,8 @@
    "in": [
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22677,7 +24039,8 @@
    "in": [
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22687,7 +24050,8 @@
    "in": [
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22697,7 +24061,8 @@
    "in": [
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22707,7 +24072,8 @@
    "in": [
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22717,7 +24083,8 @@
    "in": [
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22727,7 +24094,8 @@
    "in": [
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22737,7 +24105,8 @@
    "in": [
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22747,7 +24116,8 @@
    "in": [
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22757,7 +24127,8 @@
    "in": [
     "0.4.0",
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": "0.4.0"
   },
@@ -22766,7 +24137,8 @@
    "date": "2026-11-16",
    "in": [
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22775,7 +24147,8 @@
    "date": "2026-11-16",
    "in": [
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22784,7 +24157,8 @@
    "date": "2026-11-22",
    "in": [
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22793,7 +24167,8 @@
    "date": "2026-11-21",
    "in": [
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22802,7 +24177,8 @@
    "date": "2026-11-21",
    "in": [
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22811,7 +24187,8 @@
    "date": "2026-11-21",
    "in": [
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22820,7 +24197,8 @@
    "date": "2026-11-21",
    "in": [
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22829,7 +24207,8 @@
    "date": "2026-11-22",
    "in": [
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22838,7 +24217,8 @@
    "date": "2026-11-22",
    "in": [
     "0.4.1",
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": "0.4.1"
   },
@@ -22846,7 +24226,8 @@
    "commit": "8c8a10e68834a675928cfc19031193a9fe26ea50",
    "date": "2026-11-24",
    "in": [
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
    ],
    "release": null
   },
@@ -22854,7 +24235,49 @@
    "commit": "e370725219dfb478a2da902e4ffecaff512d11fa",
    "date": "2026-11-27",
    "in": [
-    "0.5.0"
+    "0.5.0",
+    "0.5.1"
+   ],
+   "release": null
+  },
+  {
+   "commit": "8e365a07f980fc50f5c1de5b91d9f23092a764b5",
+   "date": "2026-11-27",
+   "in": [
+    "0.5.0",
+    "0.5.1"
+   ],
+   "release": "0.5.0"
+  },
+  {
+   "commit": "c4e487d283e3dff2ef1e3fcd43755fe725485c3b",
+   "date": "2026-11-27",
+   "in": [
+    "0.5.1"
+   ],
+   "release": null
+  },
+  {
+   "commit": "698e8a981da8647d52e524b5ad2f691e8cddd325",
+   "date": "2026-11-27",
+   "in": [
+    "0.5.1"
+   ],
+   "release": null
+  },
+  {
+   "commit": "73e45eee5f6d3f3595a97b6cbd406e3700a8a892",
+   "date": "2026-11-27",
+   "in": [
+    "0.5.1"
+   ],
+   "release": null
+  },
+  {
+   "commit": "d9833ca799da4cb0f217e2b5b93dce8ac296f517",
+   "date": "2026-11-27",
+   "in": [
+    "0.5.1"
    ],
    "release": null
   },
@@ -22862,9 +24285,9 @@
    "commit": null,
    "date": "2026-11-27",
    "in": [
-    "0.5.0"
+    "0.5.1"
    ],
-   "release": "0.5.0"
+   "release": "0.5.1"
   }
  ]
 }

@@ -5,7 +5,14 @@ who have cloned the template and want to pull improvements into their own base.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are ISO (UTC).
 
-## [Unreleased]
+## [0.5.1] - 2026-11-27
+
+A patch release. `/b:watch` and the `/b:export --public` sweep now find a private term
+in text that a Mac stores decomposed, in a name written with diacritics when the term is
+listed without them, and when the privacy file itself stores the term decomposed. In a
+shallow clone, such as a CI checkout, `/b:review` and the metrics no longer read the
+cut-off git history. `/b:ingest` rebuilds the indexes with the script and leaves notes
+the source only mentions unchanged, and the indexes record their time in UTC.
 
 ### Fixed
 - **A short private term saved decomposed in a privacy file now matches.** A privacy file
