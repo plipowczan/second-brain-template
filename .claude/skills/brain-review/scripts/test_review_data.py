@@ -107,6 +107,18 @@ class TestPeriod(Vault):
         self.assertEqual(data["log"]["by_op"], {"ingest": {"runs": 1,
                                                            "counts": {"sources": 2}}})
 
+    def test_a_row_in_the_minute_of_the_last_review_after_it_counts(self):
+        # Times have minutes only: an ingest logged in the review's minute, after its row,
+        # was not covered by that review; one logged before it was.
+        rows = [row("2026-11-24 10:00", "ingest", {"sources": 1}),
+                row("2026-11-24 10:00", "review", {"days": 7}),
+                row("2026-11-24 10:00", "ingest", {"sources": 4}, ["Z/Late"])]
+        data = self.gather(rows=rows)
+        self.assertEqual(data["period"]["after"], "2026-11-24 10:00")
+        self.assertEqual(data["log"]["by_op"], {"ingest": {"runs": 1,
+                                                           "counts": {"sources": 4}}})
+        self.assertEqual(data["log"]["folders"], [{"folder": "Z", "count": 1}])
+
     def test_same_day_review_covers_its_period_again(self):
         rows = [row("2026-11-27 07:00", "review", {"days": 5}),
                 row("2026-11-23 07:00", "compile", {"created": 1})]

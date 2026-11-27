@@ -134,9 +134,17 @@ def git(root: Path, *args: str):
 
 # --- the period -------------------------------------------------------------------------
 
+def in_log_order(rows: list[dict]) -> list[dict]:
+    """The rows by time. `oplog.py read` sorts them stably, and so does this, so rows of
+    one minute stay in the order they were written."""
+    return sorted(rows, key=lambda r: str(r.get("time", "")))
+
+
 def last_review(rows: list[dict]):
-    reviews = [r for r in rows if r.get("op") == "review" and parse_date(r.get("time"))]
-    return max(reviews, key=lambda r: r["time"]) if reviews else None
+    """The latest review row; of two in one minute, the one written last."""
+    reviews = [r for r in in_log_order(rows)
+               if r.get("op") == "review" and parse_date(r.get("time"))]
+    return reviews[-1] if reviews else None
 
 
 def newest_report(root: Path, today: dt.date) -> dt.date | None:
@@ -154,7 +162,8 @@ def newest_report(root: Path, today: dt.date) -> dt.date | None:
 def find_period(root: Path, today: dt.date, rows: list[dict], since: dt.date | None,
                 days: int | None) -> dict:
     """{"since", "until", "days", "basis", "after"}: `after` is the time of the review row
-    the period starts at (log rows at or before it belong to that review), else None."""
+    the period starts at (log rows before that row, in log order, belong to that review),
+    else None."""
     after = None
     if since is not None:
         start, basis = since, "since"
@@ -182,12 +191,18 @@ def find_period(root: Path, today: dt.date, rows: list[dict], since: dt.date | N
 # --- the sources ------------------------------------------------------------------------
 
 def log_part(rows: list[dict], period: dict) -> dict:
-    since = period["since"]
+    since, after = period["since"], period["after"]
+    rows = in_log_order(rows)
+    if after is not None:
+        # The period starts right after the review row, not after its minute: a row
+        # logged later in that same minute was never covered (times have minutes only).
+        marks = [i for i, r in enumerate(rows)
+                 if r.get("op") == "review" and str(r.get("time", "")) == after]
+        rows = rows[marks[-1] + 1:] if marks else [r for r in rows
+                                                   if str(r.get("time", "")) > after]
     keep = [r for r in rows
             if str(r.get("time", ""))[:10] >= since
-            and str(r.get("time", ""))[:10] <= period["until"]
-            and (period["after"] is None or r["time"] > period["after"])]
-    keep.sort(key=lambda r: r["time"])
+            and str(r.get("time", ""))[:10] <= period["until"]]
     by_op, folders = {}, Counter()
     for r in keep:
         if r.get("op") == "review":
