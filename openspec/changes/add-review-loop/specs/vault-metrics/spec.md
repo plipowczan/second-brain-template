@@ -20,8 +20,12 @@ every share and average SHALL be `null`.
 - **THEN** both report the same number of orphans
 
 #### Scenario: Note without any link
-- **WHEN** a note has no link to or from another note
+- **WHEN** a note has no link at all, not even to itself
 - **THEN** it is counted in `notes`, `orphans`, `isolated` and `weak`, whether or not `graph.md` is current
+
+#### Scenario: Note that links only to itself
+- **WHEN** a note's only link points to itself
+- **THEN** it is `isolated` and `weak` but not an orphan, as `lint_links.py` counts a self-link as incoming
 
 ### Requirement: lint_links keeps its output
 

@@ -95,12 +95,13 @@ paths from it.
 - [ ] 7.1 Bug 7: plan warning when `.kb-onboard.json` will be tracked and
   `git check-ignore -v` matches it, naming the rule; the skill's step that offers the
   extra commit. Test with an edited `.gitignore`.
-- [ ] 7.2 Bug 8: the plan records its temporary folders; `commit` deletes them as its
-  last step, git or not; `apply` and failed steps delete nothing; `fetch` prints its
-  folders; `cleanup --path` and every deletion check the temp parent, the prefix and
-  links. Tests: a merge still finds the payload after apply, a parallel plan's folders
-  survive, a folder outside the temp directory or behind a junction is refused, a failed
-  step keeps its folders; every suite sets `TMP`, `TEMP` and `TMPDIR` to a
+- [ ] 7.2 Bug 8: `commit` deletes the folder of the plan and its payload as its last
+  step, git or not, and keeps the download; `apply` and failed steps delete nothing;
+  `plan` and `fetch` print their folders; `cleanup --path` and every deletion check the
+  temp parent, the prefix and links. Tests: a merge still finds the payload after apply,
+  the download survives `commit` (offline cycle after an adoption), a parallel plan's
+  folders survive, a folder outside the temp directory or behind a junction is refused,
+  a failed step keeps its folders; every suite sets `TMP`, `TEMP` and `TMPDIR` to a
   `TemporaryDirectory`, and a check after the suites finds no new `kb-upgrade-*` folder.
 - [ ] 7.3 Bug 9: the backup folder always created without git; `backup.json` with the
   hash before and after of every path apply wrote or deleted; `undo --backup` (stamp must

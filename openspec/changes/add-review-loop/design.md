@@ -32,8 +32,8 @@ Facts this design rests on, checked on 2026-11-27:
 - `lint_links.py` is module-level code: it counts orphans by file name, counts a
   self-link as incoming, ignores links in code, and keeps only a set of linked names and
   an out-count per name, not the edges. Its test file has one test. A count from
-  `graph.md` differs: on the maintainer's base (487 notes) 35 orphans by `lint_links.py`,
-  37 from `graph.md`. Notes with no link at all have no line in `graph.md`, only the
+  `graph.md` differs: on the maintainer's base (486 notes as `lint_links.py` counts
+  them) 35 orphans by `lint_links.py`, 37 from `graph.md`. Notes with no link at all have no line in `graph.md`, only the
   `nodes:` total, and `gaps.py` reads `graph.md`.
 - On the upgrade to the release that carries this change, the base's old engine runs
   `fetch` and the base's old `brain-upgrade/SKILL.md` drives the steps. Only `plan`,
@@ -42,7 +42,7 @@ Facts this design rests on, checked on 2026-11-27:
 - Every description of a skill and of a command enters every session. Today the template
   has 21 skills and 20 commands.
 
-Metrics measured on the maintainer's base (487 notes, about six months old), to set the
+Metrics measured on the maintainer's base (486 notes, about six months old), to set the
 call-out rules (D6): orphans 7.2 % by `lint_links.py`, isolated notes (no link in or out)
 3.7 %, 7.25 links out per note (median 6, counted from `graph.md`), one island of 6 notes
 besides the main component and 18 isolated notes, untouched for 90 days 27 % (latest of
@@ -216,9 +216,9 @@ does, and writes nothing. It asks nothing, so it can run unattended.
 
 ### D6. No pass or fail thresholds
 
-`second-brain-os` calls a base healthy below 5 % orphans. The maintainer's base, linked
-by every ingest since `0.3.0`, has 7.2 %; a 5 % line would mark it unhealthy on every
-review and teach the owner to skip the line. Absolute targets also depend on the kind of
+`second-brain-os` calls a base healthy below 5 % orphans. The maintainer's base, which
+is kept up by hand and by these skills every week, has 7.2 %; a 5 % line would mark it
+unhealthy on every review and teach the owner to skip the line. Absolute targets also depend on the kind of
 base: a recipe collection links less than a research base. So the review shows the
 value, the previous value and the change, and calls out a metric only when it got worse
 by at least one step:
@@ -345,22 +345,26 @@ and old `fetch` drive that run:
   never written. The skill offers to remove that one line after the upgrade commit, in a
   commit of its own, on the owner's yes. First run: the warning appears (new `plan`); the
   offer comes from the next upgrade, so the changelog names the one-line edit.
-- **Bug 8, folders left in the temp directory.** The plan records the temporary folders
-  the engine created for it (its own folder with the payload, and the download).
-  `commit` deletes them as its last step, in a git base after the commit and without git
-  after reporting the backup: by then merges (Phase 6) are done and nothing reads the
-  plan again. `apply` deletes nothing. A failed step deletes nothing, so its folders stay
-  for diagnosis. Every deletion checks that the folder is a direct child of the system
-  temp directory, that its name starts with `kb-upgrade-`, and that no link or junction
-  is on its path (`kt.link_in_path`), because the plan file is not trusted (it sits in
-  the temp directory). `fetch` prints the folders it created, and the skill's last phase
-  passes them, and every superseded plan folder of the run, to a new
-  `cleanup --path <folder>...` with the same checks. Nothing is deleted by pattern, so a
-  parallel upgrade in another base keeps its folders. The tests set `TMP`, `TEMP` and
-  `TMPDIR` to a `TemporaryDirectory`, so a run leaves nothing. `shutil.rmtree` is called
-  without `onexc`, which needs Python 3.12. First run: `commit` cleans the plan and the
-  download; the two `fetch` folders stay, and the changelog tells the owner to let the
-  agent delete the folders `fetch` printed.
+- **Bug 8, folders left in the temp directory.** The plan file and its payload share
+  one temporary folder. `commit` deletes that folder as its last step, in a git base
+  after the commit and without git after reporting the backup. By then the merges of
+  Phase 6 are done, and nothing after `commit` reads the plan: the follow-up steps of
+  Phase 7 read the changelog, and the upgrade cycle after an adoption makes a plan of its
+  own. `commit` keeps the download folder: `plan` tells the owner to reuse that archive
+  offline, and the cycle after an adoption may need it. `apply` deletes nothing. A
+  failed step deletes nothing, so its folders stay for diagnosis. `plan` and `fetch`
+  print the folders they created, and the skill's last phase passes the downloads, the
+  `fetch` folders and every superseded plan folder of the run to a new
+  `cleanup --path <folder>...`. Every deletion, by `commit` or `cleanup`, checks that the
+  folder is a direct child of the system temp directory, that its name starts with
+  `kb-upgrade-`, and that no link or junction is on its path (`kt.link_in_path`), because
+  the plan file is not trusted (it sits in the temp directory). Nothing is deleted by
+  pattern, so a parallel upgrade in another base keeps its folders. The tests set `TMP`,
+  `TEMP` and `TMPDIR` to a `TemporaryDirectory`, so a run leaves nothing.
+  `shutil.rmtree` is called without `onexc`, which needs Python 3.12. First run: `commit`
+  cleans the plan and its payload, the largest folder; the download and `fetch` folders
+  stay, and the changelog tells the owner to let the agent delete the folders `plan` and
+  `fetch` printed.
 - **Bug 9, the backup without git.** `apply` without git always creates the backup
   folder, copies every file it replaces or deletes into it, as today, and writes
   `backup.json`: the versions, and for every path apply wrote or deleted its hash before

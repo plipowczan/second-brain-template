@@ -54,11 +54,11 @@ than `content/WRITING_STYLE.md`, or reached through a link or junction.
 
 ### Requirement: The engine cleans up the folders of its plan
 
-The plan SHALL record the temporary folders the engine created for it. `commit`, as its
-last step, SHALL delete them, after the commit in a git instance and after reporting the
-backup in one without git. `apply` SHALL delete nothing, and a failed step SHALL delete
-nothing. No step SHALL delete folders by pattern. The template's tests SHALL leave no
-`kb-upgrade-*` folder in the system temp directory.
+`commit`, as its last step, SHALL delete the temporary folder that holds the plan and its
+payload, after the commit in a git instance and after reporting the backup in one without
+git, and SHALL keep the download folder. `apply` SHALL delete nothing, and a failed step
+SHALL delete nothing. No step SHALL delete folders by pattern. The template's tests SHALL
+leave no `kb-upgrade-*` folder in the system temp directory.
 
 #### Scenario: Parallel upgrade in another base
 - **WHEN** one base commits its upgrade while another base's upgrade is waiting for review
@@ -68,12 +68,17 @@ nothing. No step SHALL delete folders by pattern. The template's tests SHALL lea
 - **WHEN** apply leaves a file waiting for a merge
 - **THEN** the plan's payload still exists when the owner merges, and is deleted only by `commit`
 
+#### Scenario: Offline upgrade after an adoption
+- **WHEN** the adoption is committed and the owner, now offline, plans the upgrade with the archive the adoption's `plan` downloaded
+- **THEN** that archive still exists
+
 ### Requirement: A folder is deleted only after the same checks
 
 Every deletion of a temporary folder, by `commit` or by `upgrade.py cleanup --path
 <folder>...`, SHALL require that the folder is a direct child of the system temp
 directory, that its name starts with `kb-upgrade-`, and that no link or junction is on
-its path, and SHALL refuse and name any other. `fetch` SHALL print the folders it created.
+its path, and SHALL refuse and name any other. `plan` and `fetch` SHALL print the folders
+they created.
 
 #### Scenario: Path outside the temp directory
 - **WHEN** the skill passes a folder inside the base to `cleanup`
