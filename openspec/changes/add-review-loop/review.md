@@ -46,3 +46,16 @@ Test changes:
 - `.claude/skills/brain-review/scripts/test_review_data.py` — R1-2: one new test that the touched folders go to `metrics.py` and its `in_folders` is used; no existing test changed
 
 Checks: `python tests/run_tests.py` and `python tests/run_skill_tests.py` ALL PASS on Windows with Python 3.13 and 3.11 (2 POSIX-only tests skipped); the skill suites also with an 8.3 short-name temp directory; CI green on ubuntu-latest, windows-latest and windows-latest with Python 3.11.
+
+## Round 2 — 2026-11-27 — reviewed 2743025
+
+Codex review of the pull request against `main`, after the fixes of round 1.
+
+| id | sev | where | finding | outcome |
+|---|---|---|---|---|
+| R2-1 | P2 | .claude/skills/brain-review/scripts/review_data.py:184-189 | A row logged in the last review's minute, after the review row, is left out of every later review | fixed in a723cde |
+
+Test changes:
+- `.claude/skills/brain-review/scripts/test_review_data.py` — R2-1: one new test that a row after the review row in the same minute counts and one before it does not; no existing test changed
+
+Checks: `python tests/run_tests.py` and `python tests/run_skill_tests.py` ALL PASS on Windows with Python 3.13 and 3.11 (2 POSIX-only tests skipped). The round 2 fix was not reviewed again.
