@@ -76,6 +76,17 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
   edited either, it asks what to keep. An `AGENTS.md` you never edited is re-rendered by
   the upgrade, and an edited one gets the change as a proposal.
 
+### Fixed
+- **`/b:lint` accepts the note types you named in `/b:onboard`.** A type of your own
+  from the onboarding interview (`recipe-note`, say) was reported as an unknown type in
+  every lint, because lint knew only the types in `schema.yml`. Now `lint_scan.py` also accepts every type listed in
+  `NOTE_TYPES` of `.kb-onboard.json`. Such a type has no required fields; to have lint
+  check fields for it, add it to `schema.yml` with its fields. The lint report says so
+  next to an unknown type. A missing or unreadable `.kb-onboard.json` changes nothing.
+
+  Existing bases: nothing to do. `/b:upgrade` brings the fix (`brain-lint`:
+  `scripts/lint_scan.py` and the skill).
+
 ## [0.4.1] - 2026-11-22
 
 A patch release. An untouched `AGENTS.md` now follows every change to its template, and

@@ -31,6 +31,7 @@ Trigger phrases: "lint", "health check", "audit". The user wants a health report
      - `[[Note]] — stub (120 chars): run /b:enhance [[Note]]`
      - `[[Note]] — source _raw/inbox/talk.md is gone: replace it with _raw/processed/2026-07-02_talk.md`
      - `[[Note]] — 2 open contradictions: decide which claim holds, then remove the callout`
+     - `[[Note]] — unknown type recipe-notes: use a type from schema.yml or one of your own from onboarding (NOTE_TYPES in .kb-onboard.json); to have lint check the fields of a type of your own, add it to schema.yml with its required fields`
    - **Issues and warnings apart.** The classes the scanner names in `warnings` go under a **Warnings** heading: they never block a commit and need no immediate fix. Everything else goes under **Issues**.
    - **Missing source paths:** with `fix=`, give that path as the replacement; with `candidates=`, list them and ask the owner to pick the right one; with neither, the file is gone — say so, and suggest finding the source again or replacing the path with a description.
    - **End with "Fix first"**: up to five items, ordered by what the fix unblocks:

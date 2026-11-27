@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 """Vault health scanner. Walks content/ topic folders, parses frontmatter, reports
 issues. If a schema.yml is present in the working directory, the allowed types are
-its keys and each type's `required` fields are enforced (schema_violation).
+its keys and each type's `required` fields are enforced (schema_violation); without it
+they are DEFAULT_TYPES. The types the owner chose at onboarding (`NOTE_TYPES` of
+.kb-onboard.json, next to schema.yml) are allowed too, with no required fields unless
+schema.yml lists them; a missing or broken .kb-onboard.json changes nothing.
 
 The classes named in WARNINGS (also printed as the report's `warnings` list) are
 advisory: a `_raw/` source path that does not exist, and contradiction callouts left
@@ -19,6 +22,7 @@ EXCLUDE_FILES = {"WRITING_STYLE.md", "WRITING_STYLE_ANALYSIS.md", "_index.md"}
 DEFAULT_TYPES = {"basic-note", "book-note", "knowledge-note", "tool",
                  "compiled-note", "answer-note", "quote", "quote-note", "dailyjournal"}
 TODAY = date.today()
+ONBOARD_FILE = ".kb-onboard.json"
 WARNINGS = ["missing_source_file", "contradiction"]
 CONTRADICTION = re.compile(r'^\s*>\s*\[!contradiction\]', re.I)
 FENCE = re.compile(r'^\s*(`{3,}|~{3,})(.*)$')
@@ -121,6 +125,25 @@ def load_schema(path="schema.yml"):
     except FileNotFoundError:
         return {}
     return data.get("types", {}) or {}
+
+
+def load_onboard_types(path=ONBOARD_FILE):
+    """The note types chosen at onboarding: `NOTE_TYPES` of .kb-onboard.json, a string
+    such as `basic-note | knowledge-note | recipe-note` (a JSON list of strings is read
+    too). An empty set when the file is missing, unreadable or not in that shape."""
+    try:
+        with open(path, encoding="utf-8-sig") as f:
+            data = json.load(f)
+    except (OSError, ValueError):
+        return set()
+    raw = data.get("NOTE_TYPES") if isinstance(data, dict) else None
+    if isinstance(raw, str):
+        items = raw.split("|")
+    elif isinstance(raw, list):
+        items = [i for i in raw if isinstance(i, str)]
+    else:
+        return set()
+    return {t for t in (i.strip().strip("`").strip() for i in items) if t}
 
 
 def schema_violations(fm, ntype, schema):
@@ -260,9 +283,11 @@ def contradiction_count(body):
     return count
 
 
-def scan(root=ROOT, schema=None):
+def scan(root=ROOT, schema=None, extra_types=None):
+    """Scan the notes under root. schema is load_schema()'s result; extra_types are
+    further allowed types without required fields (load_onboard_types())."""
     schema = schema or {}
-    allowed = set(schema) if schema else set(DEFAULT_TYPES)
+    allowed = (set(schema) if schema else set(DEFAULT_TYPES)) | set(extra_types or ())
     notes = []
     for dirpath, dirnames, filenames in os.walk(root):
         rel = os.path.relpath(dirpath, root)
@@ -352,7 +377,7 @@ def scan(root=ROOT, schema=None):
 def main():
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")  # avoid cp1252 crash on non-Latin content
-    result = scan(ROOT, load_schema())
+    result = scan(ROOT, load_schema(), load_onboard_types())
     print(json.dumps(result, indent=1, ensure_ascii=False))
     return 0
 
