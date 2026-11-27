@@ -8,6 +8,18 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
 ## [Unreleased]
 
 ### Fixed
+- **The `/b:export --public` sweep finds private terms in decomposed text.**
+  `privacy_sweep.py` checked each line and file path only as written. Text and file
+  names from a Mac often come decomposed (NFD: `ą` stored as `a` plus a combining
+  ogonek), and a term from your privacy files did not match them. A name written with
+  diacritics did not match a term listed without them either. The sweep now checks each
+  line and path as written, in NFC and without diacritics, as the operation log
+  (`oplog.py`) already did. The hit's context masks the term in whichever form it was
+  found.
+
+  Existing bases: `/b:upgrade` brings `brain-export/scripts/privacy_sweep.py`. If you
+  published a `--public` bundle before, and your notes come from a Mac or your privacy
+  files list a term without its diacritics, search that bundle for those terms.
 - **The indexes record `updated:` in UTC.** `build_indexes.py` wrote local time followed
   by `Z`, and `Z` means UTC. East of UTC every index claimed to be newer than it was;
   west of UTC, older. `/b:reindex` reads that time to decide whether an index is stale.
