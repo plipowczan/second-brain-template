@@ -1,6 +1,6 @@
 ---
 name: brain-ingest
-description: 'Use when user says "ingest", "process inbox", "przetworz nowe pliki", or when files appear in `content/_raw/inbox/`. Turns raw sources into wiki notes across every note they touch: shows one plan (reading, notes to create and update, contradictions) before writing, marks contradictions instead of overwriting, records the final archive path as the source, updates all 3 indexes. `--batch` skips the plan.'
+description: 'Use when user says "ingest", "process inbox", "przetworz nowe pliki", or when files appear in `content/_raw/inbox/`. Turns raw sources into wiki notes across every note they touch: shows one plan before writing, marks contradictions instead of overwriting, records the archive path as the source, updates all 3 indexes and the log. `--backlog [N]` takes the N oldest sources (10 by default) and stops, for a large inbox; `--batch` skips the plan.'
 ---
 
 # INGEST
@@ -13,6 +13,12 @@ Trigger phrases: "ingest", "process inbox", "przetworz nowe pliki". Files have a
 
 **Batch mode:** `/b:ingest --batch` (or the user explicitly asks to ingest without review) skips the plan question. It is never switched on by you, whatever the number of sources.
 
+**Backlog mode:** `/b:ingest --backlog [N]` takes N sources per run (10 when N is omitted): every YouTube URL given as an argument, then the oldest sources in the inbox until the run holds N. It runs the normal plan and write for those only, then stops and says how many wait. Run it again for the next batch. The inbox is the checkpoint: whatever a run did not archive is still there, so a stopped run loses nothing, with or without git. With `--batch` it takes the same N per run without the plan question; `--batch` alone still takes the whole inbox.
+
+**Without either flag, an inbox of more than 10 sources is taken as `--backlog 10`**, and the plan message says so: a plan over dozens of sources is too long to correct, and reading them all in one go is where the reading gets shallow.
+
+Cluster detection runs within one batch. Two related sources that fall into different batches become two notes linked as usual; the owner can merge them with `/b:refactor`.
+
 ## Workflow
 
 Four phases. Phase 0 runs only when YouTube URLs are present as arguments. Phase 1 reads every source, maps it against the vault and ends with **one** message to the user: the plan, together with the cluster question if there are clusters. Nothing is written before the reply. Phase 2 writes autonomously. Phase 3 verifies and reports.
@@ -21,7 +27,7 @@ A source does not become one summary note. It becomes a main note plus an additi
 
 ### Phase 0 — Arguments and YouTube fetch
 
-1. Validate args. `--batch` switches on batch mode. Any token matching `^https?://(www\.|m\.)?(youtube\.com|youtu\.be)/` is a YT URL. Any other non-empty argument aborts the whole call with a clear error naming it, before any work begins.
+1. Validate args. `--batch` switches on batch mode. `--backlog` switches on backlog mode, and a whole number of 1 or more right after it is N. Any token matching `^https?://(www\.|m\.)?(youtube\.com|youtu\.be)/` is a YT URL. Any other non-empty argument (a number not right after `--backlog` included) aborts the whole call with a clear error naming it, before any work begins.
 
 The rest of Phase 0 is skipped entirely when there are no URLs.
 
@@ -53,7 +59,15 @@ The transcripts Phase 0 archives into `content/_raw/processed/` are the only fil
 ### Phase 1 — Read, map, plan
 
 1. Read `content/_indexes/vault-map.md` to understand current vault structure.
-2. List `content/_raw/inbox/` AND merge in any `Source` objects built by Phase 0. If both are empty, report "Inbox empty and no URLs provided, nothing to process" and exit.
+2. List the inbox with the script, and merge in any `Source` objects built by Phase 0:
+
+   ```bash
+   python .claude/skills/brain-ingest/scripts/inbox_order.py
+   ```
+
+   Its JSON has `sources` (oldest first: a `YYYY-MM-DD` date in the file name, else the frontmatter `date:`, else the modification time; ties by name), `attachments` (image and media files: never a source, they move with the source that references them in Phase 2 step 9), `unusable` (empty or unreadable files) and, per source, `duplicate_of` (a file in `_raw/processed/` with the same content, or null). If there are no sources and no URLs, report "Inbox empty and no URLs provided, nothing to process" (naming any unusable files) and exit.
+
+   **Which sources this run takes.** In backlog mode, or with more than 10 sources and neither `--backlog` nor `--batch` (then N is 10): every URL, then the first `sources` until the run holds N; with more URLs than N, every URL and no inbox file. Otherwise every source. Unusable files never count and stay in the inbox. In batch mode a source with a `duplicate_of` does not count either: it stays in the inbox, and the report names it. A file that a source in this run references (a `.pdf` it embeds, say) is that source's attachment, not a source of its own.
 3. **Batch mode only:** before touching the first source, tell the user that batch mode runs without the plan review and that its notes come out thinner than reviewed ones, because nobody corrects your reading of the sources.
 4. **Read each source end to end** before forming a view of it. Note what it is (article, transcript, thread, notes) and who wrote it.
 5. **Cluster detection.** For each pair of sources (file or YT):
@@ -91,6 +105,15 @@ The transcripts Phase 0 archives into `content/_raw/processed/` are the only fil
    ```
 
    Mark an existing main note as `(main, update)` instead of `(main)`. Write the block in the vault language.
+
+   **When this run takes a part of the inbox** (backlog mode, or more than 10 sources), the message starts with one line: `Batch: <n> of <total> sources, oldest first; <m> wait for the next run.`, followed by `(more than 10 sources in the inbox: taking 10)` when you switched to batches yourself. Add, when there are any:
+
+   ```
+   Skip (same content as an archived source): <file> = _raw/processed/<file>
+   Unusable (left in the inbox): <file> — empty | unreadable
+   ```
+
+   A source with a `duplicate_of` is proposed as a skip, not planned. The owner may confirm, plan it after all, or mark other sources to skip in the reply. A confirmed skip moves to `content/_raw/skipped/` (Phase 2 step 10), so the next batch does not offer it again; the owner can move it back to the inbox.
 9. **Wait for the reply**, then write according to the plan as confirmed or corrected. If the user cancels: write no note and no index, leave every inbox file where it is, and report that nothing was ingested (name any transcripts Phase 0 already archived).
 
 **In batch mode** skip steps 8–9: resolve every cluster with option A (separate notes) and go straight to Phase 2 with the plan you built.
@@ -143,6 +166,7 @@ For each source (cluster handling per the user's choice from Phase 1), following
 10. Move source:
     - File sources: `content/_raw/inbox/<file>` → the archive path chosen in step 2.
     - YT sources: archive file already lives in `content/_raw/processed/` from Phase 0 — no move needed.
+    - Skips the owner confirmed (interactive runs only): `content/_raw/inbox/<file>` → `content/_raw/skipped/<file>`, adding `-2`, `-3`, … before the extension when the name is taken. No note is written from a skipped file. Batch mode moves no skip.
 11. Update all three indexes per CLAUDE.md auto-update rules, for **every** note this run created or changed:
     - `catalog.md` — add or update the entry line in the correct folder section.
     - `vault-map.md` — increment folder count, refresh top-tags, prepend to Recent Changes.
@@ -176,20 +200,38 @@ Phase 2 is autonomous. No per-file confirmation. The plan and the cluster decisi
      Only one note changed: <why — e.g. no other note covers this subject yet>
    <source 2> → ...
 
+   Skipped:   <file> → _raw/skipped/<file>        (if any)
+   Left in the inbox, not ingested: <file> — empty | unreadable | same content as _raw/processed/<file>   (if any)
+
    Failures (if any):
      - <url or file> — <reason>
    Inbox now empty.
    ```
 
+   When sources still wait in the inbox after this run, the last line is instead: `<n> ingested, <m> still in the inbox. Run /b:ingest --backlog again for the next batch.`
+5. **Log the run** in the operation log, one row (a cancelled run writes none):
+
+   ```bash
+   python .claude/skills/brain-reindex/scripts/oplog.py append --op ingest --count sources=<n> --count created=<N> --count updated=<M> --count contradictions=<K> --count skipped=<S> --count remaining=<m> --note <each note created or updated>
+   ```
+
+   Note paths are relative to `content/`, without `.md`. When `oplog.py` is missing, skip the row and say so.
+
    The "Only one note changed" line appears only when it applies. **In batch mode**, replace the per-source blocks with a table — `| Source | Main note | Other notes changed | Status |` — followed by the totals.
 
 If the checklist fails, surface the discrepancy and offer to fix before reporting completion.
+
+## Calibration
+
+Ingest goes wrong when a source becomes one summary note and nothing else, when a large inbox is read in one go and the later sources get a line each, or when a conflict is settled by rewriting the older claim. Right: each source reaches every note it adds to, a run stays small enough to read each source end to end, and every conflict is a callout the owner decides.
 
 ## Failure Handling
 
 | Failure | Behavior |
 |---|---|
-| Argument is neither `--batch` nor a YT URL | Abort whole `/b:ingest` call before Phase 0; name the argument. |
+| Argument is neither `--batch`, `--backlog` (with an optional number of 1 or more right after it) nor a YT URL | Abort whole `/b:ingest` call before Phase 0; name the argument. |
+| A file in the inbox is empty or unreadable | Leave it in the inbox; it never counts towards N; name it in the plan and the report of every run. |
+| A run stops after the plan, before writing | Nothing moved: the next run takes the same batch. |
 | `yt-dlp` not found (`yt_fetch.py` exits 3: `yt-dlp not found`) | Abort whole call with install hint. |
 | Video unavailable / private / removed | Skip that URL, continue rest. Final report flags it. |
 | No captions AND Whisper fallback fails | Skip that URL. Final report names which step failed. |

@@ -8,6 +8,26 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
 ## [Unreleased]
 
 ### Added
+- **`/b:ingest --backlog [N]`: a large inbox in batches.** A backlog of dozens of old
+  notes and recordings no longer has to go through one plan. `--backlog` takes N
+  sources per run (10 when you give no number): every YouTube URL you pass, then the
+  oldest files in `content/_raw/inbox/` (by a `YYYY-MM-DD` date in the file name, else
+  the frontmatter `date:`, else the file's modification time). It shows the usual plan
+  for those, writes them, and stops with "N ingested, M still in the inbox". Run it again
+  for the next batch. The inbox is the checkpoint: a run you stop loses nothing, with or
+  without git. Images and media next to a source are attachments: they do not count and
+  move with the source that uses them. An empty or unreadable file never counts, stays
+  in the inbox and is named in every report, so it cannot stall the queue. A file whose
+  content equals a source already in `_raw/processed/` is proposed as a skip; on your OK
+  it moves to `content/_raw/skipped/`, and you can move it back. `--backlog --batch` runs
+  the same batches without the plan question and moves nothing; `--batch` alone still
+  takes the whole inbox. Related sources that fall into two batches become two linked
+  notes; merge them with `/b:refactor` if you want one. The order comes from a new
+  script, `brain-ingest/scripts/inbox_order.py`.
+
+  Existing bases: `/b:upgrade` brings the skill and the script. If you edited
+  `brain-ingest` and keep your version, it does not know `--backlog` and stops on it, as
+  on any unknown argument.
 - **Link metrics over time.** A new script, `brain-lint/scripts/metrics.py`, counts
   notes, orphans, isolated notes (no link to or from another note), weak notes (at most
   one), links per note, islands (groups of linked notes cut off from the largest one)
@@ -44,6 +64,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
   still name the old path.
 
 ### Changed
+- **`/b:ingest` takes an inbox of more than 10 sources in batches.** Without `--backlog`
+  and `--batch`, an inbox of more than 10 sources is now taken as `--backlog 10`: the
+  plan covers the 10 oldest, says so in its first line, and the report says how many
+  wait. A plan over dozens of sources was too long to correct, and reading them all in
+  one go is where the reading got shallow. `--batch` keeps its meaning and takes the
+  whole inbox without the plan, so scripts that call it are unchanged.
+
+  Existing bases: nothing to do. `/b:upgrade` brings the skill.
 - **`/b:qa` reads less on every question.** Until now every question read
   `vault-map.md` and `LIMITS.md` whole, the skill said to read catalog sections and the
   link graph, and `/b:qa` spent a separate model call only on loading the skill. Now
