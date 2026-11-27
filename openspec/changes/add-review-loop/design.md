@@ -257,7 +257,7 @@ shallow, on full reading it is the cost the batches exist to split.
   message the skill ends with).
 
 `dev/build_codex_files.py --check` already fails on a description YAML would cut; it also
-fails on one over 500 characters (the longest today has 455), so descriptions cannot
+fails on one over 500 characters (the longest today has 454), so descriptions cannot
 grow without notice. The pattern is applied to the two new skills and to every skill this
 change edits; the others follow it when they are next edited.
 
