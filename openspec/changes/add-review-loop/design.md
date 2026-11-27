@@ -306,8 +306,10 @@ In an interactive backlog run the plan may propose to skip a source whose conten
 a file already in `_raw/processed/`, or one the owner marks in the reply. On the owner's
 OK a skipped file moves to `content/_raw/skipped/`, so the next batch does not offer it
 again; the owner can move it back. Batch mode moves nothing; it reports duplicates and
-unusable files and ingests the rest. A duplicate it leaves in the inbox does not count
-towards N, like an unusable file, so a queue of unattended runs cannot stall on it. A separate pass that lists the whole backlog for
+unusable files and ingests the rest. A duplicate never counts towards N, like an
+unusable file: an interactive batch still holds N sources to ingest besides its proposed
+skips, and a queue of unattended runs cannot stall on a duplicate left in the inbox
+(found in the trial on a copy of the maintainer's base). A separate pass that lists the whole backlog for
 selection before the first batch is left out: on names and first lines it is shallow, on
 full reading it is the cost the batches exist to split.
 

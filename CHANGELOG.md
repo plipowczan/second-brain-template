@@ -55,10 +55,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
   without git. Images and media next to a source are attachments: they do not count and
   move with the source that uses them. An empty or unreadable file never counts, stays
   in the inbox and is named in every report, so it cannot stall the queue. A file whose
-  content equals a source already in `_raw/processed/` is proposed as a skip; on your OK
-  it moves to `content/_raw/skipped/`, and you can move it back. `--backlog --batch` runs
-  the same batches without the plan question and moves nothing; `--batch` alone still
-  takes the whole inbox. Related sources that fall into two batches become two linked
+  content equals a source already in `_raw/processed/` does not count either and is
+  proposed as a skip; on your OK it moves to `content/_raw/skipped/`, and you can move it
+  back. `--backlog --batch` runs the same batches without the plan question and moves
+  nothing; `--batch` alone still takes the whole inbox. Related sources that fall into two batches become two linked
   notes; merge them with `/b:refactor` if you want one. The order comes from a new
   script, `brain-ingest/scripts/inbox_order.py`.
 

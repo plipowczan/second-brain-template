@@ -67,7 +67,7 @@ The transcripts Phase 0 archives into `content/_raw/processed/` are the only fil
 
    Its JSON has `sources` (oldest first: a `YYYY-MM-DD` date in the file name, else the frontmatter `date:`, else the modification time; ties by name), `attachments` (image and media files: never a source, they move with the source that references them in Phase 2 step 9), `unusable` (empty or unreadable files) and, per source, `duplicate_of` (a file in `_raw/processed/` with the same content, or null). If there are no sources and no URLs, report "Inbox empty and no URLs provided, nothing to process" (naming any unusable files) and exit.
 
-   **Which sources this run takes.** In backlog mode, or with more than 10 sources and neither `--backlog` nor `--batch` (then N is 10): every URL, then the first `sources` until the run holds N; with more URLs than N, every URL and no inbox file. Otherwise every source. Unusable files never count and stay in the inbox. In batch mode a source with a `duplicate_of` does not count either: it stays in the inbox, and the report names it. A file that a source in this run references (a `.pdf` it embeds, say) is that source's attachment, not a source of its own.
+   **Which sources this run takes.** In backlog mode, or with more than 10 sources and neither `--backlog` nor `--batch` (then N is 10): every URL, then the first `sources` until the run holds N; with more URLs than N, every URL and no inbox file. Otherwise every source. Unusable files never count and stay in the inbox. A source with a `duplicate_of` does not count either, so the run still holds N sources to ingest: an interactive run proposes it as a skip (below); batch mode leaves it in the inbox and names it in the report. A file that a source in this run references (a `.pdf` it embeds, say) is that source's attachment, not a source of its own.
 3. **Batch mode only:** before touching the first source, tell the user that batch mode runs without the plan review and that its notes come out thinner than reviewed ones, because nobody corrects your reading of the sources.
 4. **Read each source end to end** before forming a view of it. Note what it is (article, transcript, thread, notes) and who wrote it.
 5. **Cluster detection.** For each pair of sources (file or YT):
@@ -113,7 +113,7 @@ The transcripts Phase 0 archives into `content/_raw/processed/` are the only fil
    Unusable (left in the inbox): <file> — empty | unreadable
    ```
 
-   A source with a `duplicate_of` is proposed as a skip, not planned. The owner may confirm, plan it after all, or mark other sources to skip in the reply. A confirmed skip moves to `content/_raw/skipped/` (Phase 2 step 10), so the next batch does not offer it again; the owner can move it back to the inbox.
+   A source with a `duplicate_of` is proposed as a skip, not planned, and is not one of the N. The owner may confirm, plan it after all, or mark other sources to skip in the reply. A confirmed skip moves to `content/_raw/skipped/` (Phase 2 step 10), so the next batch does not offer it again; the owner can move it back to the inbox.
 9. **Wait for the reply**, then write according to the plan as confirmed or corrected. If the user cancels: write no note and no index, leave every inbox file where it is, and report that nothing was ingested (name any transcripts Phase 0 already archived).
 
 **In batch mode** skip steps 8–9: resolve every cluster with option A (separate notes) and go straight to Phase 2 with the plan you built.

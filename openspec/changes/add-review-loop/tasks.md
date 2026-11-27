@@ -10,16 +10,16 @@ paths from it.
 
 ## 1. Operation log
 
-- [ ] 1.1 `brain-reindex/scripts/oplog.py append` with tests: creates the file with its
+- [x] 1.1 `brain-reindex/scripts/oplog.py append` with tests: creates the file with its
   header; adds a missing final newline; appends one row as bytes with LF in one write;
   "What" only from `key=N` tokens (refuses anything else); at most 10 `--note` paths as
   code spans then "and N more"; `|` escaped; private terms masked as `[private]` through
   `brain-export/scripts/privacy_sweep.py`, and a stderr notice when that script is
   missing; hand-written lines left alone.
-- [ ] 1.2 `.gitattributes`: `content/_outputs/log.md merge=union` and
+- [x] 1.2 `.gitattributes`: `content/_outputs/log.md merge=union` and
   `content/_outputs/metrics.md merge=union`. Test: two branches that each create and
   append merge without a conflict.
-- [ ] 1.3 One log step in `brain-ingest`, `brain-compile`, `brain-enhance`,
+- [x] 1.3 One log step in `brain-ingest`, `brain-compile`, `brain-enhance`,
   `brain-curate`, `brain-refactor`, `brain-import`, `brain-watch`: after a run the owner
   started that wrote, moved or retired a note; none after a cancelled or empty run, and
   none when the skill runs inside another skill (curate handing work to refactor or
@@ -30,52 +30,52 @@ paths from it.
 
 ## 2. Metrics
 
-- [ ] 2.1 Golden-output tests for `lint_links.py` on a fixture vault (self-links, links in
+- [x] 2.1 Golden-output tests for `lint_links.py` on a fixture vault (self-links, links in
   code, attachments, `templates/`, broken links, duplicate basenames, non-ASCII names),
   recorded from the code as it is now.
-- [ ] 2.2 Rewrite `lint_links.py` as functions that return notes, resolved note-to-note
+- [x] 2.2 Rewrite `lint_links.py` as functions that return notes, resolved note-to-note
   edges, attachment and template links, and broken links; `main()` prints the same output.
   The golden tests pass unchanged.
-- [ ] 2.3 `brain-lint/scripts/metrics.py` with tests: the seven metrics (distinct
+- [x] 2.3 `brain-lint/scripts/metrics.py` with tests: the seven metrics (distinct
   note-to-note links, `weak` at most one distinct link, `null` for an empty vault); last
   touch from one `git log -z` call and from frontmatter, with its basis; `--record`
   creating `content/_outputs/metrics.md`, replacing the same day's row; reading the last
   row per date, sorted; comparison with the previous snapshot and with the newest one at
   least 28 days old; "not comparable" across bases; no write without `--record`.
-- [ ] 2.4 Test that `metrics.py` and `lint_links.py` report the same orphans on the same
+- [x] 2.4 Test that `metrics.py` and `lint_links.py` report the same orphans on the same
   vault.
 
 ## 3. Review
 
-- [ ] 3.1 `brain-review/scripts/review_data.py` with tests: period start (review row with
+- [x] 3.1 `brain-review/scripts/review_data.py` with tests: period start (review row with
   `days=N`, same-day re-run, report file, 7 days, `--since` as a UTC date, `--days`); log
   rows sorted by time and touched folders; `## Recent Changes` entries in the period;
   answers and learning sessions filtered by date; git commits and uncommitted changes
   (`-z`, non-ASCII paths); inbox count; `lint_scan.py` and `metrics.py --record` as
   subprocesses; a missing or failing script reported as unavailable; a vault without git;
   an empty log.
-- [ ] 3.2 Call-out rules of design D6 (steps, at least 2 notes, two comparisons, none
+- [x] 3.2 Call-out rules of design D6 (steps, at least 2 notes, two comparisons, none
   below 30 notes) as a function with tests, used by `review_data.py`.
-- [ ] 3.3 `.claude/skills/brain-review/SKILL.md` in the description pattern: inputs,
+- [x] 3.3 `.claude/skills/brain-review/SKILL.md` in the description pattern: inputs,
   report shape and file name (never overwritten), the order of the three moves, below
   10 notes stop, no questions, one `review` row with `days=N`.
-- [ ] 3.4 `.claude/commands/b/review.md`.
+- [x] 3.4 `.claude/commands/b/review.md`.
 
 ## 4. Learning
 
-- [ ] 4.1 `.claude/skills/brain-learn/SKILL.md` in the description pattern: explain-back
+- [x] 4.1 `.claude/skills/brain-learn/SKILL.md` in the description pattern: explain-back
   with the three kinds of gap, `--quiz [N]`, the session file (slug checked against
   private terms, never overwritten, committed like answers and said so on the first
   run), offers instead of writes, stop without a person.
-- [ ] 4.2 `.claude/commands/b/learn.md`.
+- [x] 4.2 `.claude/commands/b/learn.md`.
 
 ## 5. Backlog ingest
 
-- [ ] 5.1 `brain-ingest/scripts/inbox_order.py` with tests: sources and attachments
+- [x] 5.1 `brain-ingest/scripts/inbox_order.py` with tests: sources and attachments
   told apart; the order (date in the name, frontmatter `date:`, modification time,
   name); empty and unreadable files listed apart; content equal to a file in
   `_raw/processed/` (SHA-256).
-- [ ] 5.2 `brain-ingest/SKILL.md` in the description pattern: `--backlog [N]` (every URL
+- [x] 5.2 `brain-ingest/SKILL.md` in the description pattern: `--backlog [N]` (every URL
   argument, then the inbox up to N), the automatic batches above 10 sources, `--backlog`
   with `--batch`, skips to `_raw/skipped/` in interactive runs only, unusable files named
   in every report, the closing count in place of "Inbox now empty.", the argument rule and
@@ -83,11 +83,11 @@ paths from it.
 
 ## 6. Skill descriptions
 
-- [ ] 6.1 `CONTRIBUTING.md`: the pattern (design D10) and the rule that an existing
+- [x] 6.1 `CONTRIBUTING.md`: the pattern (design D10) and the rule that an existing
   skill adopts it when it is next changed for a reason of its own.
-- [ ] 6.2 New: `dev/build_codex_files.py --check` fails on a description over 500
+- [x] 6.2 New: `dev/build_codex_files.py --check` fails on a description over 500
   characters and names the skill and the length; test.
-- [ ] 6.3 Run `python dev/build_codex_files.py` and commit the stubs for the new and
+- [x] 6.3 Run `python dev/build_codex_files.py` and commit the stubs for the new and
   changed skills.
 
 ## 7. Upgrade fixes (bugs 7–11)
@@ -112,16 +112,16 @@ paths from it.
   in the path, an invalid `backup.json`.
 - [ ] 7.4 Bug 10: the commit body names a zip, folder or clone by its last path
   component. Test with a zip source.
-- [ ] 7.5 Bug 11: `lint_scan.py` accepts `NOTE_TYPES` from `.kb-onboard.json` without
+- [x] 7.5 Bug 11: `lint_scan.py` accepts `NOTE_TYPES` from `.kb-onboard.json` without
   required fields; the `bad_type` advice in `brain-lint/SKILL.md`. Tests: own type,
   unknown type, missing or broken values file.
 - [ ] 7.6 `brain-upgrade/SKILL.md`: the cleanup phase, `undo`, the `.gitignore` offer.
 
 ## 8. Templates, docs, release notes
 
-- [ ] 8.1 `AGENTS.template.md`: folder rows for `_outputs/log.md`, `_outputs/metrics.md`,
+- [x] 8.1 `AGENTS.template.md`: folder rows for `_outputs/log.md`, `_outputs/metrics.md`,
   `_outputs/learning/`, `_raw/skipped/`; Workflows entries REVIEW and LEARN.
-- [ ] 8.2 `README.md`: rows for `/b:review` and `/b:learn`, `--backlog` in the
+- [x] 8.2 `README.md`: rows for `/b:review` and `/b:learn`, `--backlog` in the
   `/b:ingest` row (new bases only).
 - [ ] 8.3 `CHANGELOG.md` under `[Unreleased]`: one entry per behaviour, each with
   "Existing bases"; the inspiration from `undefined-ui/second-brain-os` (MIT) named
