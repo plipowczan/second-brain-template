@@ -313,6 +313,37 @@ class CommitTest(ApplyCase):
         files = fx.git(self.base, "show", "--name-only", "--format=", "HEAD").splitlines()
         self.assertIn(kt.ONBOARD_VALUES, files)
 
+    def body(self):
+        return fx.git(self.base, "log", "-1", "--format=%b")
+
+    def test_zip_source_is_named_without_its_folder(self):
+        downloads = self.tmp.path / "Users" / "someone" / "Downloads"
+        downloads.mkdir(parents=True)
+        z = downloads / "second-brain-template-0.3.0.zip"
+        z.write_bytes(fx.zip_bytes(fx.template("0.3.0", {".claude/hooks/hook.py": HOOK2}),
+                                   comment="b" * 40))
+        code, out, err = fx.run("plan", "--instance", str(self.base), "--source", str(z),
+                                "--out", str(self.planfile), *fx.CONSENT)
+        self.assertEqual(code, 0, err)
+        plan = json.loads(self.planfile.read_text(encoding="utf-8"))
+        self.assertEqual(plan["source"]["location"], str(z))  # the plan keeps the path
+        self.assertEqual(self.apply()[0], 0)
+        code, out, err = self.commit()
+        self.assertEqual(code, 0, err)
+        body = self.body()
+        self.assertIn(f"Source: zip second-brain-template-0.3.0.zip ({'b' * 40})", body)
+        self.assertNotIn("Downloads", body)
+        self.assertNotIn("someone", body)
+
+    def test_folder_source_is_named_by_its_last_component(self):
+        self.plan({".claude/hooks/hook.py": HOOK2})
+        self.assertEqual(self.apply()[0], 0)
+        code, out, err = self.commit()
+        self.assertEqual(code, 0, err)
+        body = self.body()
+        self.assertRegex(body, r"^Source: dir src\d+\n")
+        self.assertNotIn(str(self.tmp.path), body)
+
     def test_commit_needs_apply(self):
         self.plan({".claude/hooks/hook.py": HOOK2})
         code, out, err = self.commit()

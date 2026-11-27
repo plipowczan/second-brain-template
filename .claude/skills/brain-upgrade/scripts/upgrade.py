@@ -605,7 +605,7 @@ def cmd_commit(args) -> int:
     subject = (f"chore(template): adopt {repo} {version}" if plan["mode"] == "adopt"
                else f"chore(template): upgrade to {repo} {version}")
     src = plan["source"]
-    body = (f"Source: {src['kind']} {src['location']}"
+    body = (f"Source: {src['kind']} {source_label(src)}"
             + (f" ({src['commit']})" if src.get("commit") else "")
             + f"\n{len(applied['written'])} written, {len(applied['deleted'])} deleted"
             + (f", made executable: {', '.join(applied['executable'])}" if applied["executable"] else "")
@@ -633,6 +633,17 @@ def cmd_commit(args) -> int:
     save_plan(plan)
     say(f"Committed {sha[:12]}: {subject}")
     return 0
+
+
+def source_label(src: dict) -> str:
+    """How the commit message names the source. A download keeps its URL. A zip, a folder
+    or a clone is named by its last path component: the rest of a local path (a user
+    name, a Downloads folder) has no place in the base's history. The plan file in the
+    temp directory keeps the full path."""
+    location = src.get("location") or ""
+    if src.get("kind") == "download":
+        return location
+    return Path(location).name or location
 
 
 def read_for_commit(instance: Path, paths: list[str]) -> dict:
