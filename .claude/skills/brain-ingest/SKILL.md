@@ -80,7 +80,7 @@ The transcripts Phase 0 archives into `content/_raw/processed/` are the only fil
    - **Existing notes to add to** — notes that exist and to which the source adds a fact, a figure, an example or a counter-claim. Write down, per note, what it gains.
    - **New notes** — subjects the source covers in enough depth to stand alone, that have no note yet.
 
-   A note the source only *mentions* gets a link from the main note, not an addition. There is no quota: a source that adds to no other note is fine, and the report says why.
+   A note the source only *mentions* is not an addition and is not in the map (Phase 2 step 8 says how it is linked). There is no quota: a source that adds to no other note is fine, and the report says why.
 7. **Check for contradictions.** For the main note (if it exists) and every existing note in the map, compare what the source says with what the note claims. List every conflict: the note, its claim, and the source's claim.
 8. **Send the user one message** for the whole run. It holds the cluster block (only if clusters exist), then one plan block per source:
 
@@ -151,7 +151,7 @@ For each source (cluster handling per the user's choice from Phase 1), following
    - `15-45 min` → standard knowledge-note structure with sections, quotes, takeaways.
    - `> 45 min` → deep note: chapter-by-chapter breakdown with `[mm:ss]` timestamps linking to `https://youtube.com/watch?v=<id>&t=<seconds>s`.
 5. **Write the new notes** from the plan the same way.
-6. **Add to every existing note in the plan.** Add only what this source adds to that note, keep everything that is there, record the archive path in its source fields (step 3), and link it to the main note — and the main note back to it. Notes the source only mentions get a link from the main note, nothing more.
+6. **Add to every existing note in the plan.** Add only what this source adds to that note, keep everything that is there, and record the archive path in its source fields (step 3).
 7. **Mark contradictions, never overwrite.** When the source conflicts with a claim a note makes, keep the claim's text as it is and put a callout next to it:
 
    ```markdown
@@ -161,16 +161,19 @@ For each source (cluster handling per the user's choice from Phase 1), following
    ```
 
    The callout type is always the English word `contradiction`; the title and the labels (`Earlier` / `New`) are in the vault language. Never delete or rewrite the earlier claim to match the new source — only the owner decides which claim holds.
-8. Add wikilinks to related notes; update those target notes to backlink.
+8. **Links.** The main note links to every note of the plan (new notes and the notes added to), and each of them links back to the main note. A note the source only mentions gets a link from the main note and nothing else: it is not in the plan, so it is not changed, gets no backlink and no source path. `graph.md` lists that link as incoming once the indexes are rebuilt (step 11).
 9. **Move attachments.** Find image/media files referenced by the source (`.png`, `.jpg`, `.jpeg`, `.gif`, `.svg`, `.webm`, `.pdf`, etc.) that landed in `content/` root or `content/_raw/inbox/`. Move them to `content/ATTACHMENTS/`. Update any `![[filename]]` references in the new note to point to the moved location.
 10. Move source:
     - File sources: `content/_raw/inbox/<file>` → the archive path chosen in step 2.
     - YT sources: archive file already lives in `content/_raw/processed/` from Phase 0 — no move needed.
     - Skips the owner confirmed (interactive runs only): `content/_raw/inbox/<file>` → `content/_raw/skipped/<file>`, adding `-2`, `-3`, … before the extension when the name is taken. No note is written from a skipped file. Batch mode moves no skip.
-11. Update all three indexes per CLAUDE.md auto-update rules, for **every** note this run created or changed:
-    - `catalog.md` — add or update the entry line in the correct folder section.
-    - `vault-map.md` — increment folder count, refresh top-tags, prepend to Recent Changes.
-    - `graph.md` — add outgoing links for each changed note; update incoming-link entries on every target note.
+11. **Indexes.** After the last note of the run is written, rebuild them once, as AGENTS.md says, and do not edit `catalog.md` or `graph.md` by hand:
+
+    ```bash
+    python .claude/skills/brain-reindex/scripts/build_indexes.py
+    ```
+
+    It rewrites `catalog.md`, `graph.md` and the folder table and tag cloud of `vault-map.md` from every note, so every note this run created or changed is in them. It keeps `## Recent Changes` as it is (the section is a change log), so then add one line per note this run created or changed at the top of that section, leaving the lines below it as they are: `- YYYY-MM-DD <folder>/<Note> (<created | updated>: <what changed>)`. If the script fails (PyYAML missing: `pip install -r requirements.txt`), list it under Failures in the report and leave the indexes for `/b:reindex`.
 
 Phase 2 is autonomous. No per-file confirmation. The plan and the cluster decisions were already settled in Phase 1.
 
@@ -190,7 +193,7 @@ Phase 2 is autonomous. No per-file confirmation. The plan and the cluster decisi
    - Contradictions marked: K
    - Attachments moved: W
    - YouTube:   captions=A, whisper=B, failed=C
-   - Indexes:   ✅ vault-map / catalog / graph
+   - Indexes:   rebuilt (vault-map, catalog, graph)
 
    <source 1> → _raw/processed/<archive name>
      Main:     [[<Main note>]] (created | updated)
@@ -240,6 +243,7 @@ Ingest goes wrong when a source becomes one summary note and nothing else, when 
 | Classification ambiguous | Best-guess folder + `#todo/classification` tag (existing fallback). |
 | Archive name already taken | Add `-2`, `-3`, … before the extension; write that name into the notes. |
 | A written source path does not exist at the checklist | Fix it before reporting; if impossible, list it under Failures. |
+| `build_indexes.py` fails in step 11 | Do not edit the indexes by hand; list the error under Failures and tell the owner to run `/b:reindex` once it is fixed (often `pip install -r requirements.txt`). |
 | Network/timeout during fetch | `yt_fetch.py` returns non-zero; skill skips that URL. |
 | Phase 0 succeeds, Phase 2 fails mid-note | Transcript archive already in `_raw/processed/`; rerun targets it for completion. |
 

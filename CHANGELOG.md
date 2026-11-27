@@ -5,6 +5,37 @@ who have cloned the template and want to pull improvements into their own base.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are ISO (UTC).
 
+## [Unreleased]
+
+### Fixed
+- **`/b:ingest` no longer writes a backlink into a note the source only mentions.**
+  Phase 2 gave two rules: step 6 left such a note alone, and step 8 had every linked note
+  link back. Now there is one rule, in step 8. The main note links to every note in the
+  plan, and each of those links back to it. A note the source only mentions gets a link
+  from the main note and is not changed: it is not in the plan you confirmed, and the
+  report lists only the notes the run changed. `graph.md` still lists that link as
+  incoming.
+
+  Existing bases: nothing to do. `/b:upgrade` brings the skill. Backlinks that earlier
+  runs wrote into mentioned notes stay; remove them by hand if you don't want them.
+- **`/b:ingest` rebuilds the indexes with the script.** Step 11 told the agent to edit
+  `catalog.md`, `vault-map.md` and `graph.md` by hand, while `AGENTS.md` names
+  `build_indexes.py`. A hand edit after a run that touched many notes can miss an entry
+  or an incoming link. Now the skill runs
+  `python .claude/skills/brain-reindex/scripts/build_indexes.py` once, after the last
+  note. The script keeps `## Recent Changes` in `vault-map.md` as it is, so the skill
+  then adds one line per created or changed note at the top of that section. If the
+  script fails, the report lists it under Failures and the indexes wait for
+  `/b:reindex`.
+
+  Existing bases: `/b:upgrade` brings the skill. If you think an earlier ingest left an
+  index incomplete, run `/b:reindex` once. It keeps your Recent Changes.
+- **The `/b:ingest` report has no emoji.** The `Indexes:` line said
+  `✅ vault-map / catalog / graph`. It now says `rebuilt (vault-map, catalog, graph)`,
+  plain text like the reports of the other skills.
+
+  Existing bases: nothing to do. `/b:upgrade` brings the skill.
+
 ## [0.5.0] - 2026-11-27
 
 The base reports back. `/b:review` reads the period since the last review and ends with
