@@ -224,6 +224,40 @@ class PrivateTermsTest(unittest.TestCase):
         self.assertTrue(privacy_sweep.term_hit("Łąka Wiśnia", terms))
         self.assertFalse(privacy_sweep.term_hit("a plain line", terms))
 
+    def test_short_term_saved_decomposed_is_a_hit(self):
+        # A privacy file edited on a Mac can store a term decomposed (NFD). A term shorter
+        # than four letters has no form without diacritics, so it matches the NFC text
+        # most notes hold only once it is read in NFC.
+        nfd = lambda s: unicodedata.normalize("NFD", s)  # noqa: E731
+        short, long_ = "Vęx", "Żywłok Mąćski"                    # made-up names
+        self.assertNotEqual(nfd(short), short)
+        root = vault(Path(self.td.name) / "mac", nfd(f'## Always cut\n\n- "{short}" — client\n'),
+                     nfd(f'## Always cut\n\n- "{long_}"\n') + f"- {short}\n")   # NFC: the same term
+        code, out = run("--root", root, "--terms")
+        self.assertEqual(code, 0)
+        out = json.loads(out)
+        self.assertEqual([t["term"] for t in out["terms"]], [short, long_])
+        for t in out["terms"]:
+            for form in [t["term"]] + t["forms"]:
+                self.assertEqual(form, unicodedata.normalize("NFC", form), t["term"])
+        self.assertEqual(out["sources"], {"_privacy.md": 1, "_privacy.local.md": 2})
+        terms = privacy_sweep.private_terms(root)
+        self.assertEqual(terms, [short, long_])
+        self.assertEqual(privacy_sweep.term_forms(terms[0]), {short})   # still no folded form
+
+        self.note("a.md", "\n".join([f"met {short} today", nfd(f"{short} wrote"),
+                                     "it will vex you", f"for {long_}"]) + "\n")
+        code, out = run("--root", root, self.staging)
+        self.assertEqual(code, 2)
+        hits = json.loads(out)["hits"]
+        self.assertEqual([h["line"] for h in hits if h["class"] == "private-term"], [1, 2, 4])
+        self.assertTrue(all("[private]" in h["context"] for h in hits), hits)
+        shown = privacy_sweep.fold(unicodedata.normalize("NFC", out)).lower()
+        for leak in ("vex", "zywlok", "macski"):
+            self.assertNotIn(leak, shown)
+        self.assertTrue(privacy_sweep.term_hit(f"met {short} today", terms))
+        self.assertFalse(privacy_sweep.term_hit("it will vex you", terms))   # its folded spelling
+
     def test_private_terms_api(self):
         terms = privacy_sweep.private_terms(self.root)
         self.assertEqual(terms, ["Acme Corp", "Zed", "Żabka Polska"])
@@ -261,6 +295,10 @@ class PrivateTermsTest(unittest.TestCase):
             self.assertEqual(privacy_sweep.term_hit(text, terms), watch.term_hit(text, terms), text)
             self.assertEqual(privacy_sweep.mask(text, terms), watch.redact(text, terms), text)
             self.assertEqual(privacy_sweep.mask_all(text, terms), watch.mask_all(text, terms), text)
+        # A privacy file saved decomposed, as a Mac can: both read its terms in NFC.
+        mac = vault(Path(self.td.name) / "mac", nfd('## Always cut\n\n- "Vęx"\n- "Żywłok Mąćski"\n'))
+        self.assertEqual(privacy_sweep.private_terms(mac), ["Vęx", "Żywłok Mąćski"])
+        self.assertEqual(watch.private_terms(mac), privacy_sweep.private_terms(mac))
 
 
 if __name__ == "__main__":

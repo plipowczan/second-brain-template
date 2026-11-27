@@ -897,7 +897,9 @@ def status_lines(n, r, titles, o=None):
 # together. Its tests compare the two.
 def private_terms(root):
     """Terms from the "Always cut" section of content/_privacy.md and of the git-ignored
-    content/_privacy.local.md (for names whose mere presence in the repository is a leak)."""
+    content/_privacy.local.md (for names whose mere presence in the repository is a leak),
+    in NFC: a privacy file edited on a Mac can hold a term decomposed, and a term too
+    short for a folded form would then match no NFC text."""
     terms = []
     for name in ("_privacy.md", "_privacy.local.md"):
         p = Path(root) / "content" / name
@@ -914,6 +916,7 @@ def private_terms(root):
             item = m.group(1).strip()
             q = re.match(r'"([^"]+)"|“([^”]+)”', item)
             term = (q.group(1) or q.group(2)) if q else re.split(r"\s+[—–-]\s+", item)[0].strip()
+            term = unicodedata.normalize("NFC", term)
             if len(term) >= 2 and term not in terms:
                 terms.append(term)
     return terms
