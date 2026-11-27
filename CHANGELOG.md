@@ -8,6 +8,17 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
 ## [Unreleased]
 
 ### Fixed
+- **Metrics in a shallow clone use the `frontmatter` basis.** In a clone made with
+  `--depth` (for example a CI checkout with `fetch-depth: 1`), history stops at the
+  graft. `metrics.py` then dated every older file from the graft's commit, and
+  `Untouched 90d` came out too low. A shallow clone now gets the `frontmatter` basis, as
+  a vault without git does, and `/b:review` does not compare its `Untouched 90d` with
+  rows on the `git` basis.
+
+  Existing bases: nothing to do. `/b:upgrade` brings `brain-lint/scripts/metrics.py`.
+  To use the `git` basis in a shallow clone, run `git fetch --unshallow` first. Rows that
+  an earlier run recorded there on the `git` basis stay in
+  `content/_outputs/metrics.md`; delete them by hand if you want.
 - **The `/b:export --public` sweep finds private terms in decomposed text.**
   `privacy_sweep.py` checked each line and file path only as written. Text and file
   names from a Mac often come decomposed (NFD: `ą` stored as `a` plus a combining
