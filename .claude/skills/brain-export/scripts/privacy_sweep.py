@@ -25,7 +25,8 @@ Exit codes: 0 clean (or --terms), 1 usage error, 2 hits found.
 
 Private terms come from the "## Always cut" section of content/_privacy.md
 and of the git-ignored content/_privacy.local.md, parsed and matched as
-brain-watch does: HTML comments are ignored, each term also matches joined,
+brain-watch does: HTML comments are ignored, each term is read in NFC (a
+privacy file edited on a Mac can hold it decomposed) and also matches joined,
 hyphenated and underscored, and without diacritics when that leaves at least
 four letters ("Łąka Wiśnia" → laka-wisnia), case does not matter, and a term
 never matches inside a longer word. Each line and file path is checked as
@@ -70,7 +71,9 @@ PATTERNS = [
 # installed next to this skill.
 
 def terms_by_source(root):
-    """{privacy file name: its always-cut terms, or None when the file is not there}."""
+    """{privacy file name: its always-cut terms, or None when the file is not there}.
+    Terms are returned in NFC: a privacy file edited on a Mac can hold a term decomposed,
+    and a term too short for a folded form would then match no NFC text."""
     out = {}
     for name in PRIVACY_FILES:
         p = Path(root) / "content" / name
@@ -87,6 +90,7 @@ def terms_by_source(root):
             item = m.group(1).strip()
             q = re.match(r'"([^"]+)"|“([^”]+)”', item)
             term = (q.group(1) or q.group(2)) if q else re.split(r"\s+[—–-]\s+", item)[0].strip()
+            term = unicodedata.normalize("NFC", term)
             if len(term) >= 2 and term not in found:
                 found.append(term)
         out[name] = found

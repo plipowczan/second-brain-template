@@ -286,6 +286,14 @@ class TestPrivacy(VaultCase):
         self.assertEqual(self.slug_of(unicodedata.normalize("NFD", "Łąka Wiśnia plan")),
                          "private")
 
+    @needs_privacy
+    def test_short_term_saved_decomposed_masked(self):
+        # A privacy file edited on a Mac can store a term decomposed (NFD); a term this
+        # short has no form without diacritics, so it is masked only when read in NFC.
+        self.privacy(unicodedata.normalize("NFD", "## Always cut\n\n- \"Vęx\" — a client\n"))
+        self.append("--op", "watch", "--note", "CLIENTS/Vęx/Plan.md", "--note", "TOOLS/Vex.md")
+        self.assertEqual(self.read()[0]["notes"], ["CLIENTS/[private]/Plan.md", "TOOLS/Vex.md"])
+
     def slug_of(self, text):
         code, out, err = run(self.root, "slug", text)
         self.assertEqual(code, 0, err)

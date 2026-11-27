@@ -342,6 +342,30 @@ class PrivacyTest(unittest.TestCase):
         self.assertFalse(watch.private_hit("it was fine", ["Wąs"]))
         self.assertTrue(watch.private_hit("gzel.example", ["Gżel"]))  # four letters: folded too
 
+    def test_short_term_saved_decomposed_matches_composed_text(self):
+        # A privacy file edited on a Mac can store a term decomposed (NFD). A term this
+        # short has no form without diacritics, so it matches NFC text only once it is
+        # read in NFC.
+        term = "Vęx"                                             # a made-up name
+        self.assertNotEqual(nfd(term), term)
+        v = Vault()
+        try:
+            v.write("content/_privacy.md", nfd(f'## Always cut\n- "{term}" — client\n'))
+            v.write("content/_privacy.local.md", f"## Always cut\n- {term}\n")   # NFC: the same term
+            terms = watch.private_terms(v.root)
+            self.assertEqual(terms, [term])
+            self.assertEqual(watch.term_forms(terms[0]), {term})   # still no folded form
+            for text in (f"met {term} today", nfd(f"met {term} today"), "clients/vęx/plan.md",
+                         "https://vęx.example/"):
+                self.assertTrue(watch.term_hit(text, terms), text)
+                masked = folded(watch.redact_all(text, terms))
+                self.assertIn("[private]", masked, text)
+                self.assertNotIn("vex", masked, text)
+            self.assertFalse(watch.term_hit("it will vex you", terms))   # its folded spelling
+            self.assertTrue(watch.snapshot_key("https://vęx.example/", terms).startswith("private:"))
+        finally:
+            v.close()
+
     def test_decomposed_and_diacritic_text_is_a_hit(self):
         # Checked as written, in NFC and folded, as brain-reindex's oplog.py checks a row.
         terms = ["Żywłok Mąćski", "Laka Wisnia"]

@@ -8,6 +8,39 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
 ## [Unreleased]
 
 ### Fixed
+- **A short private term saved decomposed in a privacy file now matches.** A privacy file
+  edited on a Mac can store a term decomposed (NFD: `ę` as `e` plus a combining ogonek).
+  `/b:watch`, the `/b:export --public` sweep and the operation log used each term as
+  saved, while the text they check is usually NFC. A term that keeps fewer than four
+  letters without its diacritics (`Vęx`, a made-up name) has no form without them, so
+  it matched no NFC text. It could reach a status box, the watch report and the committed
+  snapshot, pass the export sweep, and be written unmasked into `content/_outputs/log.md`.
+  A longer term was still found through its form without diacritics. `watch.py` and
+  `privacy_sweep.py` now read every term of the "Always cut" lists in NFC, and
+  `privacy_sweep.py --terms` prints it that way.
+
+  Existing bases: `/b:upgrade` brings `brain-watch/scripts/watch.py` and
+  `brain-export/scripts/privacy_sweep.py`; the privacy files need no change. To see
+  whether yours hold decomposed text, run from the vault root:
+
+  ```bash
+  python -c "import pathlib, unicodedata as u; [print(p.name, 'ok' if u.is_normalized('NFC', p.read_text(encoding='utf-8')) else 'decomposed') for p in pathlib.Path('content').glob('_privacy*.md')]"
+  ```
+
+  If one says `decomposed`:
+  - Search for its short terms in the `/b:export --public` bundles you shared, in the
+    status boxes of your tool notes, in `content/_outputs/reports/*_watch.md`, in
+    `content/_outputs/watch/snapshot.json` and in `content/_outputs/log.md`. The log is
+    only ever appended to, so a row there stays until you edit it. Git history keeps the
+    old versions of these files.
+  - Expect one `/b:watch` run without a baseline for some entries. The snapshot stores a
+    repository or URL whose name holds a private term under a hash keyed with all your
+    terms, so once a term reads differently, every such hash changes. At the next run
+    those repositories and URLs are compared with nothing: an archived or stale
+    repository or a dead link can be flagged again, and a licence or release change since
+    the previous run is not seen. The run after compares as before. A repository or URL
+    with a short term in it was stored in plain; the next run reads that entry and stores
+    it hashed.
 - **`/b:watch` finds private terms in decomposed text and file names.** `watch.py`
   checked each line, link and note name only as written. Text and file names from a Mac
   often come decomposed (NFD: `ą` stored as `a` plus a combining ogonek), and a term from
