@@ -344,6 +344,40 @@ class CommitTest(ApplyCase):
         self.assertRegex(body, r"^Source: dir src\d+\n")
         self.assertNotIn(str(self.tmp.path), body)
 
+    def test_ignored_render_inputs_warn_and_leave_gitignore_alone(self):
+        # The owner edited .gitignore, and it still holds the old rule: the plan names the
+        # rule, the commit tracks the file anyway, and .gitignore stays as it is.
+        fx.git(self.base, "rm", "-q", "--cached", kt.ONBOARD_VALUES)
+        ignore = b"__pycache__/\n.kb-onboard.json\n# my own rules\n*.log\n"
+        fx.write_tree(self.base, {".gitignore": ignore})
+        fx.git(self.base, "commit", "-qam", "my ignore rules")
+        plan = self.plan({".claude/hooks/hook.py": HOOK2, ".gitignore": "__pycache__/\n*.tmp\n"})
+        self.assertEqual(plan["onboard_ignored"],
+                         {"file": ".gitignore", "line": 2, "pattern": ".kb-onboard.json"})
+        warning = [w for w in plan["warnings"] if "is ignored by" in w]
+        self.assertEqual(len(warning), 1, plan["warnings"])
+        self.assertIn("line 2 of .gitignore (.kb-onboard.json)", warning[0])
+        code, out, err = fx.run("plan", "--instance", str(self.base), "--source",
+                                plan["source"]["location"], "--out", str(self.planfile),
+                                *fx.CONSENT)
+        self.assertIn("WARNING: .kb-onboard.json is ignored by line 2 of .gitignore", out)
+        self.assertEqual(self.apply({"actions": {".gitignore": "keep"}})[0], 0)
+        code, out, err = self.commit()
+        self.assertEqual(code, 0, err)
+        self.assertIn(kt.ONBOARD_VALUES,
+                      fx.git(self.base, "show", "--name-only", "--format=", "HEAD").splitlines())
+        self.assertEqual((self.base / ".gitignore").read_bytes(), ignore)
+        self.assertEqual(fx.git(self.base, "show", "HEAD:.gitignore").encode() + b"\n", ignore)
+
+    def test_a_negated_rule_is_no_warning(self):
+        fx.git(self.base, "rm", "-q", "--cached", kt.ONBOARD_VALUES)
+        fx.write_tree(self.base, {".gitignore": b"__pycache__/\n*.json\n!.kb-onboard.json\n"})
+        fx.git(self.base, "commit", "-qam", "ignore json, but not the values")
+        plan = self.plan({".claude/hooks/hook.py": HOOK2})
+        self.assertTrue(plan["track_onboard"])
+        self.assertNotIn("onboard_ignored", plan)
+        self.assertFalse([w for w in plan["warnings"] if "is ignored by" in w])
+
     def test_commit_needs_apply(self):
         self.plan({".claude/hooks/hook.py": HOOK2})
         code, out, err = self.commit()

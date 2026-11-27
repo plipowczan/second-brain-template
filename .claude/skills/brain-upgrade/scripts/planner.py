@@ -79,6 +79,22 @@ def tracked(instance: Path, path: str) -> bool:
     return kt.git(instance, "ls-files", "--error-unmatch", "--", path, check=False).returncode == 0
 
 
+def ignore_rule(instance: Path, path: str) -> dict | None:
+    """The rule that makes git ignore `path`, as {file, line, pattern}, or None. `file` is
+    what git names: a path in the base (.gitignore, .git/info/exclude) or a global ignore
+    file. A negated rule (`!path`) is reported by `-v` too, with exit code 0, but it
+    un-ignores the path, so it does not count."""
+    r = kt.git(instance, "check-ignore", "-v", "-z", "--no-index", "--stdin", check=False,
+               input=path + "\0")
+    if r.returncode != 0:
+        return None
+    fields = r.stdout.split("\0")
+    if len(fields) < 4 or not fields[2] or fields[2].startswith("!"):
+        return None
+    line = int(fields[1]) if fields[1].isdigit() else fields[1]
+    return {"file": fields[0], "line": line, "pattern": fields[2]}
+
+
 def dirty_paths(instance: Path, paths: list[str], allow_untracked=(kt.ONBOARD_VALUES,)) -> list[str]:
     """Planned paths with uncommitted work (modified, staged or untracked). An untracked
     .kb-onboard.json is expected in bases from before 0.2.0: apply only adds keys to it
@@ -336,6 +352,16 @@ def finish(plan: dict, instance: Path, payload: dict) -> dict:
             plan["warnings"].append(
                 f"{kt.ONBOARD_VALUES} is not tracked by git; the commit will add it so "
                 "the render inputs travel with the base")
+            rule = ignore_rule(instance, kt.ONBOARD_VALUES)
+            if rule:
+                plan["onboard_ignored"] = rule
+                plan["warnings"].append(
+                    f"{kt.ONBOARD_VALUES} is ignored by line {rule['line']} of "
+                    f"{rule['file']} ({rule['pattern']}). The commit tracks the file anyway, "
+                    "but that rule hides it again whenever it is untracked (after a revert, "
+                    "in a new clone). brain-upgrade does not remove the rule for you: if the "
+                    "line is still there after the upgrade commit, remove it in a commit of "
+                    "its own")
         dirty = dirty_paths(instance, write_paths(plan) + [kt.STAMP])
         if dirty:
             plan["warnings"].append(
