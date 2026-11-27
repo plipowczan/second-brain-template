@@ -8,6 +8,21 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
 ## [Unreleased]
 
 ### Added
+- **Link metrics over time.** A new script, `brain-lint/scripts/metrics.py`, counts
+  notes, orphans, isolated notes (no link to or from another note), weak notes (at most
+  one), links per note, islands (groups of linked notes cut off from the largest one)
+  and notes untouched for 90 days (by `date`, `agent-reviewed` and, in a git base, the
+  last commit). `/b:review` runs it and keeps one row per day in
+  `content/_outputs/metrics.md`. Orphans are counted by the same code as `/b:lint`
+  (`lint_links.py` can now be imported; what it prints is unchanged), so the two
+  commands never give two numbers. There is no healthy or unhealthy line: a base of
+  recipes links less than a research base. The review shows each value against the
+  previous snapshot and the newest one at least four weeks old, and calls a metric out
+  only when it clearly got worse (orphans or isolated notes up 2 percentage points and
+  at least 2 notes, an island more, half a link per note less, untouched notes up 5
+  points and at least 2 notes), never in a base below 30 notes.
+
+  Existing bases: nothing to do. The first `/b:review` records the first row.
 - **An operation log, `content/_outputs/log.md`.** Every run of `/b:ingest`,
   `/b:compile`, `/b:enhance`, `/b:curate`, `/b:refactor`, `/b:import` and `/b:watch`
   that wrote, moved or retired a note adds one row: when (UTC), the operation, counts

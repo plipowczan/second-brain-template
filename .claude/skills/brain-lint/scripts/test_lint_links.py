@@ -90,5 +90,56 @@ class TestGoldenOutput(unittest.TestCase):
             self.assertEqual(run_in(d), {"broken": {}, "orphan_count": 0, "orphans": []})
 
 
+class TestScanFunction(unittest.TestCase):
+    """scan() is what metrics.py builds on: the same notes, incoming names, broken links
+    and orphans the script prints, plus the edges between notes."""
+
+    def scan(self):
+        sys.path.insert(0, str(LINT_LINKS.parent))
+        import lint_links
+        with tempfile.TemporaryDirectory() as d:
+            content = build_fixture(d)
+            result = lint_links.scan(str(content))
+            prefix = str(content).replace("\\", "/") + "/"
+        strip = (lambda p: p[len(prefix):])
+        return lint_links, result, strip
+
+    def test_matches_the_printed_report(self):
+        lint_links, result, strip = self.scan()
+        report = lint_links.report(result)
+        self.assertEqual({"content/" + strip(p): v for p, v in report["broken"].items()},
+                         GOLDEN["broken"])
+        self.assertEqual(report["orphans"], GOLDEN["orphans"])
+        self.assertEqual(report["orphan_count"], GOLDEN["orphan_count"])
+        self.assertEqual([strip(p) for p, _ in result["orphan_notes"]], ["Root Note.md"])
+
+    def test_notes(self):
+        _, result, strip = self.scan()
+        self.assertEqual(sorted(strip(p) for p, _ in result["notes"]), [
+            "A/Dup.md", "B/Dup.md", "Root Note.md", "T/Hub.md", "T/Leaf.md",
+            "T/Lonely-Lower.md", "T/Self.md", "T/Target.md", "T/Zażółć.md"])
+        self.assertTrue(all(strip(p).endswith(n + ".md") for p, n in result["notes"]))
+
+    def test_edges_and_other_links(self):
+        _, result, strip = self.scan()
+        edges = sorted((strip(p), t) for p, t in result["edges"])
+        self.assertEqual(edges, sorted([
+            ("A/Dup.md", "Dup"), ("B/Dup.md", "Dup"), ("Root Note.md", "Leaf"),
+            ("T/Hub.md", "Leaf"), ("T/Hub.md", "Zażółć"), ("T/Hub.md", "lonely-lower"),
+            ("T/Hub.md", "Target"), ("T/Hub.md", "Target"), ("T/Hub.md", "Target"),
+            ("T/Hub.md", "Target"), ("T/Hub.md", "Target"), ("T/Self.md", "Self"),
+            ("T/Target.md", "Hub")]))
+        self.assertEqual(sorted((strip(p), t) for p, t in result["other_links"]), [
+            ("T/Hub.md", "ATTACHMENTS/scan.pdf"), ("T/Hub.md", "pic.png"),
+            ("T/Hub.md", "templates/Note Template")])
+        self.assertEqual({t for _, t in result["edges"]}, result["incoming"])
+
+    def test_link_targets(self):
+        sys.path.insert(0, str(LINT_LINKS.parent))
+        import lint_links
+        text = "[[A|x]] [[B\\|y]] [[C#h]] [[ ]] `[[D]]`\n```\n[[E]]\n```\n[[F/G]]"
+        self.assertEqual(lint_links.link_targets(text), ["A", "B", "C", "F/G"])
+
+
 if __name__ == "__main__":
     unittest.main()
