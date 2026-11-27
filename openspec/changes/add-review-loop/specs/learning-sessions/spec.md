@@ -44,12 +44,22 @@ score and the notes to revisit.
 ### Requirement: A session is saved and changes no note
 
 Each completed session SHALL be saved to `content/_outputs/learning/YYYY-MM-DD_<topic>.md`
-(created on first use, never overwriting an earlier file) with the mode, the notes used,
-the owner's explanation or answers, the gaps by kind and the score, and SHALL append one
-`learn` row to the log. The skill SHALL NOT write any note; filing a gap back SHALL only
-be offered, as `/b:enhance` or `/b:ingest`. Without a person present it SHALL stop
-before asking anything and write nothing.
+(created on first use, never overwriting an earlier file, the topic slug checked against
+the private terms as log paths are) with the mode, the notes used, the owner's
+explanation or answers, the gaps by kind and the score, and SHALL append one `learn` row
+to the log. Without a person present the skill SHALL stop before asking anything and
+write nothing.
 
 #### Scenario: Unattended run
 - **WHEN** `/b:learn` runs from a script with no one to answer
 - **THEN** it says it needs a person and writes no file
+
+### Requirement: Gaps are offered back, never filed
+
+The skill SHALL NOT write any note. A gap the base lacks SHALL only be offered as
+`/b:compile` or an ingest of a source, and a gap its sources lack as `/b:enhance` on that
+note.
+
+#### Scenario: Gap the base lacks
+- **WHEN** the owner explains a point no note covers
+- **THEN** the skill offers `/b:compile` or an ingest and changes no note

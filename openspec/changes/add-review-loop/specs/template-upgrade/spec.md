@@ -9,8 +9,8 @@ only the planned paths, the stamp, and `.kb-onboard.json` when it becomes tracke
 Unrelated uncommitted work SHALL stay uncommitted. In an instance without git,
 brain-upgrade SHALL always create `.kb-upgrade-backup/<version>-<UTC timestamp>/` before
 writing, SHALL copy every file it overwrites or deletes into it, SHALL write a
-`backup.json` there that lists the versions and the files replaced, deleted and added,
-each with the hash apply wrote, and SHALL name that folder in its report.
+`backup.json` there that lists the versions and, for every path apply writes or deletes,
+its hash before and after, and SHALL name that folder in its report.
 
 #### Scenario: Git instance with unrelated work in progress
 - **WHEN** an upgrade is applied while an unrelated note has uncommitted edits
@@ -18,43 +18,62 @@ each with the hash apply wrote, and SHALL name that folder in its report.
 
 #### Scenario: Instance without git
 - **WHEN** an upgrade is applied in a folder that is not a git repository
-- **THEN** every replaced or deleted file has a copy in the backup folder, `backup.json` lists every added file, and the report names that folder
+- **THEN** every replaced or deleted file has a copy in the backup folder, `backup.json` lists every path apply wrote or deleted, added files included, and the report names that folder
 
 #### Scenario: Adoption without git that replaces nothing
 - **WHEN** an adoption without git only adds files and the stamp
-- **THEN** the backup folder exists, its `backup.json` lists the added files, and the folder the report names is that folder
+- **THEN** the backup folder exists, its `backup.json` lists the added files and the stamp, and the folder the report names is that folder
 
 ## ADDED Requirements
 
 ### Requirement: An update without git can be undone from its backup
 
-`upgrade.py undo --backup <folder>` SHALL restore every file the backup holds a copy of,
-SHALL delete every file `backup.json` lists as added whose content still has the hash
-apply wrote, SHALL keep and name every other listed file, and SHALL do this in one
-transaction that puts everything back as it was if a write fails. It SHALL refuse a
-folder without a valid `backup.json` and any path outside the instance, under `content/`,
-or reached through a link or junction.
+`upgrade.py undo --backup <folder>` SHALL refuse unless the current stamp equals the stamp
+`backup.json` recorded after apply. It SHALL restore a listed path only while that path
+still has the hash apply left, by putting back its copy or deleting a file apply added,
+and SHALL keep and name every listed path changed since. It SHALL do this in one
+transaction that puts everything back if a write fails.
 
 #### Scenario: Owner edited an added file
 - **WHEN** a file the update added was edited after the update and the owner runs `undo`
 - **THEN** that file is kept and named, and every other change of the update is undone
 
-### Requirement: The engine leaves no temporary folders behind
+#### Scenario: Older backup first
+- **WHEN** two updates ran without git and the owner runs `undo` on the older backup
+- **THEN** `undo` refuses and names the newer backup
 
-The plan SHALL record the temporary folders the engine created for it. `commit` SHALL
-delete them after a successful commit, and `apply` SHALL delete them in an instance
-without git. A failed step SHALL leave its folders in place. No step SHALL delete folders
-by pattern. The template's tests SHALL leave no `kb-upgrade-*` folder behind.
+### Requirement: Undo writes only what apply wrote
+
+`undo` SHALL write only paths `backup.json` lists, SHALL refuse a folder without a valid
+`backup.json`, and SHALL refuse any path outside the instance, under `content/` other
+than `content/WRITING_STYLE.md`, or reached through a link or junction.
+
+#### Scenario: Re-rendered writing style
+- **WHEN** the update re-rendered `content/WRITING_STYLE.md` on request
+- **THEN** `undo` puts back the previous file
+
+### Requirement: The engine cleans up the folders of its plan
+
+The plan SHALL record the temporary folders the engine created for it. `commit`, as its
+last step, SHALL delete them, after the commit in a git instance and after reporting the
+backup in one without git. `apply` SHALL delete nothing, and a failed step SHALL delete
+nothing. No step SHALL delete folders by pattern. The template's tests SHALL leave no
+`kb-upgrade-*` folder in the system temp directory.
 
 #### Scenario: Parallel upgrade in another base
-- **WHEN** one base finishes its upgrade while another base's upgrade is waiting for review
+- **WHEN** one base commits its upgrade while another base's upgrade is waiting for review
 - **THEN** the second upgrade's plan and payload folders still exist
 
-### Requirement: Folders from fetch are deleted by name
+#### Scenario: Merge before commit
+- **WHEN** apply leaves a file waiting for a merge
+- **THEN** the plan's payload still exists when the owner merges, and is deleted only by `commit`
 
-`fetch` SHALL print the temporary folders it created. `upgrade.py cleanup --path
-<folder>...` SHALL delete a folder only when it is a direct child of the system temp
-directory and its name starts with `kb-upgrade-`, and SHALL refuse and name any other.
+### Requirement: A folder is deleted only after the same checks
+
+Every deletion of a temporary folder, by `commit` or by `upgrade.py cleanup --path
+<folder>...`, SHALL require that the folder is a direct child of the system temp
+directory, that its name starts with `kb-upgrade-`, and that no link or junction is on
+its path, and SHALL refuse and name any other. `fetch` SHALL print the folders it created.
 
 #### Scenario: Path outside the temp directory
 - **WHEN** the skill passes a folder inside the base to `cleanup`

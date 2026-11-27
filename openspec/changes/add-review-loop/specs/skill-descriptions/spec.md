@@ -8,14 +8,14 @@ descriptions that enter every session stay short.
 
 ## ADDED Requirements
 
-### Requirement: New and edited skills follow the description pattern
+### Requirement: New skills and skills whose behaviour changes follow the pattern
 
-A skill added or edited after this change SHALL have a single-quoted YAML description
-that starts with "Use when" and its trigger phrases, says in one sentence what it does
-and what it writes, and, where a neighbouring skill overlaps, names it after "Do NOT use
-for". Its body SHALL have a `## Calibration` section with the typical failure and what
-right looks like, and SHALL state the shape of the output it ends with.
-`CONTRIBUTING.md` SHALL describe the pattern.
+A skill added after this change, and a skill whose behaviour the owner sees change
+(`brain-ingest` in this change), SHALL have a single-quoted description that starts with
+"Use when" and its trigger phrases, says in one sentence what it does and writes, and
+names an overlapping neighbour after "Do NOT use for". Its body SHALL have a
+`## Calibration` section (the typical failure, what right looks like) and SHALL state its
+output shape. `CONTRIBUTING.md` SHALL describe the pattern.
 
 #### Scenario: Review and lint
 - **WHEN** an agent reads the descriptions of `brain-review` and `brain-lint`

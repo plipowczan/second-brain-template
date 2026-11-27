@@ -37,10 +37,11 @@ The same release carries five small findings of the `v0.2.1` update pilot (bugs 
 6. **A pattern for skill descriptions.** "Use when", one sentence on what it does and
    writes, "Do NOT use for" where a neighbouring skill overlaps, and in the body a
    "Calibration" section (the typical failure) and a fixed output shape. Applied to the
-   skills this change touches.
+   two new skills and to `brain-ingest`; other skills adopt it when they next change.
 7. **Upgrade fixes from the pilot.** The plan warns when an edited `.gitignore` still
-   ignores `.kb-onboard.json` (bug 7). The engine deletes the temporary folders it
-   created once they are no longer needed, and the tests leave none behind (bug 8).
+   ignores `.kb-onboard.json` (bug 7). `commit` deletes the temporary folders of its
+   plan, a `cleanup` step deletes those of `fetch`, nothing is deleted by pattern, and
+   the tests leave none behind (bug 8).
    Without git, the backup folder always exists, lists the files the update added, and a
    new `undo` command restores the base from it (bug 9). The commit message names a
    local source by its file name, not its path (bug 10). Lint accepts the note types the
@@ -75,16 +76,18 @@ archived, so `openspec/specs/` has nothing to modify for ingest or lint. As in
 - **New skills:** `.claude/skills/brain-review/`, `.claude/skills/brain-learn/`, their
   commands in `.claude/commands/b/`, their Codex stubs.
 - **Scripts:** `brain-reindex/scripts/oplog.py` (new), `brain-lint/scripts/metrics.py`
-  (new), `brain-lint/scripts/lint_links.py` (made importable, output unchanged),
-  `brain-lint/scripts/lint_scan.py` (note types), `brain-review/scripts/review_data.py`
+  (new), `brain-lint/scripts/lint_links.py` (rewritten as functions behind golden
+  tests, output unchanged), `brain-lint/scripts/lint_scan.py` (note types),
+  `brain-ingest/scripts/inbox_order.py` (new), `brain-review/scripts/review_data.py`
   (new), `brain-upgrade/scripts/` (`upgrade.py`, `planner.py`, `sources.py`), tests.
-- **Skills edited:** `brain-ingest`, `brain-compile`, `brain-enhance`, `brain-curate`,
-  `brain-refactor`, `brain-import`, `brain-watch` (log line, description pattern),
-  `brain-upgrade` (cleanup, undo, `.gitignore` step), `brain-gaps` and `brain-lint`
-  (description: "Do NOT use for" against the review).
-- **Templates and docs:** `AGENTS.template.md` (three folder rows), `README.md` (two
-  command rows), `.gitattributes` (`merge=union` for the log), `CONTRIBUTING.md` (the
-  description pattern), `CHANGELOG.md`.
+- **Skills edited:** `brain-ingest` (backlog, log step, description pattern),
+  `brain-compile`, `brain-enhance`, `brain-curate`, `brain-refactor`, `brain-import`,
+  `brain-watch` (log step only), `brain-upgrade` (cleanup, undo, `.gitignore` step),
+  `brain-lint` (`bad_type` advice).
+- **Templates and docs:** `AGENTS.template.md` (four folder rows, two Workflows
+  entries), `README.md` (two command rows, new bases only), `.gitattributes`
+  (`merge=union` for the log and the metrics), `CONTRIBUTING.md` (the description
+  pattern), `dev/build_codex_files.py` (description length check), `CHANGELOG.md`.
 - **Existing bases:** everything arrives through `/b:upgrade`; the log, the metrics file
   and the learning folder are created on first use, because `content/` is seeded once.
 - **Not in this repository:** the course cheat sheet and lessons (the parent session
