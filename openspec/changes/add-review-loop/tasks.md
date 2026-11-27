@@ -24,7 +24,7 @@ paths from it.
   started that wrote, moved or retired a note; none after a cancelled or empty run, and
   none when the skill runs inside another skill (curate handing work to refactor or
   enhance).
-- [ ] 1.4 Verify in a scratch vault that indexes, `lint_scan.py`, `lint_links.py`, the
+- [x] 1.4 Verify in a scratch vault that indexes, `lint_scan.py`, `lint_links.py`, the
   pre-commit hook and `/b:export --public` ignore the log, the metrics file and
   `_outputs/learning/`.
 
@@ -133,7 +133,7 @@ paths from it.
 
 ## 9. Trial and pull request
 
-- [ ] 9.1 Trial on a fresh copy of the maintainer's base in a temporary folder (never the
+- [x] 9.1 Trial on a fresh copy of the maintainer's base in a temporary folder (never the
   base itself): bring the branch's skills in, then `/b:review`, `/b:learn --quiz`,
   `/b:ingest --backlog` on a few sources, the log rows, the metrics file; record the
   result in the pull request.
