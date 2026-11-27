@@ -50,9 +50,8 @@ empty or unreadable file SHALL NOT count towards N and SHALL be named in every r
 ### Requirement: Batch mode keeps its meaning
 
 `--batch` alone SHALL take the whole inbox, as before. `--backlog` together with
-`--batch` SHALL take N sources per run without the plan question. `--backlog` and a
-number right after it SHALL be valid arguments; any other argument that is neither
-`--batch` nor a YouTube URL SHALL still abort the call.
+`--batch` SHALL take N sources per run without the plan question. Which arguments
+`/b:ingest` accepts is defined once, in the `ingest-plan` capability.
 
 #### Scenario: Script with --batch
 - **WHEN** a script runs `/b:ingest --batch` on an inbox of 37 sources
