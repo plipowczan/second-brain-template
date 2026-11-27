@@ -328,7 +328,7 @@ def build_parser():
     a.add_argument("--count", action="append", metavar="KEY=N",
                    help="a count, key [a-z_]+ and N a non-negative integer; repeatable")
     a.add_argument("--note", action="append", metavar="PATH",
-                   help="a path the run wrote, moved or archived; repeatable")
+                   help="a path the run wrote, moved, archived or used; repeatable")
     a.add_argument("--at", metavar="YYYY-MM-DDTHH:MM", help="the UTC time (default: now)")
     a.set_defaults(run=cmd_append)
 

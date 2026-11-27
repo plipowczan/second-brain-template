@@ -22,7 +22,7 @@ first question: no session file, no log row. Without a topic, ask for one.
 
 ## Workflow
 
-1. **Find the notes** the way `brain-qa` does (steps 1–4 of its workflow): search
+1. **Find the notes** the way `brain-qa` does: search
    `content/_indexes/catalog.md` with a pattern first, then the folder sections, then
    the notes; follow `graph.md` only when the subject spans linked notes. For a
    `[[Note]]`, start from that note and the notes it links to. Read at most five notes:
@@ -35,7 +35,7 @@ first question: no session file, no log row. Without a topic, ask for one.
 3. **Save the session** (below), then **log the run**:
 
    ```bash
-   python .claude/skills/brain-reindex/scripts/oplog.py append --op learn --count questions=<N, 0 for explain-back> --count gaps=<number of gaps> --note <session path without content/ and .md> --note <each note used, relative to content/, without .md>
+   python .claude/skills/brain-reindex/scripts/oplog.py append --op learn --count questions=<N, 0 for explain-back> --count gaps=<number of gaps> --note <session path without content/ and .md> --note <each note a point, question or gap came from, relative to content/, without .md>
    ```
 
    When `oplog.py` is missing, skip the row and say so in the closing message.
@@ -67,7 +67,7 @@ first question: no session file, no log row. Without a topic, ask for one.
 ### Quiz
 
 1. Ask N questions one at a time, mixing recall ("what is …"), why ("why does …") and
-   application ("what would you do if …"). Each question comes from one note; do not
+   application ("what would you do if …") as far as N allows. Each question comes from one note; do not
    give the answer away in the question.
 2. After each answer, grade it: **right** (1 point), **partly** (0.5) or **wrong** (0),
    with the note named and the point it makes in one sentence. "I don't know" or "skip"
@@ -86,7 +86,8 @@ first question: no session file, no log row. Without a topic, ask for one.
 `private` when the topic holds a private term; without the script, a short kebab-case
 slug of the topic). When the name is taken, add `-2`, `-3`: never overwrite a session.
 
-**On the first run** (the folder does not exist yet), tell the owner once: sessions are
+**On the first run** (the folder does not exist yet), tell the owner once, in the
+closing message, before the block: sessions are
 tracked by git like saved answers, so they reach every clone of the base, and
 `/b:export --public` leaves them out; to keep them local, add
 `content/_outputs/learning/` to `.gitignore`.
@@ -96,8 +97,8 @@ tracked by git like saved answers, so they reach every clone of the base, and
 title: "<Learning session or Quiz, in the vault language>: <topic>"
 date: YYYY-MM-DD
 type: learning-session
-mode: explain   # or quiz
-score: "3.5/5"  # quiz only
+mode: <explain | quiz>
+score: "<points>/<N>"
 gaps: <number of gaps, 0 when none>
 agent-created: true
 ---
@@ -107,17 +108,23 @@ agent-created: true
 ## <"Notes used">
 - [[Note A]]
 
-## <"Your explanation", or "Questions and answers" with each question, the answer and its grade>
+## <"Your explanation" (the owner's words as given), or "Questions and answers":>
+### Q1 (<recall | why | application>) — <right | partly | wrong>
+<the question>
+<"Your answer">: <the owner's answer as given>
+<"From"> [[Note]]: <the point the note makes>
 
 ## <"Gaps">
 ### <"The base lacks it">
 ### <"Its sources lack it">
 ### <"You missed it">
+<each kind lists its gaps with the note named, or says none in one line>
 
 ## <"Next steps">
 ```
 
-The headings are in the vault's primary language (from `content/WRITING_STYLE.md`);
+`score:` is written for a quiz only. The headings are in the vault's primary language, from the writing-style document
+(`content/WRITING_STYLE.md`, or the one AGENTS.md "Writing Style" names in an older base);
 `gaps:` is a number, so `/b:review` and `/b:gaps` can count it whatever the language.
 Inside the file, link notes with `[[wikilinks]]`. `content/_outputs/` is outside the
 indexes, so saving needs no index update.

@@ -38,7 +38,8 @@ them the period starts at the last review.
 4. **Write the report** to `report_path`, the next free name in
    `content/_outputs/reports/` (`YYYY-MM-DD_review.md`, then `-2`, `-3`; an earlier
    report is never overwritten), in the shape below and in the vault's primary language
-   from `content/WRITING_STYLE.md`.
+   from the writing-style document (`content/WRITING_STYLE.md`, or the one AGENTS.md
+   "Writing Style" names in an older base).
 5. **Log the run** (one row; `days` is the length of the period, so the next review
    knows where this one started):
 
