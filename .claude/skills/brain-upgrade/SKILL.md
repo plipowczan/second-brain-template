@@ -166,9 +166,11 @@ python ENGINE apply --plan PLAN --decisions DECISIONS
 
 `apply` checks every planned file first and writes nothing if one changed since the
 dry run (run the plan again), if a planned file has uncommitted work (ask the owner to
-commit or stash it), or if a conflict has no choice. Without git it backs up every file
-it replaces or deletes to `.kb-upgrade-backup/<version>-<time>/` and names the folder.
-`apply` deletes no temporary folder: Phase 6 reads the plan's payload.
+commit or stash it), or if a conflict has no choice. Without git it always creates
+`.kb-upgrade-backup/<version>-<time>/`, copies every file it replaces or deletes there,
+writes `backup.json` (every path it wrote or deleted, with its hash before and after),
+and names the folder: `undo` works from it (see **Without a terminal**). `apply` deletes
+no temporary folder: Phase 6 reads the plan's payload.
 
 ## Phase 6 — Merges
 
@@ -264,8 +266,20 @@ anything from the source runs, the dry run, and one reviewable commit.
 ## Without a terminal
 
 Every step is a command the agent runs for the owner. In tools without native
-`/slash` commands, ask: *"follow `.claude/skills/brain-upgrade/SKILL.md`"*. Without git,
-the backup folder is the way back; with git, `git revert` undoes it.
+`/slash` commands, ask: *"follow `.claude/skills/brain-upgrade/SKILL.md`"*. With git,
+`git revert` undoes an update. Without git, `undo` does, from the update's backup folder:
+
+```bash
+python .claude/skills/brain-upgrade/scripts/upgrade.py undo --backup .kb-upgrade-backup/<version>-<time>
+```
+
+It puts back every file the update replaced or deleted and deletes the files it added,
+the stamp included, but only while a file still holds what the update wrote: a file
+changed since is kept and named, for the owner to compare with the backup by hand. It
+writes nothing under `content/` except `content/WRITING_STYLE.md`, and nothing through a
+link. Two updates are undone newest first: `undo` refuses the older one and names the
+newer backup. A backup from before `0.5.0` has no `backup.json`; put its copies back by
+hand.
 
 To undo both the upgrade and the adoption before it, revert the newest commit first:
 the upgrade, then the adoption. Reverting the adoption alone runs into conflicts,

@@ -29,8 +29,12 @@ Subcommands:
           Deletes temporary folders that plan and fetch reported (downloads, unpacked
           sources, superseded plans). Only kb-upgrade-... folders directly in the temp
           directory that are not links; anything else is refused and nothing is deleted.
+  undo    --backup FOLDER [--instance DIR]
+          Without git: puts back what one update changed, from its backup folder, while
+          each file still holds what apply wrote; newest update first.
 
-Every subcommand takes --instance (default: the current directory), except cleanup.
+Every subcommand takes --instance (default: the current directory), except cleanup;
+undo defaults to the base its backup folder is in.
 plan and fetch print the temporary folders they create; commit deletes the plan's own
 folder (the plan and its payload) as its last step and keeps the download.
 Exit codes: 0 ok, 1 refused or failed (nothing written unless the message says so).
@@ -41,6 +45,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import shutil
 import sys
 import tempfile
@@ -224,27 +229,27 @@ def may_touch(rel: str, role: str) -> bool:
     return role == "render" and rel == kt.WRITING_STYLE
 
 
-def target_of(instance: Path, rel: str, role: str) -> Path:
+def target_of(instance: Path, rel: str, role: str, step: str = "apply") -> Path:
     """The file a planned path names, checked before anything is written: a safe relative
     path that this role may touch, which resolves to that same path inside the base. A
     link, a junction or a Windows short name (CONTEN~1) that leads elsewhere, even
-    elsewhere inside the base, is refused."""
-    kt.check_paths([rel], "apply")
+    elsewhere inside the base, is refused. `step` names the command in the messages."""
+    kt.check_paths([rel], step)
     if not may_touch(rel, role):
-        raise kt.TemplateError(f"apply: refusing to touch {rel}, which belongs to the base. "
+        raise kt.TemplateError(f"{step}: refusing to touch {rel}, which belongs to the base. "
                                "Nothing was written.")
     root = instance.resolve()
     link = kt.link_in_path(root, rel)
     if link:
-        raise kt.TemplateError(f"apply: {rel} is reached through a link or junction ({link}). "
+        raise kt.TemplateError(f"{step}: {rel} is reached through a link or junction ({link}). "
                                "Nothing was written.")
     target = (root / rel).resolve()
     if root not in target.parents:
-        raise kt.TemplateError(f"apply: {rel} resolves outside the base ({target}). "
+        raise kt.TemplateError(f"{step}: {rel} resolves outside the base ({target}). "
                                "Nothing was written.")
     real = target.relative_to(root).as_posix()
     if real.casefold() != rel.casefold() or kt.path_problem(real) or not may_touch(real, role):
-        raise kt.TemplateError(f"apply: {rel} resolves to {real} through a link or an alias. "
+        raise kt.TemplateError(f"{step}: {rel} resolves to {real} through a link or an alias. "
                                "Nothing was written.")
     return target
 
@@ -320,7 +325,8 @@ def _current(target: Path) -> bytes | None:
     return target.read_bytes() if target.is_file() else None
 
 
-def transaction(instance: Path, items: list, finish=None, backup: Path | None = None) -> None:
+def transaction(instance: Path, items: list, finish=None, backup: Path | None = None,
+                step: str = "apply") -> None:
     """Apply (path, target, bytes | None for delete | UNCHANGED, expected hash, executable)
     in order, all or nothing, then run `finish()` (recording the plan as applied) as the
     last step.
@@ -334,6 +340,7 @@ def transaction(instance: Path, items: list, finish=None, backup: Path | None = 
     On any failure, `finish()` included, each journaled target is put back only while it
     still holds what apply left there: a file something else changed in the meantime is
     left alone and reported. Created folders are removed when empty. Then it raises.
+    `step` names the command in those messages (apply, undo).
     """
     root = instance.resolve()
     journal: list[tuple[str, Path, bytes | None, bytes | None, int | None]] = []
@@ -392,19 +399,20 @@ def transaction(instance: Path, items: list, finish=None, backup: Path | None = 
                  else "git (git status, git diff)")
         if problems or left:
             raise kt.TemplateError(
-                f"apply failed at {failed_rel} ({e}). The rollback is incomplete: "
+                f"{step} failed at {failed_rel} ({e}). The rollback is incomplete: "
                 + (f"could not be put back: {'; '.join(problems)}. " if problems else "")
                 + (f"changed by something else after apply wrote them, so left as they are: "
                    f"{', '.join(sorted(left))}. " if left else "")
                 + f"Check these against {where} before anything else.") from e
+        again = "Run plan again." if step == "apply" else f"Run {step} again."
         if isinstance(e, ChangedDuringApply):
             raise kt.TemplateError(
-                f"apply stopped: {e}. Nothing was changed: every file was put back as it "
-                "was. Run plan again.") from e
+                f"{step} stopped: {e}. Nothing was changed: every file was put back as it "
+                f"was. {again}") from e
         raise kt.TemplateError(
-            f"apply failed at {failed_rel} ({e}). Every change was rolled back: the base "
-            "is as it was before apply. Fix the cause (a locked file, a full disk) and run "
-            "apply again.") from e
+            f"{step} failed at {failed_rel} ({e}). Every change was rolled back: the base "
+            f"is as it was before {step}. Fix the cause (a locked file, a full disk) and run "
+            f"{step} again.") from e
 
 
 def remove_empty_dirs(instance: Path, start: Path) -> None:
@@ -541,10 +549,16 @@ def cmd_apply(args) -> int:
                 "uncommitted changes in planned paths: " + ", ".join(dirty) +
                 ". Commit or stash them, then run apply again. Nothing was written.")
 
+    # Without git the backup folder is the way back, so it always exists, also when the
+    # update replaces nothing (an adoption that only adds files): a copy of every file
+    # apply replaces or deletes, and backup.json, the record `undo` works from.
     backup = None
     if not plan["git"]:
-        when = kt.utc_now().replace(":", "").replace("-", "")
-        backup = instance.resolve() / kt.BACKUP_DIR / f"{plan['to_version']}-{when}"
+        if any(kt.fold(item[0]) == BACKUP_RECORD for item in items):
+            raise kt.TemplateError(f"apply: a planned {BACKUP_RECORD} at the top of the base "
+                                   "would collide with the backup's own record. Nothing was "
+                                   "written.")
+        backup = new_backup_folder(instance, s["version"])
         for rel, target, *_ in items:
             if target.is_file():
                 dst = backup / rel
@@ -572,6 +586,9 @@ def cmd_apply(args) -> int:
     def record_applied():
         # The last step of the transaction: a plan that cannot say it was applied must
         # not leave an applied base behind (commit would refuse, apply would see stale).
+        # The same holds for backup.json: it exists only for an update that happened.
+        if backup is not None:
+            _write(backup / BACKUP_RECORD, kt.dump_json(backup_record(plan, s, items)))
         save_plan({**plan, "applied": applied})
 
     transaction(instance, items, finish=record_applied, backup=backup)
@@ -596,7 +613,55 @@ def cmd_apply(args) -> int:
             + ", ".join(proposals))
     if backup:
         say(f"Backup of every replaced or deleted file: {backup}")
+        say(f"To undo this update: python {ENGINE_IN_BASE} undo --backup {backup}"
+            + (" (files you merge by hand are not part of it)" if ap["merge"] else ""))
     return 0
+
+
+BACKUP_RECORD = "backup.json"
+BACKUP_FORMAT = 1
+ENGINE_IN_BASE = ".claude/skills/brain-upgrade/scripts/upgrade.py"
+
+
+def new_backup_folder(instance: Path, version: str) -> Path:
+    """`.kb-upgrade-backup/<version>-<UTC time>/`, new: a second apply within the same
+    second gets a suffix and never writes into an earlier backup."""
+    kt.parse_version(version)
+    root = instance.resolve()
+    link = kt.link_in_path(root, kt.BACKUP_DIR)
+    if link:
+        raise kt.TemplateError(f"apply: {kt.BACKUP_DIR} is a link or junction ({link}). "
+                               "Nothing was written.")
+    parent = root / kt.BACKUP_DIR
+    parent.mkdir(exist_ok=True)
+    when = kt.utc_now().replace(":", "").replace("-", "")
+    for n in range(1, 100):
+        name = f"{version}-{when}" + (f"-{n}" if n > 1 else "")
+        if kt.path_problem(name):
+            break
+        try:
+            (parent / name).mkdir()
+        except FileExistsError:
+            continue
+        return parent / name
+    raise kt.TemplateError(f"apply: cannot create a backup folder in {parent}. "
+                           "Nothing was written.")
+
+
+def backup_record(plan: dict, stamp: dict, items: list) -> dict:
+    """backup.json: the versions, and for every path apply writes or deletes its hash
+    before and after (None: absent), the added files, the stamp, .kb-onboard.json and a
+    re-rendered content/WRITING_STYLE.md included. A change of the executable bit alone
+    leaves the content as it is, so it is not listed. The hash is the stamp's."""
+    paths = {}
+    for rel, _, data, expected, _ in items:
+        if data is UNCHANGED:
+            continue
+        paths[rel] = {"before": expected,
+                      "after": kt.content_hash(data) if data is not None else None}
+    return {"format": BACKUP_FORMAT, "mode": plan["mode"], "repository": stamp["repository"],
+            "from_version": plan["from_version"], "to_version": stamp["version"],
+            "created": kt.utc_now(), "paths": paths}
 
 
 # --- commit --------------------------------------------------------------------------
@@ -774,6 +839,158 @@ def cmd_cleanup(args) -> int:
     if failed:
         raise kt.TemplateError("could not delete: " + "; ".join(failed) + ". Close what "
                                "holds a file there and run cleanup again for them.")
+    return 0
+
+
+# --- undo ----------------------------------------------------------------------------
+
+_HASH = re.compile(r"sha256:[0-9a-f]{64}\Z")
+
+
+def read_backup(folder: Path) -> dict:
+    """backup.json of one backup folder, checked: anything else is refused whole."""
+    record = folder / BACKUP_RECORD
+
+    def invalid(why: str) -> kt.TemplateError:
+        return kt.TemplateError(f"{folder} has no valid {BACKUP_RECORD} ({why}), so undo "
+                                "cannot use it. Nothing was changed. Its copies can still be "
+                                "put back by hand.")
+    if not folder.is_dir():
+        raise kt.TemplateError(f"--backup {folder}: no such folder. Nothing was changed.")
+    if kt.is_link(folder) or kt.is_link(record):
+        raise invalid("it is reached through a link or junction")
+    if not record.is_file():
+        raise invalid("missing: a backup made before brain-upgrade 0.5.0 has none")
+    try:
+        data = json.loads(record.read_text(encoding="utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as e:
+        raise invalid(f"not JSON: {e}") from None
+    if not isinstance(data, dict) or data.get("format") != BACKUP_FORMAT:
+        raise invalid("unknown format")
+    paths = data.get("paths")
+    if not isinstance(paths, dict) or not paths:
+        raise invalid("no paths")
+    for rel, entry in paths.items():
+        if (not isinstance(entry, dict) or set(entry) != {"before", "after"}
+                or any(h is not None and not (isinstance(h, str) and _HASH.match(h))
+                       for h in entry.values())):
+            raise invalid(f"a bad entry for {rel!r}")
+    if not isinstance((paths.get(kt.STAMP) or {}).get("after"), str):
+        raise invalid(f"it does not record {kt.STAMP} after the update")
+    if not isinstance(data.get("to_version"), str):
+        raise invalid("no version")
+    try:
+        kt.check_paths(list(paths), BACKUP_RECORD)
+    except kt.TemplateError as e:
+        raise invalid(str(e)) from None
+    return data
+
+
+def undo_role(rel: str) -> str:
+    """The role each path apply may have written: the stamp and .kb-onboard.json are its
+    own bookkeeping, content/WRITING_STYLE.md is a re-render, anything else a planned
+    action. `target_of` refuses anything a role may not touch (notes, README.md)."""
+    if rel in (kt.STAMP, kt.ONBOARD_VALUES):
+        return "own"
+    return "render" if rel == kt.WRITING_STYLE else "action"
+
+
+def newer_backups(instance: Path, folder: Path, stamp_now: str | None) -> list[str]:
+    """Other backups of this base whose update left the stamp as it is now."""
+    parent = instance.resolve() / kt.BACKUP_DIR
+    if stamp_now is None or kt.is_link(parent) or not parent.is_dir():
+        return []
+    out = []
+    for d in sorted(parent.iterdir()):
+        if d.resolve() == folder.resolve() or not d.is_dir():
+            continue
+        try:
+            if read_backup(d)["paths"][kt.STAMP]["after"] == stamp_now:
+                out.append(str(d))
+        except kt.TemplateError:
+            continue
+    return out
+
+
+def cmd_undo(args) -> int:
+    """Put a base without git back as it was before one update, from that update's
+    backup folder: only the paths backup.json lists, each only while it still holds
+    what apply left there, in one transaction like apply's."""
+    folder = Path(os.path.abspath(args.backup))
+    if args.instance:
+        instance = Path(args.instance).resolve()
+    elif folder.parent.name == kt.BACKUP_DIR:
+        instance = folder.parent.parent.resolve()
+    else:
+        raise kt.TemplateError(f"--backup {folder} is not in a {kt.BACKUP_DIR} folder; name "
+                               "the base with --instance. Nothing was changed.")
+    if not instance.is_dir():
+        raise kt.TemplateError(f"--instance {instance}: no such directory")
+    refuse_in_source(instance)
+    record = read_backup(folder)
+    paths = record["paths"]
+    # Every path is checked before anything is read through it: inside the base, allowed
+    # for its role (nothing under content/ but WRITING_STYLE.md), no link on the way.
+    order = sorted(paths, key=lambda rel: (rel == kt.STAMP, rel))  # the stamp last
+    targets = {rel: target_of(instance, rel, undo_role(rel), "undo") for rel in order}
+
+    stamp = paths[kt.STAMP]
+    stamp_now = kt.file_hash(targets[kt.STAMP])
+    if stamp_now != stamp["after"]:
+        if stamp_now == stamp["before"]:
+            raise kt.TemplateError(f"this update is already undone: {kt.STAMP} is the one "
+                                   "from before it. Nothing was changed.")
+        newer = newer_backups(instance, folder, stamp_now)
+        if newer:
+            raise kt.TemplateError(
+                f"a later update ran after this one, so it has to be undone first: undo "
+                f"--backup {newer[0]}, then this one. Nothing was changed.")
+        raise kt.TemplateError(
+            f"{kt.STAMP} is no longer the one this update left (another update, or an "
+            "edit), and no other backup here explains it. Nothing was changed.")
+
+    items, kept, already = [], [], []
+    for rel in order:
+        before, after = paths[rel]["before"], paths[rel]["after"]
+        target = targets[rel]
+        now = kt.file_hash(target)
+        if now == before:
+            already.append(rel)
+            continue
+        if now != after:
+            kept.append(rel)  # changed since the update: the owner's now
+            continue
+        data = None
+        if before is not None:
+            copy = folder / rel
+            data = (copy.read_bytes() if not kt.link_in_path(folder, rel) and copy.is_file()
+                    else None)
+            if data is None or kt.content_hash(data) != before:
+                raise kt.TemplateError(
+                    f"undo: the backup's copy of {rel} is missing or does not match "
+                    f"{BACKUP_RECORD}. Nothing was changed.")
+        items.append((rel, target, data, now, False))
+
+    transaction(instance, items, backup=folder, step="undo")
+    for rel, target, data, *_ in items:
+        if data is None:
+            remove_empty_dirs(instance, target.parent)
+    restored = [rel for rel, _, data, *_ in items if data is not None]
+    deleted = [rel for rel, _, data, *_ in items if data is None]
+    back = record.get("from_version")
+    say(f"Undone: {len(restored)} put back, {len(deleted)} deleted; "
+        + (f"{kt.STAMP} names {back} again." if stamp["before"] is not None
+           else f"the base has no {kt.STAMP} again (the adoption is undone)."))
+    for rel in restored:
+        say(f"  put back {rel}")
+    for rel in deleted:
+        say(f"  deleted  {rel} (the update added it)")
+    if kept:
+        say("Kept, because they changed after the update (yours now; compare them with "
+            f"the backup by hand): {', '.join(kept)}")
+    if already:
+        say("Already as before the update: " + ", ".join(already))
+    say(f"The backup folder stays: {folder}")
     return 0
 
 
@@ -1006,6 +1223,10 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--path", action="extend", nargs="+", required=True, metavar="FOLDER",
                    help="a kb-upgrade-... folder in the temp directory (repeatable)")
 
+    p = sub.add_parser("undo", help="undo an update without git, from its backup folder")
+    p.add_argument("--backup", required=True, help=f"the update's {kt.BACKUP_DIR}/<version>-<time> folder")
+    p.add_argument("--instance", help="the base (default: the base the backup folder is in)")
+
     p = sub.add_parser("fetch", help="resolve a source; print where it comes from and its engine")
     p.add_argument("--instance", default=".")
     p.add_argument("--source")
@@ -1041,6 +1262,8 @@ def main(argv=None, opener=None) -> int:
             return cmd_prune_author(args)
         if args.cmd == "cleanup":
             return cmd_cleanup(args)
+        if args.cmd == "undo":
+            return cmd_undo(args)
         return cmd_fetch(args, opener)
     except kt.TemplateError as e:
         print(f"error: {e}", file=sys.stderr)
