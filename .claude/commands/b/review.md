@@ -1,0 +1,1 @@
+Use the `brain-review` skill to review the vault since the last review: what came in, open contradictions, thin places, unanswered questions, the metrics with their trend, and three moves for the next period. The report goes to `content/_outputs/reports/`; no note changes. Pass `--since YYYY-MM-DD` or `--days N` to set the period.

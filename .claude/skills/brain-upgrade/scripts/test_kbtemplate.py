@@ -180,5 +180,9 @@ class IndexTest(unittest.TestCase):
         self.assertFalse(idx.in_release(2, "0.1.0"))
 
 
+# No test may leave a kb-upgrade-* folder in the temp directory (fixtures.py).
+tearDownModule = fx.tear_down_module
+
+
 if __name__ == "__main__":
     unittest.main()

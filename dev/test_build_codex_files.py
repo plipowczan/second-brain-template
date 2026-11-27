@@ -364,6 +364,23 @@ class BuildCodexFilesTest(unittest.TestCase):
                 r = self.check()
                 self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
 
+    def test_description_length_limit(self):
+        def source(n):
+            return f"---\nname: gamma\ndescription: '{'x' * n}'\n---\n"
+        self.put(GAMMA, source(500), track=True)
+        self.generate()
+        self.assertEqual(self.check().returncode, 0)
+        self.put(GAMMA, source(501), track=True)
+        r = self.check()
+        self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
+        self.assertTrue(self.lines_naming(r.stdout, GAMMA, "description", "501 characters"),
+                        r.stdout)
+        before = snapshot(self.repo)
+        r = self.run_script()
+        self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
+        self.assertIn("nothing was written", r.stdout)
+        self.assertEqual(snapshot(self.repo), before)
+
 
 if __name__ == "__main__":
     unittest.main()

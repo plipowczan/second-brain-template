@@ -70,6 +70,18 @@ After mutations, update all three indexes per CLAUDE.md auto-update rules (remov
 archived notes from counts, catalog entries, graph nodes/edges). Optionally run
 `npx quartz build` to confirm the build still succeeds.
 
+Then **log the run** in the operation log, one row for everything this run did,
+including the merges and refreshes it handed to `/b:refactor` and `/b:enhance` (they
+write no row of their own when curate runs them):
+
+```bash
+python .claude/skills/brain-reindex/scripts/oplog.py append --op curate --count archived=N --count merged=N --count refreshed=N --note <each note archived, merged or refreshed>
+```
+
+Note paths are relative to `content/`, without `.md`; an archived note by the path it
+had before the move. Write no row when the owner confirmed nothing. When `oplog.py` is
+missing, skip the row and say so.
+
 ## Safety
 
 - Mutation is gated on explicit confirmation. Default is the dry-run report.

@@ -42,6 +42,9 @@ it reports where the source comes from before any code from the source runs.
    then it is a zip like any other, which needs their yes in step 5.
 3. `fetch` stops when there is no network. Say so, and ask for a release `.zip` or a
    local clone. Nothing has changed.
+
+   Note the folders it lists in `temp_folders` (the download, the unpacked release), or
+   in its `Temporary folder` lines when it stops: Phase 8 deletes them.
 4. If `engine_exists` is false, the source is older than `0.2.0` and cannot upgrade a
    base. Stop. Otherwise `ENGINE=<engine>` from the JSON.
 5. **Provenance and consent.** Show the owner the `provenance` block in plain words:
@@ -98,8 +101,10 @@ new templates. Add `--diff <path>` or
 adoption that is offline and needs an older release stops and names it; ask for that
 release's `.zip` and add `--base <zip>`.
 
-Read the summary and the plan file it names (`Plan: …`). If it says **Up to date**,
-report that and stop.
+Read the summary and the plan file it names (`Plan: …`). Note every `Temporary folder
+(…): <path>` line, of every dry run: the download and the folder of the plan and its
+payload. A new dry run makes a new plan folder and supersedes the old one. If it says
+**Up to date**, report that and go to Phase 8.
 
 ## Phase 4 — One review table
 
@@ -107,7 +112,8 @@ Show the owner, in one message:
 
 1. The version range and the `CHANGELOG.md` entries from the summary, **BREAKING**
    entries first, each with its "Existing bases" note.
-2. Any warnings (not a release, untracked `.kb-onboard.json`, uncommitted files).
+2. Any warnings (not a release, untracked `.kb-onboard.json` and an ignore rule that
+   still hides it, uncommitted files).
 3. One table of the actions: path, action, default (`[x]`/`[ ]`), note. Group them by
    action. Up-to-date files are a count, not rows.
 4. The decisions that need an answer, with defaults:
@@ -133,7 +139,7 @@ Show the owner, in one message:
 5. Seeded changes (starter content and `README.md` upstream) as information only.
 
 The owner approves, edits defaults, or rejects. A rejection ends the cycle: nothing was
-written.
+written. Go to Phase 8.
 
 ## Phase 5 — Apply
 
@@ -160,8 +166,11 @@ python ENGINE apply --plan PLAN --decisions DECISIONS
 
 `apply` checks every planned file first and writes nothing if one changed since the
 dry run (run the plan again), if a planned file has uncommitted work (ask the owner to
-commit or stash it), or if a conflict has no choice. Without git it backs up every file
-it replaces or deletes to `.kb-upgrade-backup/<version>-<time>/` and names the folder.
+commit or stash it), or if a conflict has no choice. Without git it always creates
+`.kb-upgrade-backup/<version>-<time>/`, copies every file it replaces or deletes there,
+writes `backup.json` (every path it wrote or deleted, with its hash before and after),
+and names the folder: `undo` works from it (see **Without a terminal**). `apply` deletes
+no temporary folder: Phase 6 reads the plan's payload.
 
 ## Phase 6 — Merges
 
@@ -179,7 +188,9 @@ python ENGINE commit --plan PLAN
 It stages only the applied files, the stamp and `.kb-onboard.json` (when it becomes
 tracked) and makes one commit: `chore(template): adopt <repo> <R>` or
 `chore(template): upgrade to <repo> <version>`. Other uncommitted work stays as it was.
-Without git it reports the backup folder instead.
+Without git it reports the backup folder instead. Last, it deletes the plan's own
+temporary folder (the plan and its payload); the download stays. A step that fails
+deletes nothing.
 
 Then:
 
@@ -187,7 +198,35 @@ Then:
 - when an entry renamed commands, remind the owner that their `README.md` still shows the
   old names: it is theirs, and the engine never writes it;
 - run what the entries ask for, typically `/b:reindex`;
+- when the plan warned that a rule ignores `.kb-onboard.json`, run
+  `git check-ignore -v --no-index -- .kb-onboard.json`. If it still names a line of the
+  base's own `.gitignore`, offer to remove that one line in a commit of its own
+  (`chore: stop ignoring .kb-onboard.json`). When the line is a pattern that also covers
+  other files (`*.json`), offer instead to add `!.kb-onboard.json` after it. Do either
+  only on the owner's yes: the engine does not change the rule itself. A rule in
+  `.git/info/exclude` or a global ignore file is outside the base: tell the owner where
+  it is;
 - after an adoption, offer the upgrade cycle (Phase 3 without `--adopt`).
+
+## Phase 8 — Clean up the temporary folders
+
+Every run ends here, also one that stopped early (up to date, rejected, refused). After
+the last cycle (after an adoption, the upgrade cycle that follows it), pass the folders
+the run noted to **this base's own engine** (after the upgrade, the new one), in one
+call:
+
+```bash
+python .claude/skills/brain-upgrade/scripts/upgrade.py cleanup --path <folder> <folder> ...
+```
+
+The folders are the `temp_folders` of every `fetch`, and every `Temporary folder` line of
+every dry run: the downloads, and the folders of superseded plans and of plans that
+ended without a commit. The folder of a committed plan is already gone (`Already gone`).
+`cleanup` deletes only `kb-upgrade-…` folders directly in the temp directory that are not
+links, and when one path is anything else it refuses and deletes nothing. It never
+deletes by pattern, so another base's upgrade in progress keeps its folders. Keep the
+download instead when the owner wants it for an offline upgrade later. A base whose own
+engine is older than `0.5.0` has no `cleanup`: use `ENGINE`'s.
 
 ## Bootstrap: a base without this skill
 
@@ -229,8 +268,20 @@ anything from the source runs, the dry run, and one reviewable commit.
 ## Without a terminal
 
 Every step is a command the agent runs for the owner. In tools without native
-`/slash` commands, ask: *"follow `.claude/skills/brain-upgrade/SKILL.md`"*. Without git,
-the backup folder is the way back; with git, `git revert` undoes it.
+`/slash` commands, ask: *"follow `.claude/skills/brain-upgrade/SKILL.md`"*. With git,
+`git revert` undoes an update. Without git, `undo` does, from the update's backup folder:
+
+```bash
+python .claude/skills/brain-upgrade/scripts/upgrade.py undo --backup .kb-upgrade-backup/<version>-<time>
+```
+
+It puts back every file the update replaced or deleted and deletes the files it added,
+the stamp included, but only while a file still holds what the update wrote: a file
+changed since is kept and named, for the owner to compare with the backup by hand. It
+writes nothing under `content/` except `content/WRITING_STYLE.md`, and nothing through a
+link. Two updates are undone newest first: `undo` refuses the older one and names the
+newer backup. A backup from before `0.5.0` has no `backup.json`; put its copies back by
+hand.
 
 To undo both the upgrade and the adoption before it, revert the newest commit first:
 the upgrade, then the adoption. Reverting the adoption alone runs into conflicts,

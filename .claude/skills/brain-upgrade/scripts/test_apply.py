@@ -313,10 +313,79 @@ class CommitTest(ApplyCase):
         files = fx.git(self.base, "show", "--name-only", "--format=", "HEAD").splitlines()
         self.assertIn(kt.ONBOARD_VALUES, files)
 
+    def body(self):
+        return fx.git(self.base, "log", "-1", "--format=%b")
+
+    def test_zip_source_is_named_without_its_folder(self):
+        downloads = self.tmp.path / "Users" / "someone" / "Downloads"
+        downloads.mkdir(parents=True)
+        z = downloads / "second-brain-template-0.3.0.zip"
+        z.write_bytes(fx.zip_bytes(fx.template("0.3.0", {".claude/hooks/hook.py": HOOK2}),
+                                   comment="b" * 40))
+        code, out, err = fx.run("plan", "--instance", str(self.base), "--source", str(z),
+                                "--out", str(self.planfile), *fx.CONSENT)
+        self.assertEqual(code, 0, err)
+        plan = json.loads(self.planfile.read_text(encoding="utf-8"))
+        self.assertEqual(plan["source"]["location"], str(z))  # the plan keeps the path
+        self.assertEqual(self.apply()[0], 0)
+        code, out, err = self.commit()
+        self.assertEqual(code, 0, err)
+        body = self.body()
+        self.assertIn(f"Source: zip second-brain-template-0.3.0.zip ({'b' * 40})", body)
+        self.assertNotIn("Downloads", body)
+        self.assertNotIn("someone", body)
+
+    def test_folder_source_is_named_by_its_last_component(self):
+        self.plan({".claude/hooks/hook.py": HOOK2})
+        self.assertEqual(self.apply()[0], 0)
+        code, out, err = self.commit()
+        self.assertEqual(code, 0, err)
+        body = self.body()
+        self.assertRegex(body, r"^Source: dir src\d+\n")
+        self.assertNotIn(str(self.tmp.path), body)
+
+    def test_ignored_render_inputs_warn_and_leave_gitignore_alone(self):
+        # The owner edited .gitignore, and it still holds the old rule: the plan names the
+        # rule, the commit tracks the file anyway, and .gitignore stays as it is.
+        fx.git(self.base, "rm", "-q", "--cached", kt.ONBOARD_VALUES)
+        ignore = b"__pycache__/\n.kb-onboard.json\n# my own rules\n*.log\n"
+        fx.write_tree(self.base, {".gitignore": ignore})
+        fx.git(self.base, "commit", "-qam", "my ignore rules")
+        plan = self.plan({".claude/hooks/hook.py": HOOK2, ".gitignore": "__pycache__/\n*.tmp\n"})
+        self.assertEqual(plan["onboard_ignored"],
+                         {"file": ".gitignore", "line": 2, "pattern": ".kb-onboard.json"})
+        warning = [w for w in plan["warnings"] if "is ignored by" in w]
+        self.assertEqual(len(warning), 1, plan["warnings"])
+        self.assertIn("line 2 of .gitignore (.kb-onboard.json)", warning[0])
+        code, out, err = fx.run("plan", "--instance", str(self.base), "--source",
+                                plan["source"]["location"], "--out", str(self.planfile),
+                                *fx.CONSENT)
+        self.assertIn("WARNING: .kb-onboard.json is ignored by line 2 of .gitignore", out)
+        self.assertEqual(self.apply({"actions": {".gitignore": "keep"}})[0], 0)
+        code, out, err = self.commit()
+        self.assertEqual(code, 0, err)
+        self.assertIn(kt.ONBOARD_VALUES,
+                      fx.git(self.base, "show", "--name-only", "--format=", "HEAD").splitlines())
+        self.assertEqual((self.base / ".gitignore").read_bytes(), ignore)
+        self.assertEqual(fx.git(self.base, "show", "HEAD:.gitignore").encode() + b"\n", ignore)
+
+    def test_a_negated_rule_is_no_warning(self):
+        fx.git(self.base, "rm", "-q", "--cached", kt.ONBOARD_VALUES)
+        fx.write_tree(self.base, {".gitignore": b"__pycache__/\n*.json\n!.kb-onboard.json\n"})
+        fx.git(self.base, "commit", "-qam", "ignore json, but not the values")
+        plan = self.plan({".claude/hooks/hook.py": HOOK2})
+        self.assertTrue(plan["track_onboard"])
+        self.assertNotIn("onboard_ignored", plan)
+        self.assertFalse([w for w in plan["warnings"] if "is ignored by" in w])
+
     def test_commit_needs_apply(self):
         self.plan({".claude/hooks/hook.py": HOOK2})
         code, out, err = self.commit()
         self.assertEqual(code, 1)
+
+
+# No test may leave a kb-upgrade-* folder in the temp directory (fixtures.py).
+tearDownModule = fx.tear_down_module
 
 
 if __name__ == "__main__":

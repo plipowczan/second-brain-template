@@ -1,3 +1,5 @@
+import json
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -5,6 +7,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import lint_scan  # noqa: E402
+
+SCRIPT = Path(__file__).resolve().parent / "lint_scan.py"
 
 
 class TestSchemaFunctions(unittest.TestCase):
@@ -383,6 +387,98 @@ class TestWarningsAndCompatibility(unittest.TestCase):
                 encoding="utf-8")
             res = lint_scan.scan(str(content), schema)
         self.assertEqual({k: v for k, v in res["counts"].items() if v}, {})
+
+
+class TestOnboardingTypes(unittest.TestCase):
+    """Bug 11: the note types chosen at onboarding (`NOTE_TYPES` of .kb-onboard.json)
+    are valid without being written into schema.yml."""
+
+    SCHEMA = {"knowledge-note": {"required": ["title", "date", "type", "tags", "summary"]}}
+
+    def onboard(self, d, data):
+        path = Path(d) / ".kb-onboard.json"
+        path.write_text(data if isinstance(data, str) else json.dumps(data), encoding="utf-8")
+        return str(path)
+
+    def scan_types(self, types, schema=None, extra=None):
+        with tempfile.TemporaryDirectory() as d:
+            content = Path(d) / "content"
+            (content / "T").mkdir(parents=True)
+            for i, t in enumerate(types):
+                # Only title and type: a type with required fields would be violated.
+                (content / "T" / f"N{i}.md").write_text(
+                    note(['title: "N%d"' % i, f"type: {t}"]), encoding="utf-8")
+            return lint_scan.scan(str(content), schema, extra)
+
+    def test_load_reads_the_pipe_separated_list(self):
+        with tempfile.TemporaryDirectory() as d:
+            path = self.onboard(d, {"KB_NAME": "x",
+                                    "NOTE_TYPES": "basic-note | knowledge-note |recipe-note"})
+            self.assertEqual(lint_scan.load_onboard_types(path),
+                             {"basic-note", "knowledge-note", "recipe-note"})
+
+    def test_load_reads_a_list_and_a_bom(self):
+        with tempfile.TemporaryDirectory() as d:
+            path = Path(d) / ".kb-onboard.json"
+            path.write_bytes(b"\xef\xbb\xbf" + json.dumps(
+                {"NOTE_TYPES": ["recipe-note", " ", 3]}).encode("utf-8"))
+            self.assertEqual(lint_scan.load_onboard_types(str(path)), {"recipe-note"})
+
+    def test_load_missing_or_broken_file_gives_nothing(self):
+        with tempfile.TemporaryDirectory() as d:
+            self.assertEqual(lint_scan.load_onboard_types(str(Path(d) / "absent.json")), set())
+            for data in ('{"NOTE_TYPES": "recipe-note"', '["recipe-note"]', '"recipe-note"',
+                         {"NOTE_TYPES": 3}, {"NOTE_TYPES": None}, {"KB_NAME": "x"},
+                         {"NOTE_TYPES": {"recipe-note": 1}}):
+                self.assertEqual(lint_scan.load_onboard_types(self.onboard(d, data)), set(),
+                                 data)
+            path = Path(d) / ".kb-onboard.json"
+            path.write_bytes(b'{"NOTE_TYPES": "caf\xe9"}')   # not UTF-8
+            self.assertEqual(lint_scan.load_onboard_types(str(path)), set())
+            self.assertEqual(lint_scan.load_onboard_types(d), set())   # a folder
+
+    def test_own_type_accepted_without_required_fields(self):
+        res = self.scan_types(["recipe-note"], self.SCHEMA, {"recipe-note"})
+        self.assertEqual(res["issues"]["bad_type"], [])
+        self.assertEqual(res["issues"]["schema_violation"], [])
+
+    def test_type_in_neither_file_is_bad_type(self):
+        res = self.scan_types(["mystery-note"], self.SCHEMA, {"recipe-note"})
+        self.assertEqual(len(res["issues"]["bad_type"]), 1)
+        self.assertIn("type=mystery-note", res["issues"]["bad_type"][0])
+
+    def test_schema_still_enforces_a_type_in_both(self):
+        res = self.scan_types(["knowledge-note"], self.SCHEMA, {"knowledge-note"})
+        self.assertEqual(res["issues"]["bad_type"], [])
+        self.assertEqual(len(res["issues"]["schema_violation"]), 1)
+
+    def test_without_schema_the_default_types_and_onboarding_types(self):
+        res = self.scan_types(["recipe-note", "book-note", "mystery-note"], None,
+                              {"recipe-note"})
+        self.assertEqual(len(res["issues"]["bad_type"]), 1)
+        self.assertIn("type=mystery-note", res["issues"]["bad_type"][0])
+
+    def test_without_onboarding_types_nothing_changes(self):
+        res = self.scan_types(["recipe-note"], self.SCHEMA)
+        self.assertEqual(len(res["issues"]["bad_type"]), 1)
+
+    def run_script(self, onboard):
+        with tempfile.TemporaryDirectory() as d:
+            content = Path(d) / "content" / "T"
+            content.mkdir(parents=True)
+            (content / "N.md").write_text(note(['title: "N"', "type: recipe-note"]),
+                                          encoding="utf-8")
+            if onboard is not None:
+                self.onboard(d, onboard)
+            r = subprocess.run([sys.executable, str(SCRIPT)], cwd=d, capture_output=True)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            return json.loads(r.stdout.decode("utf-8"))
+
+    def test_script_reads_the_values_file(self):
+        self.assertEqual(self.run_script({"NOTE_TYPES": "basic-note | recipe-note"})
+                         ["counts"]["bad_type"], 0)
+        self.assertEqual(self.run_script(None)["counts"]["bad_type"], 1)
+        self.assertEqual(self.run_script("{not json")["counts"]["bad_type"], 1)
 
 
 if __name__ == "__main__":

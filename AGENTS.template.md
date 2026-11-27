@@ -30,9 +30,13 @@ Primary language: **{{PRIMARY_LANGUAGE}}** (keep established technical terms in 
 {{TOPIC_TABLE}}
 | `/content/_raw/inbox/` | Drop zone for source documents | No |
 | `/content/_raw/processed/` | Archive of ingested sources | No |
+| `/content/_raw/skipped/` | Inbox files a backlog ingest set aside (duplicates, or marked by you); move one back to the inbox to ingest it | No |
 | `/content/_indexes/` | Auto-maintained navigation indexes | No |
 | `/content/_outputs/answers/` | Saved Q&A results | No |
-| `/content/_outputs/reports/` | Lint/health reports | No |
+| `/content/_outputs/reports/` | Lint, health and review reports | No |
+| `/content/_outputs/learning/` | `/b:learn` sessions: explanations, quiz answers, gaps | No |
+| `/content/_outputs/log.md` | Operation log: one row per run that wrote notes (append-only) | No |
+| `/content/_outputs/metrics.md` | Link metrics over time, one row per day `/b:review` ran | No |
 | `/content/_outputs/watch/` | `/b:watch` snapshot: the baseline the next run compares with | No |
 | `/content/_graveyard/` | Retired notes (reversible; excluded from indexes) | No |
 | `/content/templates/` | Note templates | No |
@@ -122,6 +126,8 @@ Each workflow is a skill with a matching slash command:
 - **LINT** (`/b:lint`) — audit vault health.
 - **OUTPUT** (`/b:output`) — generate a report/summary.
 - **REFACTOR** (`/b:refactor`) — rename/move/merge/split notes with automatic wikilink + index repair.
+- **REVIEW** (`/b:review`) — periodic review since the last one: what came in, open contradictions, thin places, unanswered questions, link metrics against the previous snapshot and one at least four weeks old, and three moves; writes a report to `_outputs/reports/`, never a note, asks nothing. Weekly is a good cadence.
+- **LEARN** (`/b:learn`) — learn a topic from the vault: the agent explains it, you explain it back, it names the gaps (the base lacks it, its sources lack it, you missed it); `--quiz` asks graded questions. Saves the session to `_outputs/learning/`; changes no note.
 - **GAPS** (`/b:gaps`) — coverage analysis: weakly-connected notes, missing topics, thin areas.
 - **CURATE** (`/b:curate`) — staleness/relevance hygiene: scores notes (age, isolation, dead links, duplication), proposes archive/merge/refresh, retires confirmed notes to `_graveyard/` (reversible, gated on confirmation).
 - **WATCH** (`/b:watch`) — re-check `type: tool` notes: a cheap GitHub/URL pass flags archives, renames, licence changes, new releases and stale repos against a snapshot; web-search agents research flagged and due notes; writes only each note's status box and its `status-checked` / `project-status` frontmatter, plus a report with `/b:enhance` and `/b:curate` candidates (never moves a note). Monthly is a good cadence.

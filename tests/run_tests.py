@@ -5,6 +5,7 @@ adopts and upgrades a synthetic old base with brain-upgrade, and runs the curate
 brain-upgrade unit suites.
 Run from anywhere:  python tests/run_tests.py   (exit 0 = all pass)."""
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -28,6 +29,34 @@ NOTE_A = ('---\ntitle: "Alpha"\ndate: 2026-01-01\ntags: ["x"]\ntype: knowledge-n
           '`[[NotARealLink]]`.\n' + PAD)
 NOTE_B = ('---\ntitle: "Beta"\ndate: 2026-01-01\ntags: ["x"]\ntype: knowledge-note\n'
           'summary: "Beta note."\n---\n# Beta\nLinks back to [[Alpha]].\n' + PAD)
+
+
+TEMP_PREFIX = "kb-upgrade-"  # brain-upgrade's temporary folders (sources.private_dir)
+
+
+def isolate_temp():
+    """Point the temp directory of this run, and of every process it starts, at one
+    TemporaryDirectory, before anything starts: brain-upgrade's folders land there, and a
+    test that leaves one behind is seen, not mixed up with other sessions' folders in the
+    shared temp directory. `tempfile` caches its directory, so tempfile.tempdir is set as
+    well as TMP, TEMP and TMPDIR; KB_TEST_TEMP tells the brain-upgrade fixtures to use it."""
+    tmp = tempfile.TemporaryDirectory(prefix="kb-tests-")
+    for var in ("TMP", "TEMP", "TMPDIR", "KB_TEST_TEMP"):
+        os.environ[var] = tmp.name
+    tempfile.tempdir = tmp.name
+    return tmp
+
+
+def leftover_temp_folders(tmp):
+    return sorted(p.name for p in Path(tmp.name).glob(TEMP_PREFIX + "*") if p.is_dir())
+
+
+def release_temp(tmp):
+    try:
+        tmp.cleanup()
+    except OSError as e:  # a file still held open (Windows); the run's result stands
+        print(f"note: could not remove {tmp.name}: {e}")
+
 
 failures = []
 
@@ -131,6 +160,14 @@ def lint_warnings_case():
 
 
 def main():
+    tmp = isolate_temp()
+    try:
+        return run_all(tmp)
+    finally:
+        release_temp(tmp)
+
+
+def run_all(tmp):
     with tempfile.TemporaryDirectory() as d:
         c = Path(d) / "content" / "REFERENCE"
         c.mkdir(parents=True)
@@ -190,6 +227,9 @@ def main():
     else:
         print("SKIP - dev/check_manifest.py and dev/build_codex_files.py --check "
               "(no dev/: not the template source)")
+
+    left = leftover_temp_folders(tmp)
+    check("no kb-upgrade-* folder left in the temp directory", not left, left)
 
     print("---")
     if failures:

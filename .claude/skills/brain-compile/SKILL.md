@@ -26,6 +26,13 @@ Trigger phrases: "compile X", "write article about X", "napisz artykuł o X". Th
 4. Set frontmatter: `type: compiled-note`, `agent-created: true`, and a one-line `summary:`. If you cite raw source files directly, list their `_raw/processed/` paths in `sources:`.
 5. Place the article in the appropriate topic folder under `content/`.
 6. Update cited notes to link back to the new article. Update all three indexes (`vault-map.md`, `catalog.md`, `graph.md`) per the auto-update rules in CLAUDE.md.
+7. **Log the run** in the operation log, one row:
+
+   ```bash
+   python .claude/skills/brain-reindex/scripts/oplog.py append --op compile --count created=1 --count updated=<notes that got a link back> --note <the new article> --note <each updated note>
+   ```
+
+   Note paths are relative to `content/`, without `.md`. Write no row when the run was cancelled or wrote nothing. When `oplog.py` is missing, skip the row and say so.
 
 ## See also
 

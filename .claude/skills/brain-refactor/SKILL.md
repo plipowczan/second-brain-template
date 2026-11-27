@@ -40,3 +40,15 @@ just reindex afterward.
 ## After every operation
 
 Rebuild indexes and run `/b:lint` to confirm no broken links were introduced.
+
+Then **log the operation** in the operation log, one row (the operation is `rename`,
+`move`, `merge` or `split`; `relinked` counts the notes whose links were repaired):
+
+```bash
+python .claude/skills/brain-reindex/scripts/oplog.py append --op refactor --count <operation>=1 --count relinked=N --note <the note as it is now> --note <its old path, or the note merged into it, or the new note split off>
+```
+
+Note paths are relative to `content/`, without `.md`. Earlier rows keep the old path:
+the log is history and is never rewritten. Write no row when another skill runs this
+one (`/b:curate` merging or archiving a note): that skill writes the row. When
+`oplog.py` is missing, skip the row and say so.
