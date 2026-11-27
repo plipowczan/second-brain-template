@@ -413,7 +413,7 @@ def snapshot_key(key, terms):
     may be published: the key itself, or, when it contains a private term, a hash keyed
     with the private terms, so a reader without them cannot test a guessed name. Editing
     the terms changes the hash: those entries then start from no baseline, once."""
-    if not terms or not private_hit(key, terms):
+    if not terms or not term_hit(key, terms):
         return key
     secret = "\n".join(sorted(terms)).encode("utf-8")
     return "private:" + hmac.new(secret, key.encode("utf-8"), hashlib.sha256).hexdigest()[:32]
@@ -423,7 +423,7 @@ def public_entry(entry, terms):
     """A snapshot entry without the values that contain a private term (a renamed repo's
     full_name, say). A dropped release tag takes its kind and date along, so the next
     run does not see a "first release"."""
-    out = {k: v for k, v in entry.items() if not (isinstance(v, str) and private_hit(v, terms))}
+    out = {k: v for k, v in entry.items() if not (isinstance(v, str) and term_hit(v, terms))}
     if "latest" in entry and "latest" not in out:
         out.pop("latest_kind", None)
         out.pop("latest_date", None)
@@ -616,7 +616,8 @@ def result_key(n):
 
 
 def redact(value, terms):
-    """value with every private term (and its slug forms) replaced by [private]."""
+    """value with every private term (and its slug forms) replaced by [private] where it
+    shows as written. redact_all() also finds it in decomposed and folded text."""
     if isinstance(value, str):
         for t in terms:
             for form in sorted(term_forms(t), key=len, reverse=True):
@@ -629,6 +630,19 @@ def redact(value, terms):
     return value
 
 
+def redact_all(value, terms):
+    """value (a string, or a list or dict of them) with each string that term_hit() flags
+    replaced by its mask_all(): the term is masked in the form it was found in. A string
+    without a term is returned as it was, still decomposed if it was."""
+    if isinstance(value, str):
+        return mask_all(value, terms) if term_hit(value, terms) else value
+    if isinstance(value, list):
+        return [redact_all(v, terms) for v in value]
+    if isinstance(value, dict):
+        return {k: redact_all(v, terms) for k, v in value.items()}
+    return value
+
+
 def build_outline(scan, workspace, root="."):
     """The deep-pass workspace. Private terms are redacted from what the agents get."""
     ws = Path(workspace)
@@ -636,7 +650,7 @@ def build_outline(scan, workspace, root="."):
     terms = private_terms(root)
     items = []
     for n in scan["notes"]:
-        if not n.get("deep") or private_hit(n["title"] + " " + n["path"], terms):
+        if not n.get("deep") or term_hit(n["title"] + " " + n["path"], terms):
             continue                       # a note named after a private term is not researched
         f = {k: v for k, v in (n.get("facts") or {}).items() if v not in (None, "")}
         items.append({
@@ -651,7 +665,7 @@ def build_outline(scan, workspace, root="."):
             "cheap_pass_facts": f or "n/a",
             "result_file": result_key(n) + ".json",
         })
-    items = [redact(it, terms) for it in items]
+    items = [redact_all(it, terms) for it in items]
     outline = {"topic": f"brain-watch status check {scan['today']}", "created": scan["today"],
                "purpose": "Re-check liveness, licence, releases and successor of tool notes; "
                           "say what in each note is now wrong.",
@@ -878,8 +892,9 @@ def status_lines(n, r, titles, o=None):
     return lv, lines, changes
 
 
-# brain-export/scripts/privacy_sweep.py mirrors private_terms(), term_forms(), private_hit()
-# and redact() (as mask()); change both together. Its tests compare the two.
+# brain-export/scripts/privacy_sweep.py mirrors private_terms(), fold(), term_forms(),
+# private_hit(), redact() (as mask()), text_forms(), term_hit() and mask_all(); change both
+# together. Its tests compare the two.
 def private_terms(root):
     """Terms from the "Always cut" section of content/_privacy.md and of the git-ignored
     content/_privacy.local.md (for names whose mere presence in the repository is a leak)."""
@@ -927,6 +942,33 @@ def private_hit(text, terms):
                for t in terms for form in term_forms(t))
 
 
+# Text is checked in three forms, as brain-reindex/scripts/oplog.py checks a log row
+# (private_check). Every check in this script goes through term_hit(), not private_hit().
+
+def text_forms(text):
+    """text as written, in NFC (text and file names from macOS come decomposed, which a
+    term as written does not match) and folded (a name written with the diacritics its
+    listed term leaves out)."""
+    nfc = unicodedata.normalize("NFC", text)
+    return text, nfc, fold(nfc)
+
+
+def term_hit(text, terms):
+    """Whether text holds a private term in any of its text_forms()."""
+    return any(private_hit(form, terms) for form in text_forms(text))
+
+
+def mask_all(text, terms):
+    """text with every term that term_hit() finds replaced by [private]: masked as
+    written and in NFC, then folded and masked again when a term still shows there."""
+    if not terms:
+        return text
+    text = redact(unicodedata.normalize("NFC", redact(text, terms)), terms)
+    if private_hit(fold(text), terms):
+        text = redact(fold(text), terms)
+    return text
+
+
 def build_digest(root, scan, workspace):
     ws = Path(workspace)
     flat, bad = {}, []
@@ -961,7 +1003,7 @@ def build_digest(root, scan, workspace):
         full = (n.get("facts") or {}).get("full_name")
         new_repo = ("https://github.com/" + full) if full and any(k == "renamed" for k, _ in n["flags"]) else None
         # Both forms: a link label survives escaping as plain text, a space may become NBSP.
-        if private_hit(" ".join(raw + lines + [changes, new_repo or ""]), terms):
+        if term_hit(" ".join(raw + lines + [changes, new_repo or ""]), terms):
             out["held"].append({"path": n["path"], "reason": "a line matched a private term"})
             continue
         entry = {"liveness": lv, "lines": lines, "changes": changes, "enhance": material(changes)}
@@ -1028,12 +1070,12 @@ def apply_changes(root, scan, digest=None, dry=False):
     done = {"seeded": [], "status": [], "skipped": [], "held": []}
     for n in scan["notes"]:
         entry, seed = entries.get(n["path"]), n.get("seed") or {}
-        if seed and private_hit(" ".join(str(v) for v in seed.values()), terms):
+        if seed and term_hit(" ".join(str(v) for v in seed.values()), terms):
             done["held"].append(n["path"])
             seed = {}
         # digest.json may have been edited (translated) since the digest checked it
         if entry and (entry.get("liveness") not in CALLOUT
-                      or private_hit(" ".join(str(x) for x in entry.get("lines") or []), terms)):
+                      or term_hit(" ".join(str(x) for x in entry.get("lines") or []), terms)):
             if n["path"] not in done["held"]:
                 done["held"].append(n["path"])
             entries, entry = {k: v for k, v in entries.items() if k != n["path"]}, None   # still flagged next run
@@ -1054,7 +1096,7 @@ def apply_changes(root, scan, digest=None, dry=False):
         if entry:
             new_fm = set_fm(new_fm, "status-checked", today)
             new_fm = set_fm(new_fm, "project-status", entry["liveness"])
-            if safe_url(entry.get("repo")) and not private_hit(entry["repo"], terms):
+            if safe_url(entry.get("repo")) and not term_hit(entry["repo"], terms):
                 new_fm = set_fm(new_fm, "repo", fm_value(entry["repo"]))
             new_body = insert_callout(body, render_box(today, entry["liveness"], entry["lines"], titles))
         out = f"---\n{new_fm}\n---\n" + new_body
@@ -1119,7 +1161,7 @@ def esc(s, keep=(), terms=()):
     """Untrusted text (GitHub tags, deep-pass results, links) for one report line. The
     private terms are checked on the text before it is escaped, since escaping can split
     one ("Team #2" gets a no-break space)."""
-    if terms and private_hit(str(s if s is not None else ""), terms):
+    if terms and term_hit(str(s if s is not None else ""), terms):
         return "(withheld: a private term)"
     return safe_md(s, keep)
 
@@ -1149,7 +1191,7 @@ def build_report(root, scan, digest=None, dry=False):
     researched = [n for n in deep if n["path"] in entries]
     errors = [n for n in notes if (n.get("facts") or {}).get("error")]
     unverified = [n for n in notes if (n.get("facts") or {}).get("status") == "unverified"]
-    secret = lambda n: private_hit(" ".join(str(v) for v in n["seed"].values()), terms)
+    secret = lambda n: term_hit(" ".join(str(v) for v in n["seed"].values()), terms)
     seeded = [n for n in notes if n["seed"] and not secret(n)]
     held_seeds = [n for n in notes if n["seed"] and secret(n)]
     ambiguous = [n for n in notes if n["ambiguous"]]
@@ -1243,7 +1285,7 @@ def build_report(root, scan, digest=None, dry=False):
             """The value apply writes: a confirmed rename wins over the seed."""
             seed = n["seed"].get("repo") or n["seed"].get("homepage") or "watch: false"
             moved = entries.get(n["path"], {}).get("repo")
-            if moved and moved != seed and not private_hit(moved, terms):
+            if moved and moved != seed and not term_hit(moved, terms):
                 return f"{moved} (moved from {seed})"
             return seed
 
@@ -1268,7 +1310,7 @@ def build_report(root, scan, digest=None, dry=False):
         L.append("Add `repo:` or `homepage:` to the note (or `watch: false`).")
         L.append("")
         for n in ambiguous:
-            cands = ["(a private link)" if private_hit(c, terms) else text(c) for c in n["ambiguous"]]
+            cands = ["(a private link)" if term_hit(c, terms) else text(c) for c in n["ambiguous"]]
             why = "several candidates" if len(cands) > 1 else "one link, but its site is not named after the note"
             L.append(f"- {wl(n)} — {why}: " + ", ".join(cands))
         for n in untracked:
@@ -1301,7 +1343,7 @@ def build_report(root, scan, digest=None, dry=False):
 
     guarded = []
     for line in L:
-        guarded.append("(line withheld: it matched a private term)" if private_hit(line, terms) else line)
+        guarded.append("(line withheld: it matched a private term)" if term_hit(line, terms) else line)
     return "\n".join(guarded).rstrip("\n") + "\n"
 
 

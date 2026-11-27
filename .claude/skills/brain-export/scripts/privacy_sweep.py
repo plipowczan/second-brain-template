@@ -63,10 +63,11 @@ PATTERNS = [
 ]
 
 
-# --- Private terms. private_terms(), term_forms() and private_hit() behave like
-# their namesakes in brain-watch/scripts/watch.py, so /b:watch and /b:export
-# --public cut the same names. Change both together: test_privacy_sweep.py
-# compares the two whenever brain-watch is installed next to this skill.
+# --- Private terms. private_terms(), fold(), term_forms(), private_hit(), mask() (as
+# redact()), text_forms(), term_hit() and mask_all() behave like their namesakes in
+# brain-watch/scripts/watch.py, so /b:watch and /b:export --public cut the same names.
+# Change both together: test_privacy_sweep.py compares the two whenever brain-watch is
+# installed next to this skill.
 
 def terms_by_source(root):
     """{privacy file name: its always-cut terms, or None when the file is not there}."""
@@ -134,8 +135,9 @@ def mask(text, terms):
     return text
 
 
-# --- The sweep's own matching, over the functions above. A line is checked in three
-# forms, as brain-reindex/scripts/oplog.py checks a log row (private_check).
+# --- Matching over the functions above. A line is checked in three forms, as
+# brain-reindex/scripts/oplog.py checks a log row (private_check) and brain-watch checks
+# each line it writes.
 
 def text_forms(text):
     """text as written, in NFC (text and file names from macOS come decomposed, which a

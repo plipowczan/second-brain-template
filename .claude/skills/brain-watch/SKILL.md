@@ -124,7 +124,9 @@ Run every command from the vault root. `SCRIPT=.claude/skills/brain-watch/script
    (also in its slug forms: `Acme Labs` matches `acme-labs`, `acmelabs`; and a name with
    Polish letters matches without them when that leaves at least four letters:
    `Łąka Wiśnia` matches `laka-wisnia`). So is a result whose `liveness` is not in the
-   vocabulary. To correct a result by hand, put
+   vocabulary. Text is checked as written, in NFC and without diacritics, so a
+   decomposed (NFD) name from a Mac matches too, and so does `Łąka Wiśnia` when the term
+   is listed as `Laka Wisnia`. To correct a result by hand, put
    `{result_key: {"field": "text"}}` or `{result_key: {"liveness": …, "lines": […]}}` in
    `$WS/overrides.json` and re-run the digest. Override lines are made safe like the
    results (see Safety), so link a note as a plain `[[Note]]`. If `content/WRITING_STYLE.md` names a
@@ -163,9 +165,11 @@ flagged notes stay flagged for the next run.
 - The cheap pass reads only; every GitHub call names its repository (`repos/<owner>/<name>/…`), so `gh` never falls back to the current checkout's repository.
 - A network error, a block or a server error is "not checked", never `dead` or `gone`.
 - Lines and links that match a private term are not written into a note or the report.
-  The check runs on the text before it is escaped, and `apply` runs it again on
-  `digest.json` (which may have been translated), holding back a note whose lines match
-  or whose `liveness` is not in the vocabulary.
+  The check runs on the text before it is escaped, as written, in NFC and without
+  diacritics, and on a note's file name too, so a decomposed name from a Mac is caught.
+  A term replaced by `[private]` is replaced in the form it was found in. `apply` runs
+  the check again on `digest.json` (which may have been translated), holding back a note
+  whose lines match or whose `liveness` is not in the vocabulary.
 - The snapshot is committed, so a repo or URL that contains a private term is stored
   under a hash keyed with the private terms, and a value that contains one (a renamed
   repo's name, a release tag) is left out. Changing the terms resets those entries once.
