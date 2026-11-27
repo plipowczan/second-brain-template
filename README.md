@@ -127,7 +127,7 @@ first. Don't want the workflow? Delete the file.
 | Command | What it does |
 |---------|--------------|
 | `/b:onboard` | Interview + scaffold a fresh knowledge base from the template (personalizes the brain, creates topics, builds indexes). |
-| `/b:ingest` | Turn raw sources (files in `_raw/inbox/`, or YouTube URLs) into wiki notes: shows its plan first, updates every note a source is about, marks contradictions instead of overwriting; updates indexes. `--batch` skips the plan. |
+| `/b:ingest` | Turn raw sources (files in `_raw/inbox/`, or YouTube URLs) into wiki notes: shows its plan first, updates every note a source is about, marks contradictions instead of overwriting; updates indexes. `--backlog [N]` takes the N oldest sources (10 by default) and stops, for a large inbox; `--batch` skips the plan. |
 | `/b:compile` | Synthesize a new article from existing notes on a topic. |
 | `/b:enhance` | Improve a single note: fill gaps, add wikilinks, mark reviewed. |
 | `/b:qa` | Answer a question from the vault, citing notes; saves substantive answers with what they rest on and what the vault could not answer (`--no-save` to skip). |
@@ -135,6 +135,8 @@ first. Don't want the workflow? Delete the file.
 | `/b:output` | Generate a report/summary (reading list, topic map, timeline). |
 | `/b:reindex` | Rebuild `vault-map.md`, `catalog.md`, `graph.md` from all notes. |
 | `/b:refactor` | Rename/move/merge/split notes with automatic wikilink repair. |
+| `/b:review` | Review the base since the last review: what came in, open contradictions, thin places, unanswered questions, link metrics with their trend, and three moves for the next week. Writes a report, never a note. |
+| `/b:learn` | Learn a topic from your notes: the agent explains it, you explain it back, and it names what the base, its sources or you missed. `--quiz` asks graded questions. |
 | `/b:gaps` | Coverage analysis: weakly-connected notes, missing topics, thin areas. |
 | `/b:curate` | Staleness hygiene: score notes (age, isolation, dead links, duplication), propose archive/merge/refresh, retire confirmed notes to `_graveyard/` (reversible). |
 | `/b:watch` | Re-check tool notes: GitHub releases, archives, renames and licence changes, dead product URLs; research what changed, update each note's status box, report notes to refresh or retire. `--dry` for the report only. |

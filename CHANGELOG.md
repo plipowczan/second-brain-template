@@ -8,6 +8,26 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
 ## [Unreleased]
 
 ### Added
+- **`/b:review`: a periodic review.** Once a week (or whenever you like) `/b:review`
+  writes a short report to `content/_outputs/reports/YYYY-MM-DD_review.md`: what came
+  in since the last review, where your attention went, open contradictions, thin places,
+  questions your base could not answer, the link metrics against earlier snapshots, and
+  three moves for the next period, each one a command you can run as it stands
+  (`/b:enhance [[Note]]`, `/b:ingest --backlog`, "decide which claim holds in
+  [[Note]]"). It changes no note and asks nothing, so it can run from a schedule. The
+  period starts at the last review (`--since YYYY-MM-DD` or `--days N` to choose
+  another). Below 10 notes it says the base is too young and writes nothing, as
+  `/b:lint` does. The review, the operation log, the metrics over time, `/b:learn` and
+  the backlog batches were inspired by `undefined-ui/second-brain-os` (MIT); no code was
+  taken from it.
+
+  Existing bases: `/b:upgrade` brings the `brain-review` skill and the `/b:review`
+  command. Your first review covers the last 7 days and records the first metrics, so it
+  has no trend yet; the operation log starts empty after the upgrade, so the first
+  review also reads `## Recent Changes` and your git history. `AGENTS.md` lists REVIEW
+  and LEARN and the new folders: an `AGENTS.md` you never edited is re-rendered by the
+  upgrade, an edited one gets the change as a proposal. `README.md` belongs to your base
+  and is not changed.
 - **`/b:learn`: learn from your own notes.** `/b:learn <topic or [[Note]]>` explains the
   topic from your notes in a few plain sentences and asks you to explain it back in your
   own words. Then it names what is missing, in three kinds: the base lacks it (no note
