@@ -15,8 +15,9 @@ Reads the log, `## Recent Changes` of `vault-map.md`, saved answers and learning
 git history and uncommitted changes, and the inbox; runs `oplog.py`, `lint_scan.py`,
 `inbox_order.py` and `metrics.py --record` (the metrics only when the base has at least 10
 notes) as subprocesses with this interpreter. A script that is missing or fails is listed
-in `unavailable` and the rest is still gathered. Writes nothing itself; `metrics.py
---record` writes today's row of `content/_outputs/metrics.md`.
+in `unavailable` and the rest is still gathered. So is git in a shallow clone: its history
+stops at the graft, and every older note would look created there. Writes nothing itself;
+`metrics.py --record` writes today's row of `content/_outputs/metrics.md`.
 """
 
 from __future__ import annotations
@@ -46,6 +47,8 @@ CONTRADICTION = re.compile(r"^(.*) \((\d+) markers?\)$")
 FM_FIELD = re.compile(r"^(title|date|gaps|missed|mode|score)\s*:\s*(.*?)\s*$")
 EXCLUDE_TOP = {"_raw", "_indexes", "_outputs", "_graveyard", "templates", "ATTACHMENTS"}
 EXCLUDE_FILES = {"WRITING_STYLE.md", "WRITING_STYLE_ANALYSIS.md", "_index.md"}
+SHALLOW = ("a shallow clone: its history stops at the graft, so every older note would "
+           "look created there; run git fetch --unshallow to use the history")
 
 
 def utc_today() -> dt.date:
@@ -288,6 +291,8 @@ def git_part(root: Path, period: dict) -> dict:
         return {"available": False, "reason": "not the top of a git work tree"}
     if git(root, "rev-parse", "--verify", "-q", "HEAD") is None:
         return {"available": False, "reason": "no commits yet"}
+    if (git(root, "rev-parse", "--is-shallow-repository") or "").strip() == "true":
+        return {"available": False, "reason": SHALLOW}
     # From the last review's own minute when the period starts there: its commits belong
     # to that review. Otherwise from the start of the first day.
     start = period["after"] or f"{period['since']} 00:00"
@@ -382,6 +387,8 @@ def gather(root: Path, today: dt.date, since: dt.date | None = None,
 
     log = log_part(rows, period)
     git_data = git_part(root, period)
+    if git_data.get("reason") == SHALLOW:  # there is git, but its history cannot be used
+        unavailable.append({"part": "git", "reason": SHALLOW})
     touched = {f["folder"] for f in log["folders"]}
     if git_data.get("available"):
         touched |= {f["folder"] for f in git_data["folders"]}

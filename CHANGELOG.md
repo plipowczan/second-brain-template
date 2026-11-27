@@ -5,6 +5,23 @@ who have cloned the template and want to pull improvements into their own base.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are ISO (UTC).
 
+## [Unreleased]
+
+### Fixed
+- **`/b:review` in a shallow clone no longer reports the whole base as new.** In a clone
+  made with `--depth` (for example a CI checkout with `fetch-depth: 1`), history stops
+  at the graft. `review_data.py` read "what came in" from `git log`, and when the graft
+  fell inside the review period, every note looked created and changed by the graft's
+  commit, the old ones too. In a shallow clone the review now leaves git history out, as
+  in a base without git, and works from the operation log, `## Recent Changes` and the
+  dates of saved answers and learning sessions. The report says that git was not used,
+  and why.
+
+  Existing bases: nothing to do. `/b:upgrade` brings
+  `brain-review/scripts/review_data.py` and the skill. To have the review read git
+  history in a CI checkout, clone the whole history (`fetch-depth: 0`) or run
+  `git fetch --unshallow` before `/b:review`.
+
 ## [0.5.0] - 2026-11-27
 
 The base reports back. `/b:review` reads the period since the last review and ends with

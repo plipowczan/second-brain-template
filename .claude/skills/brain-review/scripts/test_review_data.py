@@ -323,6 +323,34 @@ class TestGit(Vault):
         g = self.gather()["git"]
         self.assertFalse(g["available"])
 
+    def test_shallow_clone_has_no_history(self):
+        # History stops at the graft: its commit has no parent, so every note in it would
+        # look created in the period, the old ones too.
+        git(self.root, "init", "-q")
+        git(self.root, "config", "user.email", "test@example.com")
+        git(self.root, "config", "user.name", "Test")
+        content = self.root / "content"
+        write(content / "T" / "Old.md", "old\n")
+        git(self.root, "add", "-A")
+        git(self.root, "commit", "-qm", "old", date="2026-11-01T10:00:00Z")
+        write(content / "T" / "New.md", "new\n")
+        git(self.root, "add", "-A")
+        git(self.root, "commit", "-qm", "new", date="2026-11-25T10:00:00Z")
+        clone = Path(self.tmp.name) / "clone"
+        r = subprocess.run(["git", "clone", "-q", "--depth", "1", self.root.as_uri(),
+                            str(clone)], capture_output=True)
+        self.assertEqual(r.returncode, 0, r.stderr.decode("utf-8", "replace"))
+        shallow = subprocess.run(["git", "rev-parse", "--is-shallow-repository"], cwd=clone,
+                                 capture_output=True, check=True).stdout.strip()
+        self.assertEqual(shallow, b"true")
+        data = rd.gather(clone, TODAY, scripts=self.scripts())
+        g = data["git"]
+        self.assertNotIn("T/Old", g.get("created", []), g)
+        self.assertFalse(g["available"])
+        self.assertIn("shallow clone", g["reason"])
+        self.assertIn("git fetch --unshallow", g["reason"])
+        self.assertEqual(data["unavailable"], [{"part": "git", "reason": g["reason"]}])
+
 
 class TestMain(unittest.TestCase):
     def run_main(self, *args, cwd):
