@@ -19,6 +19,33 @@ ROOT = Path(__file__).resolve().parent.parent
 SKILLS = ROOT / ".claude" / "skills"
 
 
+TEMP_PREFIX = "kb-upgrade-"  # brain-upgrade's temporary folders (sources.private_dir)
+
+
+def isolate_temp():
+    """Point the temp directory of this run, and of every process it starts, at one
+    TemporaryDirectory, before anything starts: brain-upgrade's folders land there, and a
+    test that leaves one behind is seen, not mixed up with other sessions' folders in the
+    shared temp directory. `tempfile` caches its directory, so tempfile.tempdir is set as
+    well as TMP, TEMP and TMPDIR; KB_TEST_TEMP tells the brain-upgrade fixtures to use it."""
+    tmp = tempfile.TemporaryDirectory(prefix="kb-tests-")
+    for var in ("TMP", "TEMP", "TMPDIR", "KB_TEST_TEMP"):
+        os.environ[var] = tmp.name
+    tempfile.tempdir = tmp.name
+    return tmp
+
+
+def leftover_temp_folders(tmp):
+    return sorted(p.name for p in Path(tmp.name).glob(TEMP_PREFIX + "*") if p.is_dir())
+
+
+def release_temp(tmp):
+    try:
+        tmp.cleanup()
+    except OSError as e:  # a file still held open (Windows); the run's result stands
+        print(f"note: could not remove {tmp.name}: {e}")
+
+
 def run_one_suite(suite_dir, report_path):
     """Child process: run one suite, write what ran and what was skipped as JSON."""
     os.chdir(suite_dir)
@@ -43,7 +70,14 @@ def main():
     if not suites:
         print(f"FAIL - no skill test suites found under {SKILLS}")
         return 1
+    temp = isolate_temp()
+    try:
+        return run_suites(suites, temp)
+    finally:
+        release_temp(temp)
 
+
+def run_suites(suites, temp):
     rows, skips, failed = [], [], []
     with tempfile.TemporaryDirectory() as tmp:
         for i, suite in enumerate(suites):
@@ -67,6 +101,11 @@ def main():
                 failed.append(skill)
             rows.append((skill, report["ran"], len(report["skipped"]), status))
             skips += [(skill, test, reason) for test, reason in report["skipped"]]
+
+    left = leftover_temp_folders(temp)
+    if left:
+        rows.append(("temp directory", 0, 0, f"FAIL (left: {', '.join(left)})"))
+        failed.append("temp directory")
 
     print("---")
     for skill, ran, skipped, status in rows:
