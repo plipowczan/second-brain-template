@@ -8,6 +8,23 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
 ## [Unreleased]
 
 ### Fixed
+- **`/b:watch` finds private terms in decomposed text and file names.** `watch.py`
+  checked each line, link and note name only as written. Text and file names from a Mac
+  often come decomposed (NFD: `ą` stored as `a` plus a combining ogonek), and a term from
+  your privacy files did not match them. A name written with diacritics did not match a
+  term listed without them either. Such a name could reach a status box in a note, the
+  watch report, the outline the research agents get, and the committed snapshot. Every
+  check now looks at the text as written, in NFC and without diacritics, as the
+  `/b:export --public` sweep and the operation log already do. `[private]` replaces the
+  term in whichever form it was found.
+
+  Existing bases: `/b:upgrade` brings `brain-watch/scripts/watch.py`; the change in
+  `brain-export/scripts/privacy_sweep.py` is comments only. If your notes come from a Mac
+  or your privacy files list a term without its diacritics, search for those terms in the
+  status boxes of your tool notes, in `content/_outputs/reports/*_watch.md` and in
+  `content/_outputs/watch/snapshot.json`. The next `/b:watch` run stores a repository or
+  URL that now matches under a hash and drops the entry written in plain, but git history
+  keeps the old version of the snapshot.
 - **What `sources:` holds on a book note is now written down.** Nothing said whether a
   book note's `source:` or `sources:` names the book or what the notes were taken from.
   When ingest wrote a new book note from an article that discussed the book, the
