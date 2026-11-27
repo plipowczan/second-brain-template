@@ -358,10 +358,11 @@ def finish(plan: dict, instance: Path, payload: dict) -> dict:
                 plan["warnings"].append(
                     f"{kt.ONBOARD_VALUES} is ignored by line {rule['line']} of "
                     f"{rule['file']} ({rule['pattern']}). The commit tracks the file anyway, "
-                    "but that rule hides it again whenever it is untracked (after a revert, "
-                    "in a new clone). brain-upgrade does not remove the rule for you: if the "
-                    "line is still there after the upgrade commit, remove it in a commit of "
-                    "its own")
+                    "but while the rule stays, git hides the file again whenever it becomes "
+                    "untracked. brain-upgrade does not change the rule for you: if the line "
+                    "is still there after the upgrade commit, remove it in a commit of its "
+                    f"own, or add !{kt.ONBOARD_VALUES} after it when it also covers other "
+                    "files")
         dirty = dirty_paths(instance, write_paths(plan) + [kt.STAMP])
         if dirty:
             plan["warnings"].append(

@@ -201,9 +201,11 @@ Then:
 - when the plan warned that a rule ignores `.kb-onboard.json`, run
   `git check-ignore -v --no-index -- .kb-onboard.json`. If it still names a line of the
   base's own `.gitignore`, offer to remove that one line in a commit of its own
-  (`chore: stop ignoring .kb-onboard.json`), and do it only on the owner's yes: the
-  engine does not remove the rule itself. A rule in `.git/info/exclude` or a global
-  ignore file is outside the base: tell the owner where it is;
+  (`chore: stop ignoring .kb-onboard.json`). When the line is a pattern that also covers
+  other files (`*.json`), offer instead to add `!.kb-onboard.json` after it. Do either
+  only on the owner's yes: the engine does not change the rule itself. A rule in
+  `.git/info/exclude` or a global ignore file is outside the base: tell the owner where
+  it is;
 - after an adoption, offer the upgrade cycle (Phase 3 without `--adopt`).
 
 ## Phase 8 — Clean up the temporary folders

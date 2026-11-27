@@ -6,6 +6,8 @@ Run: python -m unittest -v"""
 import json
 import os
 import shutil
+import subprocess
+import sys
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -167,6 +169,27 @@ class UndoTest(UndoCase):
         self.assertIn("Every change was rolled back", err)
         self.assertEqual(self.base_files(), after)
         self.assertEqual(self.undo(backup)[0], 0)  # and it can run again
+
+    def test_the_base_engine_undoes_the_update_that_replaced_it(self):
+        # The documented command runs the base's own engine, which the update replaced:
+        # undo rewrites the files it runs from, and must still finish.
+        here = Path(__file__).resolve().parent
+        names = ("upgrade.py", "planner.py", "sources.py", "kbtemplate.py")
+        engine = ".claude/skills/brain-upgrade/scripts/"
+
+        def release(mark):
+            return {engine + n: (here / n).read_text(encoding="utf-8") + f"\n# {mark}\n"
+                    for n in names}
+        self.update("0.3.0", release("engine A"))
+        middle = self.base_files()
+        newer = self.update("0.4.0", release("engine B"))
+        r = subprocess.run([sys.executable, "-B", str(self.base / engine / "upgrade.py"), "undo",
+                            "--backup", str(newer)], capture_output=True, text=True,
+                           cwd=str(self.tmp.path))
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("names 0.3.0 again", r.stdout)
+        self.assertEqual(self.base_files(), middle)
+        self.assertIn("# engine A", (self.base / engine / "upgrade.py").read_text(encoding="utf-8"))
 
     def test_the_default_instance_is_the_base_the_backup_is_in(self):
         backup = self.update()

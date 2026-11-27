@@ -1224,7 +1224,8 @@ def parser() -> argparse.ArgumentParser:
                    help="a kb-upgrade-... folder in the temp directory (repeatable)")
 
     p = sub.add_parser("undo", help="undo an update without git, from its backup folder")
-    p.add_argument("--backup", required=True, help=f"the update's {kt.BACKUP_DIR}/<version>-<time> folder")
+    p.add_argument("--backup", required=True,
+                   help=f"the update's {kt.BACKUP_DIR}/<version>-<time> folder")
     p.add_argument("--instance", help="the base (default: the base the backup folder is in)")
 
     p = sub.add_parser("fetch", help="resolve a source; print where it comes from and its engine")
