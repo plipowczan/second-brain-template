@@ -12,10 +12,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
   made with `--depth` (for example a CI checkout with `fetch-depth: 1`), history stops
   at the graft. `review_data.py` read "what came in" from `git log`, and when the graft
   fell inside the review period, every note looked created and changed by the graft's
-  commit, the old ones too. In a shallow clone the review now leaves git history out, as
-  in a base without git, and works from the operation log, `## Recent Changes` and the
-  dates of saved answers and learning sessions. The report says that git was not used,
-  and why.
+  commit, the old ones too. In a shallow clone the review now leaves git out, as in a
+  base without git: no commits, and no list of notes not committed yet. It works from
+  the operation log, `## Recent Changes` and the dates of saved answers and learning
+  sessions. The report says that git was not used, and why.
 
   Existing bases: nothing to do. `/b:upgrade` brings
   `brain-review/scripts/review_data.py` and the skill. To have the review read git
