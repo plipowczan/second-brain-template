@@ -80,10 +80,12 @@ The headings are in the vault language. What each section holds:
   5 sources, 3 notes created, 7 updated`). From `recent_changes`: the entries dated in
   the period, at most five (say how many more). From `git`: commits in the period and
   the number of notes they created or changed (`git.created_count`,
-  `git.changed_count`); `git.uncommitted` as "new or changed, not committed yet". From
-  `inbox`: the sources waiting, and how many of them are unusable or duplicates of an
-  archived source. Both ends of the period are included, so the day of the last review
-  counts in both reviews. When `log.rows` is empty, say
+  `git.changed_count`); `git.uncommitted` as "new or changed, not committed yet". When
+  `git.available` is false (no git, no commit yet, or a shallow clone, whose history
+  stops at the graft), leave git out and rely on the other sources; a shallow clone is
+  also in `unavailable`. From `inbox`: the sources waiting, and how many of them are
+  unusable or duplicates of an archived source. Both ends of the period are included,
+  so the day of the last review counts in both reviews. When `log.rows` is empty, say
   that the log has no rows for the period (a base fresh from an upgrade, or skills the
   owner kept at their own version, write none) and rely on the other sources.
 - **Where attention went.** `log.folders` and `git.folders`, the counts of one folder

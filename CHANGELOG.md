@@ -8,6 +8,19 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
 ## [Unreleased]
 
 ### Fixed
+- **`/b:review` in a shallow clone no longer reports the whole base as new.** In a clone
+  made with `--depth` (for example a CI checkout with `fetch-depth: 1`), history stops
+  at the graft. `review_data.py` read "what came in" from `git log`, and when the graft
+  fell inside the review period, every note looked created and changed by the graft's
+  commit, the old ones too. In a shallow clone the review now leaves git out, as in a
+  base without git: no commits, and no list of notes not committed yet. It works from
+  the operation log, `## Recent Changes` and the dates of saved answers and learning
+  sessions. The report says that git was not used, and why.
+
+  Existing bases: nothing to do. `/b:upgrade` brings
+  `brain-review/scripts/review_data.py` and the skill. To have the review read git
+  history in a CI checkout, clone the whole history (`fetch-depth: 0`) or run
+  `git fetch --unshallow` before `/b:review`.
 - **`/b:watch` finds private terms in decomposed text and file names.** `watch.py`
   checked each line, link and note name only as written. Text and file names from a Mac
   often come decomposed (NFD: `ą` stored as `a` plus a combining ogonek), and a term from
