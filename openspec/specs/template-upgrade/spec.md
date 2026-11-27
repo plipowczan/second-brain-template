@@ -180,13 +180,12 @@ instance it SHALL refuse to apply while a planned path has uncommitted changes.
 
 ### Requirement: One commit per update, or a backup without git
 
-In a git instance, an upgrade SHALL end in exactly one commit. That commit SHALL contain
-only the planned paths, the stamp, and `.kb-onboard.json` when it becomes tracked.
-Unrelated uncommitted work SHALL stay uncommitted. In an instance without git,
-brain-upgrade SHALL always create `.kb-upgrade-backup/<version>-<UTC timestamp>/` before
-writing, SHALL copy every file it overwrites or deletes into it, SHALL write a
-`backup.json` there that lists the versions and, for every path apply writes or deletes,
-its hash before and after, and SHALL name that folder in its report.
+In a git instance, an upgrade SHALL end in exactly one commit that holds only the
+planned paths, the stamp and a newly tracked `.kb-onboard.json`; unrelated uncommitted
+work SHALL stay uncommitted. Without git, the upgrade SHALL always create
+`.kb-upgrade-backup/<version>-<UTC timestamp>/` before writing, copy there every file it
+overwrites or deletes, add a `backup.json` with the versions and the hash before and
+after of every path apply writes or deletes, and name that folder in its report.
 
 #### Scenario: Git instance with unrelated work in progress
 - **WHEN** an upgrade is applied while an unrelated note has uncommitted edits
