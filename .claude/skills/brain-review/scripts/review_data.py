@@ -365,8 +365,17 @@ def gather(root: Path, today: dt.date, since: dt.date | None = None,
             path, count = (m.group(1), int(m.group(2))) if m else (str(entry), 1)
             contradictions.append({"note": note_key(path), "count": count})
 
+    log = log_part(rows, period)
+    git_data = git_part(root, period)
+    touched = {f["folder"] for f in log["folders"]}
+    if git_data.get("available"):
+        touched |= {f["folder"] for f in git_data["folders"]}
+    # metrics.py picks the thin notes of these folders before it cuts its lists to 20,
+    # so a folder late in the alphabet is not lost behind earlier ones.
+    folder_args = [a for f in sorted(touched) for a in ("--folder", f)]
+
     metrics = None
-    today_arg = ["--today", today.isoformat()]
+    today_arg = ["--today", today.isoformat(), *folder_args]
     if notes is None:  # no lint_scan: count the notes with metrics.py, without recording
         metrics = run("metrics", "metrics", today_arg)
         if isinstance(metrics, dict):
@@ -386,14 +395,11 @@ def gather(root: Path, today: dt.date, since: dt.date | None = None,
     else:
         inbox = inbox_fallback(root)
 
-    log = log_part(rows, period)
-    git_data = git_part(root, period)
-    touched = {f["folder"] for f in log["folders"]}
-    if git_data.get("available"):
-        touched |= {f["folder"] for f in git_data["folders"]}
     thin = {"in_touched_folders": []}
     if isinstance(metrics, dict):
-        lists = metrics.get("lists") or {}
+        lists = metrics.pop("in_folders", None)
+        if not isinstance(lists, dict):  # called without --folder: the cut lists
+            lists = metrics.get("lists") or {}
         found = {}
         for kind in ("orphans", "isolated", "weak"):
             for key in lists.get(kind) or []:

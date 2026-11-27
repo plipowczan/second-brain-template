@@ -194,6 +194,25 @@ class TestGraphMetrics(unittest.TestCase):
         self.assertEqual(lists["orphans"], sorted(lists["orphans"]))
         self.assertEqual(lists["orphans"][0], "N00")
 
+    def test_folder_lists_are_picked_before_the_cut(self):
+        # A folder late in the alphabet must not vanish behind 20 notes of an earlier one.
+        files = {f"A/N{i:02d}.md": "x\n" for i in range(25)}
+        files["Z/Late.md"] = "x\n"
+        files["Top.md"] = "x\n"
+        with tempfile.TemporaryDirectory() as d:
+            content = write_vault(d, files)
+            s, lists = metrics.measure(str(content), TODAY, None, ["Z", "(root)"])
+            out = run(d, "--today", TODAY.isoformat(), "--folder", "Z")
+            plain = run(d, "--today", TODAY.isoformat())
+        self.assertEqual(len(lists["orphans"]), 20)
+        self.assertNotIn("Z/Late", lists["orphans"])
+        self.assertEqual(lists["in_folders"],
+                         {"orphans": ["Top", "Z/Late"], "isolated": ["Top", "Z/Late"],
+                          "weak": ["Top", "Z/Late"]})
+        self.assertEqual(out["in_folders"]["orphans"], ["Z/Late"])
+        self.assertNotIn("in_folders", out["lists"])
+        self.assertNotIn("in_folders", plain)
+
 
 class TestSameOrphansAsLint(unittest.TestCase):
     def test_metrics_and_lint_links_agree_on_the_fixture(self):

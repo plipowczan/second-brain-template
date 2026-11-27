@@ -183,6 +183,19 @@ class TestParts(Vault):
                          [{"note": "T/Lonely", "kinds": ["orphans", "isolated"]},
                           {"note": "T/Thin", "kinds": ["weak"]}])
 
+    def test_thin_notes_come_from_the_folders_metrics_picked(self):
+        # metrics.py cuts its lists to 20; the touched folders go to it with --folder, so
+        # it picks their notes before the cut.
+        rows = [row("2026-11-26 10:00", "ingest", {}, ["Z/Something"])]
+        metrics = {**METRICS, "in_folders": {"orphans": ["Z/Late"], "isolated": [],
+                                             "weak": ["Z/Late"]}}
+        data = self.gather(rows=rows, metrics=metrics)
+        self.assertEqual(data["thin"]["in_touched_folders"],
+                         [{"note": "Z/Late", "kinds": ["orphans", "weak"]}])
+        self.assertNotIn("in_folders", data["metrics"])
+        self.assertEqual(calls(self.fakes, "metrics"),
+                         [["--record", "--today", "2026-11-27", "--folder", "Z"]])
+
     def test_report_path_never_taken(self):
         reports = self.root / "content" / "_outputs" / "reports"
         self.assertEqual(self.gather()["report_path"],

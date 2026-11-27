@@ -4,12 +4,16 @@
 Run from the vault root (the folder that holds content/):
 
   python .claude/skills/brain-lint/scripts/metrics.py [--record] [--today YYYY-MM-DD]
+      [--folder NAME]...
 
 Prints one JSON object: `snapshot` (today's values), `previous` (the latest recorded
 snapshot before today), `older` (the newest one at least 28 days before today),
 `callouts` (metrics that got worse by at least one step), `comparable`, `lists` (up to
 20 note paths per metric) and `recorded`. `--record` writes today's row into
-content/_outputs/metrics.md; without it nothing is written.
+content/_outputs/metrics.md; without it nothing is written. With `--folder` (a folder
+under content/, `(root)` for the notes at its top; repeatable) it also prints
+`in_folders`: the orphans, isolated and weak notes in those folders, up to 20 each,
+chosen before the lists are cut, so a folder late in the alphabet is not lost.
 
 The note set, link resolution and orphan rule are those of lint_links.py, imported:
 
@@ -198,9 +202,17 @@ def make_snapshot(values):
     return snap
 
 
-def measure(root, today, commit_dates=None):
+def folder_of(name):
+    """The folder of a note name (its path under content/ without .md), `(root)` for a
+    note at the top: the folder names /b:review uses."""
+    return name.rsplit("/", 1)[0] if "/" in name else "(root)"
+
+
+def measure(root, today, commit_dates=None, folders=None):
     """(snapshot, lists) for the vault under root on `today`. commit_dates is None for
-    the frontmatter basis, else commit_days() for the git basis."""
+    the frontmatter basis, else commit_days() for the git basis. With `folders`, lists
+    also holds `in_folders`: the orphans, isolated and weak notes in those folders, each
+    list filtered first and cut after."""
     result = lint_links.scan(root)
     notes = [p for p, _ in result["notes"]]
     rel = {p: os.path.relpath(p, root).replace("\\", "/") for p in notes}
@@ -242,6 +254,11 @@ def measure(root, today, commit_dates=None):
     })
     lists = {"orphans": orphans[:LIST_LIMIT], "isolated": isolated[:LIST_LIMIT],
              "weak": weak[:LIST_LIMIT], "untouched_90d": [p for _, p in untouched][:LIST_LIMIT]}
+    if folders is not None:
+        wanted = set(folders)
+        lists["in_folders"] = {
+            kind: [n for n in full if folder_of(n) in wanted][:LIST_LIMIT]
+            for kind, full in (("orphans", orphans), ("isolated", isolated), ("weak", weak))}
     return snap, lists
 
 
@@ -412,15 +429,16 @@ def _day_arg(value):
         raise argparse.ArgumentTypeError(f"not a YYYY-MM-DD date: {value}")
 
 
-def run(root, today, record=False, commit_dates=None):
+def run(root, today, record=False, commit_dates=None, folders=None):
     """The JSON object the script prints; writes the row when record is true."""
-    snap, lists = measure(root, today, commit_dates)
+    snap, lists = measure(root, today, commit_dates, folders)
+    in_folders = lists.pop("in_folders", None)
     path = metrics_path(root)
     text = read_text(path)
     previous, older = pick_earlier(read_history(text), today)
     if record:
         write_text(path, recorded_text(text, snap))
-    return {
+    out = {
         "snapshot": snap,
         "previous": previous,
         "older": older,
@@ -429,6 +447,9 @@ def run(root, today, record=False, commit_dates=None):
         "lists": lists,
         "recorded": bool(record),
     }
+    if in_folders is not None:
+        out["in_folders"] = in_folders
+    return out
 
 
 def main(argv=None):
@@ -439,6 +460,9 @@ def main(argv=None):
                     help="write today's row into content/_outputs/metrics.md")
     ap.add_argument("--today", type=_day_arg, default=None,
                     help="the snapshot date, YYYY-MM-DD (default: today in UTC)")
+    ap.add_argument("--folder", action="append", default=None, metavar="NAME",
+                    help="also list the thin notes of this folder under content/ "
+                         "((root) for its top) before the lists are cut; repeatable")
     args = ap.parse_args(argv)
     if not os.path.isdir(ROOT):
         print(f"metrics.py: no {ROOT}/ folder here; run it from the vault root",
@@ -446,7 +470,7 @@ def main(argv=None):
         return 2
     today = args.today or datetime.now(timezone.utc).date()
     commit_dates = commit_days(ROOT) if git_basis() else None
-    print(json.dumps(run(ROOT, today, args.record, commit_dates), indent=1,
+    print(json.dumps(run(ROOT, today, args.record, commit_dates, args.folder), indent=1,
                      ensure_ascii=False))
     return 0
 

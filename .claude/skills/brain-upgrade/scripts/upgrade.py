@@ -960,7 +960,7 @@ def cmd_undo(args) -> int:
         if now != after:
             kept.append(rel)  # changed since the update: the owner's now
             continue
-        data = None
+        data, executable = None, False
         if before is not None:
             copy = folder / rel
             data = (copy.read_bytes() if not kt.link_in_path(folder, rel) and copy.is_file()
@@ -969,7 +969,12 @@ def cmd_undo(args) -> int:
                 raise kt.TemplateError(
                     f"undo: the backup's copy of {rel} is missing or does not match "
                     f"{BACKUP_RECORD}. Nothing was changed.")
-        items.append((rel, target, data, now, False))
+            # The copy keeps the file's permission bits (copy2). A file the update deleted
+            # is written anew, with no bits of its own to keep: an executable hook or
+            # script gets its bit back from the copy (Linux and macOS; Windows has none).
+            bits = kt.file_bits(copy)
+            executable = bits is not None and bool(bits & 0o111)
+        items.append((rel, target, data, now, executable))
 
     transaction(instance, items, backup=folder, step="undo")
     for rel, target, data, *_ in items:

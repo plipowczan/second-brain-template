@@ -152,6 +152,15 @@ class UndoTest(UndoCase):
         self.assertEqual(self.undo(backup)[0], 0)
         self.assertEqual((self.base / kt.ONBOARD_VALUES).read_bytes(), values)
 
+    @unittest.skipUnless(os.name == "posix", "only Linux and macOS have the bit on disk")
+    def test_a_deleted_executable_comes_back_executable(self):
+        tool = self.base / TOOL
+        tool.chmod(0o755)
+        backup = self.update()  # deletes TOOL
+        self.assertFalse(tool.exists())
+        self.assertEqual(self.undo(backup)[0], 0)
+        self.assertTrue(os.access(tool, os.X_OK))
+
     def test_a_failed_write_puts_everything_back(self):
         backup = self.update()
         after = self.base_files()
