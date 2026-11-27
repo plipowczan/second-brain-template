@@ -7,6 +7,7 @@ import json
 import subprocess
 import sys
 import tempfile
+import unicodedata
 import unittest
 from datetime import datetime, timezone
 from pathlib import Path
@@ -271,6 +272,24 @@ class TestPrivacy(VaultCase):
                     "--note", "PEOPLE/Public Name.md")
         self.assertEqual(self.read()[0]["notes"],
                          ["PEOPLE/[private]/Notes.md", "PEOPLE/Public Name.md"])
+
+    @needs_privacy
+    def test_decomposed_and_folded_names_masked(self):
+        (self.root / "content" / "_privacy.md").write_text(
+            "# Privacy\n\n## Always cut\n\n- \"Łąka Wiśnia\" — a person\n", encoding="utf-8")
+        nfd = unicodedata.normalize("NFD", "PEOPLE/Łąka Wiśnia/Notes.md")
+        self.assertNotEqual(nfd, "PEOPLE/Łąka Wiśnia/Notes.md")
+        self.append("--op", "watch", "--note", nfd, "--note", "PEOPLE/Laka Wisnia.md",
+                    "--note", unicodedata.normalize("NFD", "TOOLS/Zażółć.md"))
+        self.assertEqual(self.read()[0]["notes"],
+                         ["PEOPLE/[private]/Notes.md", "PEOPLE/[private]", "TOOLS/Zażółć.md"])
+        self.assertEqual(self.slug_of(unicodedata.normalize("NFD", "Łąka Wiśnia plan")),
+                         "private")
+
+    def slug_of(self, text):
+        code, out, err = run(self.root, "slug", text)
+        self.assertEqual(code, 0, err)
+        return out.strip()
 
     @needs_privacy
     def test_term_across_segments_masks_the_whole_path(self):

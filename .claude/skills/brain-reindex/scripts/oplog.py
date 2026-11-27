@@ -106,7 +106,13 @@ def private_check(root):
     terms = module.private_terms(str(root))
     if not terms:
         return lambda text: False
-    return lambda text: bool(module.private_hit(text, terms))
+
+    def check(text):
+        # As written, in NFC (a file name from macOS comes decomposed, which the term as
+        # written does not match) and folded (a name written without its diacritics).
+        nfc = unicodedata.normalize("NFC", text)
+        return any(module.private_hit(form, terms) for form in (text, nfc, fold(nfc)))
+    return check
 
 
 def mask_path(path, hit):
@@ -141,7 +147,7 @@ def parse_notes(raw_paths):
             raw.encode("utf-8")
         except UnicodeEncodeError:  # undecodable bytes in argv: no half-created file
             raise Refused(f"a --note path is not valid text: {raw!r}") from None
-        path = raw.replace("\\", "/")
+        path = unicodedata.normalize("NFC", raw.replace("\\", "/"))
         if path not in notes:
             notes.append(path)
     return notes
