@@ -8,6 +8,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
 ## [Unreleased]
 
 ### Fixed
+- **The indexes record `updated:` in UTC.** `build_indexes.py` wrote local time followed
+  by `Z`, and `Z` means UTC. East of UTC every index claimed to be newer than it was;
+  west of UTC, older. `/b:reindex` reads that time to decide whether an index is stale.
+  The script now writes UTC. Apart from the `updated:` lines its output is byte for byte
+  what it was, so the `kb-maintain` workflow sees no other change.
+
+  Existing bases: nothing to do. `/b:upgrade` brings the script, and the next
+  `/b:reindex` writes the correct time.
 - **`/b:ingest` no longer writes a backlink into a note the source only mentions.**
   Phase 2 gave two rules: step 6 left such a note alone, and step 8 had every linked note
   link back. Now there is one rule, in step 8. The main note links to every note in the
