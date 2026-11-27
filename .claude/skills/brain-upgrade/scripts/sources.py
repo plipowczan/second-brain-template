@@ -18,6 +18,7 @@ import io
 import json
 import os
 import re
+import shutil
 import tarfile
 import tempfile
 import urllib.error
@@ -36,10 +37,67 @@ class OfflineError(kt.TemplateError):
     """The network was needed and could not be reached."""
 
 
-def private_dir() -> Path:
+TEMP_PREFIX = "kb-upgrade-"
+_created: list[tuple[Path, str]] = []
+
+
+def private_dir(purpose: str = "") -> Path:
     """A new directory under the OS temp dir that only this user can read or write
-    (`mkdtemp`: unpredictable name, mode 0700), for archives, plans and unpacked trees."""
-    return Path(tempfile.mkdtemp(prefix="kb-upgrade-"))
+    (`mkdtemp`: unpredictable name, mode 0700), for archives, plans and unpacked trees.
+    Each one is recorded with its purpose, so that `plan` and `fetch` can say which
+    folders they created."""
+    folder = Path(tempfile.mkdtemp(prefix=TEMP_PREFIX))
+    _created.append((folder, purpose))
+    return folder
+
+
+def created_count() -> int:
+    return len(_created)
+
+
+def created_since(mark: int) -> list[tuple[Path, str]]:
+    """The folders `private_dir` made since `created_count()` returned `mark`."""
+    return list(_created[mark:])
+
+
+def temp_folder_problem(path) -> str | None:
+    """Why `path` is not one of brain-upgrade's own temporary folders, or None when it
+    is: a folder (or nothing, when it is already gone) directly in the system temp
+    directory, named kb-upgrade-..., and not itself a link or junction. Nothing else is
+    ever deleted, because the paths come from a plan file or from the agent, and a plan
+    file sits in the temp directory, where anyone could have written it.
+
+    The path is taken as given (made absolute, `..` folded), not resolved: resolving
+    first would look through a link. Only its parent is resolved, as is the temp
+    directory, so a Windows short name (RUNNER~1) or a temp directory reached through a
+    symbolic link (/var -> /private/var on macOS) compares equal to its long form."""
+    p = Path(os.path.abspath(path))
+    if kt.is_link(p):
+        return "it is a link or junction"
+    if not p.name.startswith(TEMP_PREFIX):
+        return f"its name does not start with {TEMP_PREFIX}"
+    temp = Path(tempfile.gettempdir()).resolve()
+    if os.path.normcase(str(p.parent.resolve())) != os.path.normcase(str(temp)):
+        return f"it is not directly in the temp directory {temp}"
+    if os.path.lexists(p) and not p.is_dir():
+        return "it is not a folder"
+    return None
+
+
+def remove_temp_folder(path) -> bool:
+    """Delete one of brain-upgrade's own temporary folders, after the checks of
+    `temp_folder_problem`. Returns False when it was already gone. Raises TemplateError
+    naming the folder when a check fails, OSError when the deletion fails."""
+    why = temp_folder_problem(path)
+    if why:
+        raise kt.TemplateError(f"{path} is not one of brain-upgrade's temporary folders "
+                               f"({why}), so it was not deleted")
+    p = Path(os.path.abspath(path))
+    folder = Path(tempfile.gettempdir()).resolve() / p.name
+    if not os.path.lexists(folder):
+        return False
+    shutil.rmtree(folder)  # no onexc: that needs Python 3.12
+    return True
 
 
 
@@ -272,7 +330,7 @@ def download(repository: str, version: str | None = None, opener=default_open,
         raise kt.TemplateError(f"{url}: HTTP {e.code}; is v{version} a published release?") from e
     except (urllib.error.URLError, OSError) as e:
         raise OfflineError(offline_message(repository, version)) from e
-    dest = dest or private_dir()
+    dest = dest or private_dir("download")
     path = dest / f"{repository.split('/')[-1]}-v{version}.zip"
     path.write_bytes(data)
     files, commit = read_zip(data, url)

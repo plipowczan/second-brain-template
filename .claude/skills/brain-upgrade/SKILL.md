@@ -42,6 +42,9 @@ it reports where the source comes from before any code from the source runs.
    then it is a zip like any other, which needs their yes in step 5.
 3. `fetch` stops when there is no network. Say so, and ask for a release `.zip` or a
    local clone. Nothing has changed.
+
+   Note the folders it lists in `temp_folders` (the download, the unpacked release), or
+   in its `Temporary folder` lines when it stops: Phase 8 deletes them.
 4. If `engine_exists` is false, the source is older than `0.2.0` and cannot upgrade a
    base. Stop. Otherwise `ENGINE=<engine>` from the JSON.
 5. **Provenance and consent.** Show the owner the `provenance` block in plain words:
@@ -98,8 +101,10 @@ new templates. Add `--diff <path>` or
 adoption that is offline and needs an older release stops and names it; ask for that
 release's `.zip` and add `--base <zip>`.
 
-Read the summary and the plan file it names (`Plan: …`). If it says **Up to date**,
-report that and stop.
+Read the summary and the plan file it names (`Plan: …`). Note every `Temporary folder
+(…): <path>` line, of every dry run: the download and the folder of the plan and its
+payload. A new dry run makes a new plan folder and supersedes the old one. If it says
+**Up to date**, report that and go to Phase 8.
 
 ## Phase 4 — One review table
 
@@ -134,7 +139,7 @@ Show the owner, in one message:
 5. Seeded changes (starter content and `README.md` upstream) as information only.
 
 The owner approves, edits defaults, or rejects. A rejection ends the cycle: nothing was
-written.
+written. Go to Phase 8.
 
 ## Phase 5 — Apply
 
@@ -163,6 +168,7 @@ python ENGINE apply --plan PLAN --decisions DECISIONS
 dry run (run the plan again), if a planned file has uncommitted work (ask the owner to
 commit or stash it), or if a conflict has no choice. Without git it backs up every file
 it replaces or deletes to `.kb-upgrade-backup/<version>-<time>/` and names the folder.
+`apply` deletes no temporary folder: Phase 6 reads the plan's payload.
 
 ## Phase 6 — Merges
 
@@ -180,7 +186,9 @@ python ENGINE commit --plan PLAN
 It stages only the applied files, the stamp and `.kb-onboard.json` (when it becomes
 tracked) and makes one commit: `chore(template): adopt <repo> <R>` or
 `chore(template): upgrade to <repo> <version>`. Other uncommitted work stays as it was.
-Without git it reports the backup folder instead.
+Without git it reports the backup folder instead. Last, it deletes the plan's own
+temporary folder (the plan and its payload); the download stays. A step that fails
+deletes nothing.
 
 Then:
 
@@ -195,6 +203,26 @@ Then:
   engine does not remove the rule itself. A rule in `.git/info/exclude` or a global
   ignore file is outside the base: tell the owner where it is;
 - after an adoption, offer the upgrade cycle (Phase 3 without `--adopt`).
+
+## Phase 8 — Clean up the temporary folders
+
+Every run ends here, also one that stopped early (up to date, rejected, refused). After
+the last cycle (after an adoption, the upgrade cycle that follows it), pass the folders
+the run noted to **this base's own engine** (after the upgrade, the new one), in one
+call:
+
+```bash
+python .claude/skills/brain-upgrade/scripts/upgrade.py cleanup --path <folder> <folder> ...
+```
+
+The folders are the `temp_folders` of every `fetch`, and every `Temporary folder` line of
+every dry run: the downloads, and the folders of superseded plans and of plans that
+ended without a commit. The folder of a committed plan is already gone (`Already gone`).
+`cleanup` deletes only `kb-upgrade-…` folders directly in the temp directory that are not
+links, and when one path is anything else it refuses and deletes nothing. It never
+deletes by pattern, so another base's upgrade in progress keeps its folders. Keep the
+download instead when the owner wants it for an offline upgrade later. A base whose own
+engine is older than `0.5.0` has no `cleanup`: use `ENGINE`'s.
 
 ## Bootstrap: a base without this skill
 

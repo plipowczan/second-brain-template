@@ -396,5 +396,9 @@ class PlanCommandTest(PlannerCase):
         self.assertIn("uncommitted changes in planned paths", out)
 
 
+# No test may leave a kb-upgrade-* folder in the temp directory (fixtures.py).
+tearDownModule = fx.tear_down_module
+
+
 if __name__ == "__main__":
     unittest.main()

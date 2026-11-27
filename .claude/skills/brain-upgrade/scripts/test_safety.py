@@ -946,5 +946,9 @@ class RollbackTest(SafetyCase):
                 self.assertNotIn("applied", json.loads(self.planfile.read_text(encoding="utf-8")))
 
 
+# No test may leave a kb-upgrade-* folder in the temp directory (fixtures.py).
+tearDownModule = fx.tear_down_module
+
+
 if __name__ == "__main__":
     unittest.main()

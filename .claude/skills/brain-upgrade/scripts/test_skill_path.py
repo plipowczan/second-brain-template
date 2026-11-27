@@ -22,6 +22,8 @@ COMMIT = "a" * 40
 FETCH = re.compile(r"`python \.claude/skills/brain-upgrade/scripts/upgrade\.py (fetch)"
                    r"(?: \[--to X\.Y\.Z\])?`")
 ENGINE = re.compile(r"^python ENGINE (.+?)(?:\s+#.*)?$", re.M)
+CLEANUP = re.compile(r"^python \.claude/skills/brain-upgrade/scripts/upgrade\.py (cleanup --path) "
+                     r"<folder>", re.M)
 
 
 def phase(title: str) -> str:
@@ -113,6 +115,26 @@ class DefaultPathTest(SkillPathCase):
         self.assertEqual((self.base / ".claude/hooks/hook.py").read_text(encoding="utf-8"),
                          "print('hook v2')\n")
         self.assertEqual(fx.git(self.base, "status", "--porcelain"), "")
+
+    def test_the_last_phase_deletes_every_folder_of_the_run(self):
+        # The folders fetch and plan reported, handed to the cleanup line of Phase 8: the
+        # committed plan's folder is gone already, everything else goes now.
+        self.publish("0.3.0", {".claude/hooks/hook.py": "print('hook v2')\n"})
+        fetched = self.skill_fetch()
+        superseded, first = self.skill_plan("upgrade", fetched["provenance"]["version"])
+        plan_file, summary = self.skill_plan("upgrade", fetched["provenance"]["version"])
+        self.skill_apply_and_commit(plan_file)
+        self.assertFalse(plan_file.parent.exists())
+        folders = fetched["temp_folders"] + [p for out in (first, summary)
+                                             for ps in fx.temp_folders_of(out).values() for p in ps]
+        self.assertEqual(len(folders), 6)  # 2 by fetch; a download and a plan per dry run
+        self.assertTrue(superseded.is_file())
+        m = CLEANUP.search(phase("Clean up the temporary folders"))
+        self.assertTrue(m, "the cleanup line left SKILL.md")
+        code, out, err = fx.run(*m.group(1).split(), *folders)
+        self.assertEqual(code, 0, err)
+        self.assertFalse([p for p in folders if Path(p).exists()])
+        self.assertIn(f"Already gone: {plan_file.parent}", out)
 
     def test_the_plan_stays_on_the_version_the_owner_agreed_to(self):
         self.publish("0.3.0")
@@ -210,6 +232,10 @@ class RefusalTest(SkillPathCase):
                                 "--out", str(plan_file), *fx.CONSENT)
         self.assertEqual(code, 0, err)
         self.assertTrue(plan_file.is_file())
+
+
+# No test may leave a kb-upgrade-* folder in the temp directory (fixtures.py).
+tearDownModule = fx.tear_down_module
 
 
 if __name__ == "__main__":

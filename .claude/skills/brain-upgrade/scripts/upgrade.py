@@ -14,7 +14,8 @@ Subcommands:
   apply   --plan FILE --decisions FILE
           Checks every planned path, then writes the approved actions and the stamp.
   commit  --plan FILE
-          One git commit with exactly the applied paths, the stamp and .kb-onboard.json.
+          One git commit with exactly the applied paths, the stamp and .kb-onboard.json,
+          then deletes the plan's temporary folder.
   stamp   Records the current files as the baseline (used by /b:onboard).
   prune-author
           Deletes author-class files from a fresh clone (used by /b:onboard).
@@ -24,8 +25,14 @@ Subcommands:
           (repository, version, tag, commit, where it came from, whether it matches the
           stamp's repository) and where that version's engine is, so the owner can agree
           before any code from it runs.
+  cleanup --path FOLDER...
+          Deletes temporary folders that plan and fetch reported (downloads, unpacked
+          sources, superseded plans). Only kb-upgrade-... folders directly in the temp
+          directory that are not links; anything else is refused and nothing is deleted.
 
-Every subcommand takes --instance (default: the current directory).
+Every subcommand takes --instance (default: the current directory), except cleanup.
+plan and fetch print the temporary folders they create; commit deletes the plan's own
+folder (the plan and its payload) as its last step and keeps the download.
 Exit codes: 0 ok, 1 refused or failed (nothing written unless the message says so).
 """
 
@@ -36,6 +43,7 @@ import json
 import os
 import shutil
 import sys
+import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -51,6 +59,12 @@ def say(msg: str = "") -> None:
     print(msg)
 
 
+def say_temp_folders(folders, stream=None) -> None:
+    """One line per temporary folder a run created: what the skill hands to `cleanup`."""
+    for path, purpose in folders:
+        print(f"Temporary folder ({purpose or 'work'}): {path}", file=stream or sys.stdout)
+
+
 def refuse_in_source(instance: Path) -> None:
     if (instance / "CLAUDE.local.md").exists():
         raise kt.TemplateError(
@@ -61,10 +75,17 @@ def refuse_in_source(instance: Path) -> None:
 # --- plan ----------------------------------------------------------------------------
 
 def write_plan(plan: dict, out: Path | None, instance: Path) -> Path:
+    """Write the plan file and its payload (`<plan>.files/`) side by side. Without
+    `--out` both go into one new temporary folder, recorded as the plan's `temp_folder`:
+    `commit` deletes that folder as its last step. A plan written with `--out` is the
+    owner's file, and nothing deletes it."""
     payload = plan.pop("_payload", {})
+    plan["temp_folder"] = None
     if out is None:
         stamp = kt.utc_now().replace(":", "").replace("-", "")
-        out = sources.private_dir() / f"plan-{instance.name}-{plan['mode']}-{stamp}.json"
+        folder = sources.private_dir("plan")
+        plan["temp_folder"] = str(folder)
+        out = folder / f"plan-{instance.name}-{plan['mode']}-{stamp}.json"
     out = out.resolve()
     pdir = out.with_suffix(".files")
     if pdir.exists():
@@ -149,6 +170,7 @@ def cmd_plan(args, opener) -> int:
     say(planner.summary(plan))
     if args.diff:
         print_diffs(plan, instance, args.diff)
+    say_temp_folders(sources.created_since(getattr(args, "temp_mark", 0)))
     say(f"Plan: {path}")
     if not plan["up_to_date"]:
         say("Nothing has been written. Review the plan, then run apply with --plan and "
@@ -588,6 +610,7 @@ def cmd_commit(args) -> int:
     if not kt.is_git_root(instance):
         say("Not a git repository: nothing to commit."
             + (f" Backup: {applied['backup']}" if applied.get("backup") else ""))
+        delete_plan_folder(plan, args.plan)
         return 0
     if plan.get("committed"):
         raise kt.TemplateError(f"already committed as {plan['committed']}")
@@ -614,15 +637,21 @@ def cmd_commit(args) -> int:
     # The commit is built in a temporary index (HEAD plus exactly these contents), so the
     # owner's own index is not touched unless the commit is made, and other staged work
     # stays out of it.
-    index = sources.private_dir() / "index"
+    index = sources.private_dir("commit index") / "index"
     try:
-        if not build_commit_index(instance, index, contents, applied["executable"]):
-            say("Nothing to commit.")
-            return 0
-        refuse_if_changed(expected, read_for_commit(instance, list(expected)))
-        kt.git(instance, "commit", "-q", "-m", subject, "-m", body, index=index)
+        made = build_commit_index(instance, index, contents, applied["executable"])
+        if made:
+            refuse_if_changed(expected, read_for_commit(instance, list(expected)))
+            kt.git(instance, "commit", "-q", "-m", subject, "-m", body, index=index)
     finally:
-        shutil.rmtree(index.parent, ignore_errors=True)
+        # The scratch index of this one call, in a folder this call just made: through
+        # the same checks as every other deletion, and never an error of its own.
+        if not sources.temp_folder_problem(index.parent):
+            shutil.rmtree(index.parent, ignore_errors=True)
+    if not made:
+        say("Nothing to commit.")
+        delete_plan_folder(plan, args.plan)
+        return 0
     head = kt.git(instance, "ls-tree", "-r", "--name-only", "-z", "HEAD").stdout.split("\0")
     staged = set(kt.git(instance, "ls-files", "-z").stdout.split("\0"))
     sync = [p for p in paths if p in set(head) or p in staged]
@@ -632,7 +661,37 @@ def cmd_commit(args) -> int:
     plan["committed"] = sha
     save_plan(plan)
     say(f"Committed {sha[:12]}: {subject}")
+    delete_plan_folder(plan, args.plan)
     return 0
+
+
+def delete_plan_folder(plan: dict, given: str) -> None:
+    """The last step of `commit`: delete the temporary folder that holds this plan and its
+    payload. By now the merges are done and nothing reads the plan again. The download
+    folder stays (the owner may reuse that archive offline, and the upgrade after an
+    adoption may need it). A plan written with --out is the owner's file and stays.
+
+    The folder is the one the plan file was given in (`--plan` as passed, not resolved),
+    it must be the folder the plan says `plan` created for it, and it goes through the
+    checks every deletion has. A refusal or a failed deletion is reported: the commit is
+    made, so it is not an error."""
+    recorded = plan.get("temp_folder")
+    if not recorded:
+        return
+    here = Path(os.path.abspath(given)).parent
+    if os.path.normcase(str(Path(recorded).resolve())) != os.path.normcase(str(here.resolve())):
+        say(f"Kept {here}: the plan names {recorded} as its folder, not this one.")
+        return
+    try:
+        sources.remove_temp_folder(here)
+    except kt.TemplateError as e:
+        say(f"Kept the plan's folder: {e}.")
+        return
+    except OSError as e:
+        say(f"Could not delete the plan's folder {here} ({e}). Delete it later with "
+            f"cleanup --path {here}.")
+        return
+    say(f"Deleted the plan's temporary folder (the plan and its payload): {here}")
 
 
 def source_label(src: dict) -> str:
@@ -689,6 +748,33 @@ def build_commit_index(instance: Path, index: Path, contents: dict, executable=(
                                                        "--stdin", input="").stdout.strip()]),
                   check=False, index=index)
     return diff.returncode != 0
+
+
+# --- cleanup -------------------------------------------------------------------------
+
+def cmd_cleanup(args) -> int:
+    """Delete the temporary folders the skill names: the downloads, the `fetch` folders
+    and the superseded plans of one upgrade. Every folder is checked first; if one is
+    not brain-upgrade's own, nothing is deleted. Nothing is ever deleted by pattern."""
+    folders = list(dict.fromkeys(args.path))
+    refused = [(f, why) for f in folders for why in [sources.temp_folder_problem(f)] if why]
+    if refused:
+        raise kt.TemplateError(
+            "cleanup deletes only brain-upgrade's own temporary folders (kb-upgrade-..., "
+            f"directly in {Path(tempfile.gettempdir()).resolve()}). Refused: "
+            + "; ".join(f"{f} ({why})" for f, why in refused) + ". Nothing was deleted.")
+    failed = []
+    for f in folders:
+        try:
+            gone = sources.remove_temp_folder(f)
+        except OSError as e:
+            failed.append(f"{f} ({e})")
+            continue
+        say(f"Deleted {f}" if gone else f"Already gone: {f}")
+    if failed:
+        raise kt.TemplateError("could not delete: " + "; ".join(failed) + ". Close what "
+                               "holds a file there and run cleanup again for them.")
+    return 0
 
 
 # --- stamp and onboarding helpers ----------------------------------------------------
@@ -866,15 +952,18 @@ def cmd_fetch(args, opener) -> int:
     if src.kind in ("zip", "download"):
         name = (src.manifest.repository if src.manifest else repo)
         tag = (src.commit or "unknown")[:12]
-        root = sources.private_dir() / f"{name.split('/')[-1]}-{src.version}-{tag}"
+        root = sources.private_dir("unpacked source") / f"{name.split('/')[-1]}-{src.version}-{tag}"
         src.materialize(root)
     else:
         root = Path(src.location).resolve()
     engine = root / ".claude" / "skills" / "brain-upgrade" / "scripts" / "upgrade.py"
     warnings = list(src.warnings) + provenance_warnings(prov)
+    # The folders this run made (the download, the unpacked tree): the skill passes them
+    # to `cleanup` when the upgrade is over.
+    folders = [str(p) for p, _ in sources.created_since(getattr(args, "temp_mark", 0))]
     say(json.dumps({"provenance": prov, "source": src.describe(), "root": str(root),
                     "engine": str(engine), "engine_exists": engine.is_file(),
-                    "warnings": warnings}, indent=2))
+                    "warnings": warnings, "temp_folders": folders}, indent=2))
     return 0
 
 
@@ -913,6 +1002,10 @@ def parser() -> argparse.ArgumentParser:
     p = sub.add_parser("prune-author", help="delete author-class files (onboarding)")
     p.add_argument("--instance", default=".")
 
+    p = sub.add_parser("cleanup", help="delete brain-upgrade's own temporary folders")
+    p.add_argument("--path", action="extend", nargs="+", required=True, metavar="FOLDER",
+                   help="a kb-upgrade-... folder in the temp directory (repeatable)")
+
     p = sub.add_parser("fetch", help="resolve a source; print where it comes from and its engine")
     p.add_argument("--instance", default=".")
     p.add_argument("--source")
@@ -932,6 +1025,9 @@ def main(argv=None, opener=None) -> int:
             pass
     args = parser().parse_args(argv)
     opener = opener or sources.default_open
+    # Where this call's temporary folders start in the record: plan and fetch report the
+    # ones they made, also when they stop, so that the skill can clean them up.
+    args.temp_mark = sources.created_count()
     try:
         if args.cmd == "plan":
             return cmd_plan(args, opener)
@@ -943,9 +1039,13 @@ def main(argv=None, opener=None) -> int:
             return cmd_stamp(args)
         if args.cmd == "prune-author":
             return cmd_prune_author(args)
+        if args.cmd == "cleanup":
+            return cmd_cleanup(args)
         return cmd_fetch(args, opener)
     except kt.TemplateError as e:
         print(f"error: {e}", file=sys.stderr)
+        if args.cmd in ("plan", "fetch"):
+            say_temp_folders(sources.created_since(getattr(args, "temp_mark", 0)), sys.stderr)
         return 1
 
 

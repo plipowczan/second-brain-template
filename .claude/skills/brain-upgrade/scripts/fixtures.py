@@ -6,6 +6,9 @@ from __future__ import annotations
 import contextlib
 import io
 import json
+import os
+import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -16,7 +19,82 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
 import kbtemplate as kt  # noqa: E402
+import sources  # noqa: E402
 import upgrade  # noqa: E402
+
+
+# --- the temp directory --------------------------------------------------------------
+# The engine makes its folders (kb-upgrade-...) in the system temp directory. The tests
+# run it against a temp directory of their own, so that a folder a test leaves behind is
+# seen, and other sessions' folders in the shared one are neither seen nor touched. The
+# test runners (tests/run_tests.py, tests/run_skill_tests.py) own one directory for a
+# whole run and name it in KB_TEST_TEMP; run on its own (python -m unittest), a suite
+# makes one here. `tempfile` caches its directory, so tempfile.tempdir is set as well as
+# the variables every subprocess (git) inherits.
+
+TEMP_VARS = ("TMP", "TEMP", "TMPDIR")
+
+
+def isolate_temp() -> Path:
+    given = os.environ.get("KB_TEST_TEMP")
+    if given and Path(given).is_dir():
+        root = given
+    else:
+        global _OWN_TEMP
+        _OWN_TEMP = tempfile.TemporaryDirectory(prefix="brain-upgrade-tests-")
+        root = _OWN_TEMP.name
+    for var in TEMP_VARS + ("KB_TEST_TEMP",):
+        os.environ[var] = root
+    tempfile.tempdir = root
+    return Path(root)
+
+
+_OWN_TEMP = None
+TEMP_ROOT = isolate_temp()
+# Every temporary folder the engine reported in this process (plan's "Temporary folder"
+# lines, fetch's temp_folders), handed to its own `cleanup` at the end of each module.
+REPORTED: list[str] = []
+_FOLDER_LINE = re.compile(r"^Temporary folder \([^)]*\): (.+?)\s*$", re.M)
+
+
+def reported_folders(argv, code: int, out: str, err: str) -> list[str]:
+    found = _FOLDER_LINE.findall(out) + _FOLDER_LINE.findall(err)
+    if argv and argv[0] == "fetch" and code == 0:
+        try:
+            found += json.loads(out).get("temp_folders", [])
+        except ValueError:
+            pass
+    return found
+
+
+def temp_folders_of(out: str) -> dict[str, list[str]]:
+    """The "Temporary folder (<purpose>): <path>" lines of one output, by purpose."""
+    found: dict[str, list[str]] = {}
+    for m in re.finditer(r"^Temporary folder \(([^)]*)\): (.+?)\s*$", out, re.M):
+        found.setdefault(m.group(1), []).append(m.group(2))
+    return found
+
+
+def leftover_temp_folders() -> list[str]:
+    return sorted(p.name for p in TEMP_ROOT.glob(sources.TEMP_PREFIX + "*") if p.is_dir())
+
+
+def tear_down_module() -> None:
+    """`tearDownModule` of every suite: the folders the engine reported go through its own
+    `cleanup` (which must accept them), then no kb-upgrade-* folder may be left. One that
+    is left was never reported, or was not deleted by the step that should have; it is
+    swept so the next module starts clean, and the module fails."""
+    folders = list(dict.fromkeys(REPORTED))
+    REPORTED.clear()
+    if folders:
+        code, out, err = run("cleanup", "--path", *folders)
+        if code != 0:
+            raise AssertionError(f"cleanup refused reported folders: {err}")
+    left = leftover_temp_folders()
+    for name in left:
+        shutil.rmtree(TEMP_ROOT / name, ignore_errors=True)
+    if left:
+        raise AssertionError(f"temporary folders left in {TEMP_ROOT}: {', '.join(left)}")
 
 RENDER_PY = (HERE.parent.parent / "brain-onboard" / "scripts" / "render.py").read_bytes()
 
@@ -147,6 +225,7 @@ def run(*argv: str, opener=None) -> tuple[int, str, str]:
     out, err = io.StringIO(), io.StringIO()
     with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
         code = upgrade.main(list(argv), opener=opener)
+    REPORTED.extend(reported_folders(argv, code, out.getvalue(), err.getvalue()))
     return code, out.getvalue(), err.getvalue()
 
 
