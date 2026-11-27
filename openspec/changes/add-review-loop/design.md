@@ -139,8 +139,8 @@ git. Rows then follow merge order, not time; readers sort them by time.
 `brain-review` (`/b:review`) and `brain-learn` (`/b:learn`). The metrics are a script
 the review runs, not a skill: numbers without a reading of them tell the owner little,
 and a third description in every session is a cost paid daily for a command run weekly.
-The limit stays three, so a `/b:metrics` command can come later. Paweł decides (question
-1 of the plan).
+The limit stays three, so a `/b:metrics` command can come later. Paweł agreed on
+2026-11-27.
 
 ### D4. Metrics: one definition, shared with lint
 
@@ -234,7 +234,7 @@ The comparison is made twice: with the previous snapshot (a sudden change) and w
 newest snapshot at least 28 days old (slow decay that no single week shows). The
 "at least 2 notes" part keeps a small base from being called out for one new orphan, and
 the steps are large enough that one ordinary ingest on the maintainer's base does not
-trigger them. Below 30 notes nothing is called out. Paweł decides (question 2).
+trigger them. Below 30 notes nothing is called out. Paweł agreed on 2026-11-27.
 
 ### D7. `/b:learn`: quiz and explain-back in one skill and one command
 
@@ -256,8 +256,8 @@ one log row. They change no note: a gap of the first kind is offered as `/b:comp
 an ingest of a source, a gap of the second kind as `/b:enhance` on that note, as
 `brain-qa` offers compile and enhance. Without a person present the skill stops before
 asking anything. The session files are committed like saved answers; the skill says so
-on its first run, and the changelog says it. Paweł decides whether that is right
-(question 5) and whether one command is enough (question 3).
+on its first run, and the changelog says it. Paweł agreed to both (committed sessions,
+one command) on 2026-11-27.
 
 ### D8. `/b:ingest --backlog [N]`
 
@@ -298,7 +298,7 @@ on it are unchanged.
 Without either flag, when the inbox holds more than 10 sources, interactive ingest
 behaves as `--backlog 10` and says so in its plan message: one plan over dozens of
 sources is too long to correct, and reading them all in one context is where the reading
-gets shallow. Ingest still asks once per run. Paweł decides (question 4).
+gets shallow. Ingest still asks once per run. Paweł agreed on 2026-11-27.
 
 ### D9. Skips instead of a selection pass
 
@@ -328,8 +328,8 @@ answering a question (use `/b:qa`)"; `brain-ingest` names `--backlog` against `-
 The other skills this change edits get only the log step: rewriting their descriptions
 or adding sections would change no behaviour and turn every owner-edited copy into a
 conflict at upgrade. They follow the pattern when they are next changed for a reason of
-their own. This narrows the decision of 2026-11-04 ("in the skills the package touches"),
-so Paweł decides (question 6).
+their own. This narrows the decision of 2026-11-04 ("in the skills the package touches");
+Paweł agreed on 2026-11-27.
 
 New work in `dev/build_codex_files.py --check`: it also fails on a description over 500
 characters (the longest today has 454; `brain-ingest` has 405 and must stay under the
@@ -443,10 +443,9 @@ this change. When this change is archived, the argument rule of the `ingest-back
 capability is rewritten as a MODIFIED delta of `ingest-plan`, so the two specs never
 disagree about which arguments abort an ingest.
 
-## Open Questions
+## Decisions taken
 
-For Paweł, each with a recommendation in the plan: metrics inside the review or as a
-third skill (D3); trend only or their 5 % threshold (D6); one `/b:learn` or two commands
-(D7); interactive ingest of more than 10 sources switches to batches by itself or only
-suggests it (D8); learning sessions committed like answers or kept local (D7); the
-description pattern on three skills or on every skill this change edits (D10).
+Paweł accepted the plan on 2026-11-27 with every recommendation: metrics inside the
+review (D3), trend only (D6), one `/b:learn` with `--quiz` (D7), interactive ingest of
+more than 10 sources switches to batches by itself (D8), learning sessions committed like
+answers (D7), the description pattern on the two new skills and `brain-ingest` (D10).
