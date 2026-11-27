@@ -7,6 +7,27 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
 
 ## [Unreleased]
 
+### Added
+- **An operation log, `content/_outputs/log.md`.** Every run of `/b:ingest`,
+  `/b:compile`, `/b:enhance`, `/b:curate`, `/b:refactor`, `/b:import` and `/b:watch`
+  that wrote, moved or retired a note adds one row: when (UTC), the operation, counts
+  (`sources=3 created=2 updated=5`) and up to ten note paths. `/b:review` and `/b:learn`
+  add one row each. Rows are only ever added, never rewritten, and the file is created by
+  the first run, so it works without git. A folder or file name that holds a term from
+  the "Always cut" sections of `content/_privacy.md` or `content/_privacy.local.md` is
+  written as `[private]`. The log is committed like your notes; the indexes, `/b:lint`
+  and `/b:export --public` leave it out. `.gitattributes` now merges the log and the
+  metrics file with git's union driver, so two clones that both added rows merge without
+  a conflict.
+
+  Existing bases: `/b:upgrade` brings `brain-reindex/scripts/oplog.py`, the log step in
+  each skill and the `.gitattributes` lines. A skill you edited and keep at your version
+  writes no rows until you take the template's version. If you keep an edited
+  `.gitattributes`, add the two lines yourself:
+  `content/_outputs/log.md merge=union` and `content/_outputs/metrics.md merge=union`.
+  Rows keep the paths of their day: after `/b:refactor` renames a note, earlier rows
+  still name the old path.
+
 ### Changed
 - **`/b:qa` reads less on every question.** Until now every question read
   `vault-map.md` and `LIMITS.md` whole, the skill said to read catalog sections and the

@@ -29,6 +29,13 @@ Trigger phrases: "enhance [[Note]]", "improve X", "popraw notatkę X". The user 
 
    The callout type is always the English word `contradiction`; the title and labels are in the vault language. An existing `> [!contradiction]` callout stays, with both claims, until the owner decides in the session which claim holds — only then rewrite the note to that claim and remove the callout. List every callout you added in your summary to the user.
 7. Update all three indexes per CLAUDE.md auto-update rules.
+8. **Log the run** in the operation log, one row:
+
+   ```bash
+   python .claude/skills/brain-reindex/scripts/oplog.py append --op enhance --count updated=<notes changed, the target included> --count contradictions=<callouts added> --note <the target> --note <each other note changed>
+   ```
+
+   Note paths are relative to `content/`, without `.md`. Write no row when nothing changed, or when another skill runs this one (`/b:curate` refreshing a note): that skill writes the row. When `oplog.py` is missing, skip the row and say so.
 
 ## See also
 

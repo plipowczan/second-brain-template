@@ -139,14 +139,23 @@ Run every command from the vault root. `SCRIPT=.claude/skills/brain-watch/script
    it as they are (the section is a change log):
    `- YYYY-MM-DD <N> tool notes status-checked, <M> linked (/b:watch)`.
 9. **Report.** `python $SCRIPT report "$WS/scan.json" --digest "$WS/digest.json" --out content/_outputs/reports/YYYY-MM-DD_watch.md`.
-10. **Tell the user:** the counts, the flags, status changes, the `/b:enhance` list, the
+10. **Log the run** in the operation log, one row, after an apply that changed at least
+    one note (a dry run writes none):
+
+    ```bash
+    python .claude/skills/brain-reindex/scripts/oplog.py append --op watch --count checked=<tool notes checked> --count updated=<notes apply changed> --note <each note apply changed>
+    ```
+
+    Note paths are relative to `content/`, without `.md`. When `oplog.py` is missing,
+    skip the row and say so.
+11. **Tell the user:** the counts, the flags, status changes, the `/b:enhance` list, the
     `/b:curate` list, aggregators to refresh, notes that need a link, anything held back.
 
 ## Unattended (scheduled) runs
 
 Same steps, no questions: never use AskUserQuestion. Writes are limited to the table in
 "What it writes", so nothing waits for a confirmation. If the web-search agents cannot
-run, do steps 1-2 and 7-9 without a digest: the report then lists the flags, and the
+run, do steps 1-2 and 7-10 without a digest: the report then lists the flags, and the
 flagged notes stay flagged for the next run.
 
 ## Safety

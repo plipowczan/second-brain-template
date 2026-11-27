@@ -7,6 +7,12 @@
 *.sh text eol=lf
 *.py text eol=lf
 
+# The operation log and the metrics only ever gain rows. Union merge keeps the rows of
+# both sides when two clones or worktrees appended to them, without a conflict; the
+# scripts that read them sort the rows by time.
+content/_outputs/log.md merge=union
+content/_outputs/metrics.md merge=union
+
 # Binary assets.
 *.png binary
 *.jpg binary

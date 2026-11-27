@@ -130,6 +130,15 @@ content/_outputs/reports/import-<YYYY-MM-DD>-<source>.md
 Contents: notes written (paths + bucket), triage verdicts as executed, folder mappings
 applied, broken links with counts, skipped/identical list.
 
+Then **log the run** in the operation log, one row:
+
+```bash
+python .claude/skills/brain-reindex/scripts/oplog.py append --op import --count created=N --count merged=N --count renamed=N --count skipped=N --note <each note written>
+```
+
+Note paths are relative to `content/`, without `.md`. A no-op import (below) writes no
+row. When `oplog.py` is missing, skip the row and say so.
+
 **No-op detection:** when every manifest note landed in the `identical` bucket, end with
 zero prompts, zero vault writes, zero index changes, and a report line
 "bundle already fully imported — no-op".
