@@ -92,10 +92,10 @@ paths from it.
 
 ## 7. Upgrade fixes (bugs 7–11)
 
-- [ ] 7.1 Bug 7: plan warning when `.kb-onboard.json` will be tracked and
+- [x] 7.1 Bug 7: plan warning when `.kb-onboard.json` will be tracked and
   `git check-ignore -v` matches it, naming the rule; the skill's step that offers the
   extra commit. Test with an edited `.gitignore`.
-- [ ] 7.2 Bug 8: `commit` deletes the folder of the plan and its payload as its last
+- [x] 7.2 Bug 8: `commit` deletes the folder of the plan and its payload as its last
   step, git or not, and keeps the download; `apply` and failed steps delete nothing;
   `plan` and `fetch` print their folders; `cleanup --path` and every deletion check the
   temp parent, the prefix and links. Tests: a merge still finds the payload after apply,
@@ -103,19 +103,19 @@ paths from it.
   folders survive, a folder outside the temp directory or behind a junction is refused,
   a failed step keeps its folders; every suite sets `TMP`, `TEMP` and `TMPDIR` to a
   `TemporaryDirectory`, and a check after the suites finds no new `kb-upgrade-*` folder.
-- [ ] 7.3 Bug 9: the backup folder always created without git; `backup.json` with the
+- [x] 7.3 Bug 9: the backup folder always created without git; `backup.json` with the
   hash before and after of every path apply wrote or deleted; `undo --backup` (stamp must
   match, restore only on a matching hash, `content/WRITING_STYLE.md` allowed, nothing else
   under `content/`, no links, one transaction). Adoption names the folder only when it
   exists. Tests: adoption that only adds, undo after an upgrade, an added file edited
   after apply, the older of two backups refused, a re-rendered `WRITING_STYLE.md`, a link
   in the path, an invalid `backup.json`.
-- [ ] 7.4 Bug 10: the commit body names a zip, folder or clone by its last path
+- [x] 7.4 Bug 10: the commit body names a zip, folder or clone by its last path
   component. Test with a zip source.
 - [x] 7.5 Bug 11: `lint_scan.py` accepts `NOTE_TYPES` from `.kb-onboard.json` without
   required fields; the `bad_type` advice in `brain-lint/SKILL.md`. Tests: own type,
   unknown type, missing or broken values file.
-- [ ] 7.6 `brain-upgrade/SKILL.md`: the cleanup phase, `undo`, the `.gitignore` offer.
+- [x] 7.6 `brain-upgrade/SKILL.md`: the cleanup phase, `undo`, the `.gitignore` offer.
 
 ## 8. Templates, docs, release notes
 
@@ -123,7 +123,7 @@ paths from it.
   `_outputs/learning/`, `_raw/skipped/`; Workflows entries REVIEW and LEARN.
 - [x] 8.2 `README.md`: rows for `/b:review` and `/b:learn`, `--backlog` in the
   `/b:ingest` row (new bases only).
-- [ ] 8.3 `CHANGELOG.md` under `[Unreleased]`: one entry per behaviour, each with
+- [x] 8.3 `CHANGELOG.md` under `[Unreleased]`: one entry per behaviour, each with
   "Existing bases"; the inspiration from `undefined-ui/second-brain-os` (MIT) named
   once; the first-run steps of design D11 (delete the `fetch` folders, the `.gitignore`
   line, the `undo` command); edited skills write no log rows; learning sessions are

@@ -58,9 +58,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
   content equals a source already in `_raw/processed/` does not count either and is
   proposed as a skip; on your OK it moves to `content/_raw/skipped/`, and you can move it
   back. `--backlog --batch` runs the same batches without the plan question and moves
-  nothing; `--batch` alone still takes the whole inbox. Related sources that fall into two batches become two linked
-  notes; merge them with `/b:refactor` if you want one. The order comes from a new
-  script, `brain-ingest/scripts/inbox_order.py`.
+  nothing; `--batch` alone still takes the whole inbox. Related sources that fall into
+  two batches become two linked notes; merge them with `/b:refactor` if you want one.
+  The order comes from a new script, `brain-ingest/scripts/inbox_order.py`.
 
   Existing bases: `/b:upgrade` brings the skill and the script. If you edited
   `brain-ingest` and keep your version, it does not know `--backlog` and stops on it, as
@@ -152,12 +152,56 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
   the upgrade, and an edited one gets the change as a proposal.
 
 ### Fixed
+- **`/b:upgrade` warns when your base still ignores `.kb-onboard.json`.** The upgrade
+  commit tracks the file even when a `.gitignore` rule ignores it, but while the rule
+  stays, git hides the file again whenever it becomes untracked, and the values
+  `/b:onboard` recorded stop travelling with the base. The plan now names the rule
+  (file, line, pattern). After the commit, the skill offers to remove that line in a
+  commit of its own, or, when the pattern also covers other files (`*.json`), to add
+  `!.kb-onboard.json` after it. It changes nothing without your yes.
+
+  Existing bases: the upgrade to 0.5.0 shows the warning; the offer comes from the next
+  upgrade on. If you see the warning, run `git check-ignore -v --no-index --
+  .kb-onboard.json` and remove or negate the line it names, in a commit of its own.
+- **An upgrade no longer leaves folders in your temp directory.** Each run left
+  `kb-upgrade-…` folders behind (the download, the unpacked release, the plan and its
+  payload). Now the plan and its payload share one folder, and `commit` deletes it as
+  its last step. `plan` and `fetch` print every folder they create, and the skill ends
+  by passing them to the new `upgrade.py cleanup --path <folder>...`, which deletes only
+  `kb-upgrade-…` folders directly in the temp directory and refuses anything else. The
+  download is offered for deletion too; keep it if you want to plan again offline.
+
+  Existing bases: the upgrade to 0.5.0 runs your old skill, so only the plan folder is
+  deleted. After it, ask the agent to list the `kb-upgrade-…` folders in your temp
+  directory and pass the ones you no longer need to `upgrade.py cleanup --path`. From
+  the next upgrade on, the skill does this itself.
+- **Without git, an update can be undone.** In a base that is not a git repository,
+  `apply` now always creates `.kb-upgrade-backup/<version>-<time>/`, also for an adoption
+  that only adds files (its report used to name a folder that did not exist). The folder
+  holds a copy of every file the update replaced or deleted and `backup.json`, which
+  records each path's state before and after. `upgrade.py undo --backup <folder>` puts
+  that update back: newest update first, only files that still hold what the update
+  wrote, never a note (nothing under `content/` except `WRITING_STYLE.md`). A file you
+  changed since the update is kept and named. The apply report prints the undo command.
+
+  Existing bases: nothing to do. The upgrade to 0.5.0 already writes `backup.json`, so
+  `undo` works for it; the skill describes `undo` from the next upgrade on. A backup
+  from an older upgrade has no `backup.json`: put its copies back by hand.
+- **The upgrade commit no longer records the path of a local source.** When you
+  upgraded from a zip, a folder or a clone, the commit body named its full path (your
+  user name, your Downloads folder) in the base's history. It now names the file or
+  folder only: `Source: zip second-brain-template-v0.5.0.zip (<commit>)`. A download
+  keeps its URL.
+
+  Existing bases: nothing to do. The upgrade to 0.5.0 already writes the short form.
+  Older upgrade commits keep what they say.
 - **`/b:lint` accepts the note types you named in `/b:onboard`.** A type of your own
   from the onboarding interview (`recipe-note`, say) was reported as an unknown type in
-  every lint, because lint knew only the types in `schema.yml`. Now `lint_scan.py` also accepts every type listed in
-  `NOTE_TYPES` of `.kb-onboard.json`. Such a type has no required fields; to have lint
-  check fields for it, add it to `schema.yml` with its fields. The lint report says so
-  next to an unknown type. A missing or unreadable `.kb-onboard.json` changes nothing.
+  every lint, because lint knew only the types in `schema.yml`. Now `lint_scan.py` also
+  accepts every type listed in `NOTE_TYPES` of `.kb-onboard.json`. Such a type has no
+  required fields; to have lint check fields for it, add it to `schema.yml` with its
+  fields. The lint report says so next to an unknown type. A missing or unreadable
+  `.kb-onboard.json` changes nothing.
 
   Existing bases: nothing to do. `/b:upgrade` brings the fix (`brain-lint`:
   `scripts/lint_scan.py` and the skill).
