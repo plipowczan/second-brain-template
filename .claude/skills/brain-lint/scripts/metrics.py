@@ -26,8 +26,9 @@ The note set, link resolution and orphan rule are those of lint_links.py, import
   is isolated, not an island.
 - untouched_90d: notes whose last touch is 90 or more days before today. Last touch is the
   latest of frontmatter `date`, `agent-reviewed` and, when the vault root is the top of a
-  git work tree with a commit (basis `git`), the file's last commit date; else the basis
-  is `frontmatter`. A note with no date from any source counts in untouched_unknown.
+  git work tree with a commit and is not a shallow clone (basis `git`), the file's last
+  commit date; else the basis is `frontmatter`. A note with no date from any source
+  counts in untouched_unknown.
 
 Notes that share a file name: lint resolves a link by name, without case, so a link to
 `Dup` reaches every `Dup.md` and cannot tell them apart. Here the name (lower case) is
@@ -146,9 +147,13 @@ def _git(args):
 
 
 def git_basis():
-    """True when the working directory is the top of a git work tree with a commit."""
+    """True when the working directory is the top of a git work tree with a commit and
+    its whole history. A shallow clone is not: its history stops at the graft, so every
+    file older than that would date from the graft's commit."""
     prefix = _git(["rev-parse", "--show-prefix"])
     if prefix is None or prefix.strip():
+        return False
+    if (_git(["rev-parse", "--is-shallow-repository"]) or b"").strip() == b"true":
         return False
     return _git(["rev-parse", "-q", "--verify", "HEAD^{commit}"]) is not None
 

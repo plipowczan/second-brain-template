@@ -5,6 +5,7 @@ enableToc: true
 openToc: true
 tags: ["book"]
 type: book-note
+# sources: ["_raw/processed/YYYY-MM-DD_file.md"]  # where these notes came from, not the book
 ---
 
 # {{title}}

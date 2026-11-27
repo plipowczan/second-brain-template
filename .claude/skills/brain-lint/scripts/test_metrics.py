@@ -348,6 +348,20 @@ class TestGitBasis(unittest.TestCase):
             self.assertEqual(run(vault, "--today", TODAY.isoformat())["snapshot"]["basis"],
                              "frontmatter")
 
+    def test_shallow_clone_is_frontmatter(self):
+        # History stops at the graft: every file would date from the one commit there.
+        with tempfile.TemporaryDirectory() as d:
+            origin, clone = Path(d) / "origin", Path(d) / "clone"
+            self.build(origin)
+            r = subprocess.run(["git", "clone", "-q", "--depth", "1", origin.as_uri(),
+                                str(clone)], capture_output=True)
+            self.assertEqual(r.returncode, 0, r.stderr.decode("utf-8", "replace"))
+            self.assertEqual(git(clone, "rev-parse", "--is-shallow-repository").strip(), b"true")
+            out = run(clone, "--today", TODAY.isoformat())
+        s = out["snapshot"]
+        self.assertEqual(s["basis"], "frontmatter")
+        self.assertEqual(out["lists"]["untouched_90d"], ["T/Zażółć", "T/Fresh", "T/Old"])
+
     def test_nothing_written_in_a_git_vault(self):
         with tempfile.TemporaryDirectory() as d:
             self.build(d)

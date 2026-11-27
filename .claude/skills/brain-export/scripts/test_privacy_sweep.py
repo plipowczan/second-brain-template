@@ -6,6 +6,7 @@ import json
 import subprocess
 import sys
 import tempfile
+import unicodedata
 import unittest
 from pathlib import Path
 
@@ -197,6 +198,31 @@ class PrivateTermsTest(unittest.TestCase):
         code, out = sweep(self.staging, self.root)
         self.assertEqual(code, 2)
         self.assertEqual([(h["line"], h["class"]) for h in out["hits"]], [(0, "private-term")])
+
+    def test_decomposed_and_diacritic_text_is_a_hit(self):
+        # Text and file names from macOS come decomposed (NFD), which a term as written
+        # does not match; a term listed without diacritics must match a line with them.
+        root = vault(Path(self.td.name) / "nfd", '## Always cut\n\n- "Laka Wisnia"\n', LOCAL_MD)
+        nfd = lambda s: unicodedata.normalize("NFD", s)  # noqa: E731
+        self.assertNotEqual(nfd("Żabka Polska"), "Żabka Polska")
+        self.note(nfd("PEOPLE/Żabka Polska/Plan.md"), "nothing private in the body\n")
+        self.note("a.md", "\n".join([nfd("spotkanie w Żabka Polska"), "met Łąka Wiśnia",
+                                     nfd("ŁĄKA-WIŚNIA wrote"), "a plain line"]) + "\n")
+        code, out = sweep(self.staging, root)
+        self.assertEqual(code, 2)
+        hits = [(unicodedata.normalize("NFC", h["file"]), h["line"]) for h in out["hits"]
+                if h["class"] == "private-term"]
+        self.assertEqual(sorted(hits), [("PEOPLE/Żabka Polska/Plan.md", 0),
+                                        ("a.md", 1), ("a.md", 2), ("a.md", 3)])
+        for h in out["hits"]:
+            context = privacy_sweep.fold(unicodedata.normalize("NFC", h["context"])).lower()
+            for leak in ("zabka", "laka", "wisnia"):
+                self.assertNotIn(leak, context, h)
+        terms = privacy_sweep.private_terms(root)
+        self.assertFalse(privacy_sweep.private_hit(nfd("Żabka Polska"), terms))
+        self.assertTrue(privacy_sweep.term_hit(nfd("Żabka Polska"), terms))
+        self.assertTrue(privacy_sweep.term_hit("Łąka Wiśnia", terms))
+        self.assertFalse(privacy_sweep.term_hit("a plain line", terms))
 
     def test_private_terms_api(self):
         terms = privacy_sweep.private_terms(self.root)

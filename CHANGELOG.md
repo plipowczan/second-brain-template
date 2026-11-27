@@ -21,6 +21,82 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
   `brain-review/scripts/review_data.py` and the skill. To have the review read git
   history in a CI checkout, clone the whole history (`fetch-depth: 0`) or run
   `git fetch --unshallow` before `/b:review`.
+- **What `sources:` holds on a book note is now written down.** Nothing said whether a
+  book note's `source:` or `sources:` names the book or what the notes were taken from.
+  When ingest wrote a new book note from an article that discussed the book, the
+  article was its only source, and a reader could take the article for what the note
+  describes. Ingest step 3, a comment in `schema.yml` and a commented line in
+  `content/templates/book.md` now say the same thing. On every note, these fields hold
+  where the content came from: a `_raw/` path, a URL or a description. The book itself
+  is the title and the `Author:` line. A new note about a work (a book, a film, a talk)
+  written from a text about it, not from the work, says so in the first line under its
+  title. No field becomes required.
+
+  Existing bases: `/b:upgrade` brings the skill and `schema.yml`; if you edited
+  `schema.yml`, the upgrade asks first. `content/templates/book.md` belongs to your base,
+  so no upgrade changes it. To get the hint there, add this line before the closing
+  `---` of its frontmatter:
+  `# sources: ["_raw/processed/YYYY-MM-DD_file.md"]  # where these notes came from, not the book`.
+  Book notes that an earlier ingest wrote from a text about the book don't get the first
+  line automatically. Add it by hand if you want it.
+- **Metrics in a shallow clone use the `frontmatter` basis.** In a clone made with
+  `--depth` (for example a CI checkout with `fetch-depth: 1`), history stops at the
+  graft. `metrics.py` then dated every older file from the graft's commit, and
+  `Untouched 90d` came out too low. A shallow clone now gets the `frontmatter` basis, as
+  a vault without git does, and `/b:review` does not compare its `Untouched 90d` with
+  rows on the `git` basis.
+
+  Existing bases: nothing to do. `/b:upgrade` brings `brain-lint/scripts/metrics.py`.
+  To use the `git` basis in a shallow clone, run `git fetch --unshallow` first. Rows that
+  an earlier run recorded there on the `git` basis stay in
+  `content/_outputs/metrics.md`; delete them by hand if you want.
+- **The `/b:export --public` sweep finds private terms in decomposed text.**
+  `privacy_sweep.py` checked each line and file path only as written. Text and file
+  names from a Mac often come decomposed (NFD: `ą` stored as `a` plus a combining
+  ogonek), and a term from your privacy files did not match them. A name written with
+  diacritics did not match a term listed without them either. The sweep now checks each
+  line and path as written, in NFC and without diacritics, as the operation log
+  (`oplog.py`) already did. The hit's context masks the term in whichever form it was
+  found.
+
+  Existing bases: `/b:upgrade` brings `brain-export/scripts/privacy_sweep.py`. If you
+  published a `--public` bundle before, and your notes come from a Mac or your privacy
+  files list a term without its diacritics, search that bundle for those terms.
+- **The indexes record `updated:` in UTC.** `build_indexes.py` wrote local time followed
+  by `Z`, and `Z` means UTC. East of UTC every index claimed to be newer than it was;
+  west of UTC, older. `/b:reindex` reads that time to decide whether an index is stale.
+  The script now writes UTC. Apart from the `updated:` lines its output is byte for byte
+  what it was, so the `kb-maintain` workflow sees no other change.
+
+  Existing bases: nothing to do. `/b:upgrade` brings the script, and the next
+  `/b:reindex` writes the correct time.
+- **`/b:ingest` no longer writes a backlink into a note the source only mentions.**
+  Phase 2 gave two rules: step 6 left such a note alone, and step 8 had every linked note
+  link back. Now there is one rule, in step 8. The main note links to every note in the
+  plan, and each of those links back to it. A note the source only mentions gets a link
+  from the main note and is not changed: it is not in the plan you confirmed, and the
+  report lists only the notes the run changed. `graph.md` still lists that link as
+  incoming.
+
+  Existing bases: nothing to do. `/b:upgrade` brings the skill. Backlinks that earlier
+  runs wrote into mentioned notes stay; remove them by hand if you don't want them.
+- **`/b:ingest` rebuilds the indexes with the script.** Step 11 told the agent to edit
+  `catalog.md`, `vault-map.md` and `graph.md` by hand, while `AGENTS.md` names
+  `build_indexes.py`. A hand edit after a run that touched many notes can miss an entry
+  or an incoming link. Now the skill runs
+  `python .claude/skills/brain-reindex/scripts/build_indexes.py` once, after the last
+  note. The script keeps `## Recent Changes` in `vault-map.md` as it is, so the skill
+  then adds one line per created or changed note at the top of that section. If the
+  script fails, the report lists it under Failures and the indexes wait for
+  `/b:reindex`.
+
+  Existing bases: `/b:upgrade` brings the skill. If you think an earlier ingest left an
+  index incomplete, run `/b:reindex` once. It keeps your Recent Changes.
+- **The `/b:ingest` report has no emoji.** The `Indexes:` line said
+  `✅ vault-map / catalog / graph`. It now says `rebuilt (vault-map, catalog, graph)`,
+  plain text like the reports of the other skills.
+
+  Existing bases: nothing to do. `/b:upgrade` brings the skill.
 
 ## [0.5.0] - 2026-11-27
 
