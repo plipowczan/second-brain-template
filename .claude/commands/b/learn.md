@@ -1,0 +1,1 @@
+Use the `brain-learn` skill to learn the topic below from the vault: it explains the topic in plain words, you explain it back, and it names the gaps (the base lacks it, its sources lack it, you missed it). `--quiz <topic> [N]` asks N questions (5 by default) and grades each answer against its note. The session is saved to `content/_outputs/learning/`; no note changes.

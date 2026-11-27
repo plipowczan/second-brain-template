@@ -8,6 +8,23 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
 ## [Unreleased]
 
 ### Added
+- **`/b:learn`: learn from your own notes.** `/b:learn <topic or [[Note]]>` explains the
+  topic from your notes in a few plain sentences and asks you to explain it back in your
+  own words. Then it names what is missing, in three kinds: the base lacks it (no note
+  covers it), its sources lack it (a note claims it, but the source it cites does not
+  say so), you missed it (the notes have it, you did not say it). `/b:learn --quiz
+  <topic> [N]` asks N questions (5 by default) one at a time and grades each answer
+  against the note it came from. Every session is saved to
+  `content/_outputs/learning/YYYY-MM-DD_<topic>.md` with the notes used, your answers,
+  the gaps and the score; no note changes. A gap comes with the command that would close
+  it (`/b:compile`, an ingest, `/b:enhance`). The skill needs a person to answer, so a
+  scheduled run stops before the first question. A topic that holds a term from the
+  "Always cut" lists of your privacy files gets the file name `private`.
+
+  Existing bases: `/b:upgrade` brings the `brain-learn` skill and the `/b:learn` command.
+  Learning sessions are tracked by git like saved answers, so they reach every clone of
+  your base (`/b:export --public` leaves them out); the skill tells you so on its first
+  run. To keep them local, add `content/_outputs/learning/` to `.gitignore`.
 - **`/b:ingest --backlog [N]`: a large inbox in batches.** A backlog of dozens of old
   notes and recordings no longer has to go through one plan. `--backlog` takes N
   sources per run (10 when you give no number): every YouTube URL you pass, then the
