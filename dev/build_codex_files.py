@@ -15,8 +15,10 @@ under `.agents/skills/` (paths the manifest excludes aside).
   - a source frontmatter is not valid YAML, lacks a string `name` or `description`, or
     a comment follows an unquoted description, so YAML reads less of it than the file
     holds, or the description comes from a merge key (`<<`);
+  - a description is longer than 500 characters as YAML reads it: every description is
+    loaded into every session, so none may grow without notice;
   - a path this script writes runs through a symbolic link or junction.
-Write mode fails on the last two kinds and then writes nothing.
+Write mode fails on the last three kinds and then writes nothing.
 
 Usage:  python dev/build_codex_files.py [--root PATH] [--check]   (default: this repository)
 """
@@ -44,6 +46,8 @@ SOURCES = ".claude/skills"
 STUBS = ".agents/skills"
 HOOKS = ".codex/hooks.json"
 RUN = "python dev/build_codex_files.py"
+# The longest description a skill may have, in characters (add-review-loop, D10).
+DESCRIPTION_LIMIT = 500
 
 # design.md D3. `{skill}` is the skill's folder name.
 BODY = ("\n"
@@ -163,6 +167,9 @@ def frontmatter_problems(rel: str, text: str | None) -> list[str]:
     cut = description_cut("\n".join(lines), desc) if isinstance(desc, str) else None
     if cut:
         out.append(f"{where}: description: {cut}")
+    if isinstance(desc, str) and len(desc) > DESCRIPTION_LIMIT:
+        out.append(f"{where}: description: {len(desc)} characters, over the limit of "
+                   f"{DESCRIPTION_LIMIT}; shorten it")
     return out
 
 

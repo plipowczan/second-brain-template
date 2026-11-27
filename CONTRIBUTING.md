@@ -109,6 +109,30 @@ a note or anything else that belongs to the base.
   topics or file paths that only exist in one vault. Read them from the instance (for
   example the primary language from `content/WRITING_STYLE.md`) or add a placeholder.
 
+## How a skill describes itself
+
+Every skill's `description` is loaded into every session, and it is what makes the agent
+pick one skill over its neighbour. A new skill follows this pattern; an existing one
+adopts it the next time it is changed for a reason of its own, not in a change of its
+own (every owner-edited copy would become a conflict at upgrade for no change in
+behaviour).
+
+- **The description**, single-quoted in YAML:
+  - "Use when" with the trigger phrases;
+  - one sentence on what the skill does and what it writes;
+  - "Do NOT use for …" naming the neighbouring skill, only where two skills overlap
+    (`brain-review`: "Do NOT use for a health audit (use `/b:lint`) or coverage
+    analysis (use `/b:gaps`)").
+
+  At most 500 characters: `python dev/build_codex_files.py --check` fails on a longer
+  one.
+- **In the body**, a `## Calibration` section: the typical way this skill goes wrong
+  and what right looks like, in two to four lines.
+- **A fixed output shape**: the report or the closing message the skill ends with, as a
+  block the agent fills in.
+
+`brain-review` and `brain-learn` are the examples to copy.
+
 ## Author tools in `dev/`
 
 `dev/` is author-class: it never reaches an instance.

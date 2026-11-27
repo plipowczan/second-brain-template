@@ -101,6 +101,16 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
   still name the old path.
 
 ### Changed
+- **Three skills describe themselves in one pattern.** `brain-ingest`, `brain-review` and
+  `brain-learn` now say when to use them, what they write and, where a neighbouring
+  skill overlaps, which one to use instead ("Do NOT use for a health audit (use
+  `/b:lint`)"), and each ends with a fixed shape of its report. This helps the agent pick
+  the right skill. The other skills follow when they next change for a reason of their
+  own. For contributors to the template, `CONTRIBUTING.md` describes the pattern and
+  `python dev/build_codex_files.py --check` now fails on a description over 500
+  characters.
+
+  Existing bases: nothing to do.
 - **`/b:ingest` takes an inbox of more than 10 sources in batches.** Without `--backlog`
   and `--batch`, an inbox of more than 10 sources is now taken as `--backlog 10`: the
   plan covers the 10 oldest, says so in its first line, and the report says how many
