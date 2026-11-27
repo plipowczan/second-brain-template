@@ -35,7 +35,7 @@ first question: no session file, no log row. Without a topic, ask for one.
 3. **Save the session** (below), then **log the run**:
 
    ```bash
-   python .claude/skills/brain-reindex/scripts/oplog.py append --op learn --count questions=<N, 0 for explain-back> --count gaps=<number of gaps> --note <session path without content/ and .md> --note <each note a point, question or gap came from, relative to content/, without .md>
+   python .claude/skills/brain-reindex/scripts/oplog.py append --op learn --count questions=<N, 0 for explain-back> --count gaps=<what the base or its sources lack> --count missed=<what you missed> --note <session path without content/ and .md> --note <each note a point, question or gap came from, relative to content/, without .md>
    ```
 
    When `oplog.py` is missing, skip the row and say so in the closing message.
@@ -99,7 +99,8 @@ date: YYYY-MM-DD
 type: learning-session
 mode: <explain | quiz>
 score: "<points>/<N>"
-gaps: <number of gaps, 0 when none>
+gaps: <gaps of the kinds "the base lacks it" and "its sources lack it", 0 when none>
+missed: <gaps of the kind "you missed it", 0 when none>
 agent-created: true
 ---
 
@@ -125,7 +126,9 @@ agent-created: true
 
 `score:` is written for a quiz only. The headings are in the vault's primary language, from the writing-style document
 (`content/WRITING_STYLE.md`, or the one AGENTS.md "Writing Style" names in an older base);
-`gaps:` is a number, so `/b:review` and `/b:gaps` can count it whatever the language.
+`gaps:` and `missed:` are numbers, so `/b:review` can count them whatever the language.
+`gaps:` counts only what the base or its sources lack, as in a saved answer: the
+review lists such a session among the questions the base could not answer.
 Inside the file, link notes with `[[wikilinks]]`. `content/_outputs/` is outside the
 indexes, so saving needs no index update.
 

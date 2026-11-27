@@ -43,7 +43,7 @@ LIST_CAP = 20
 REPORT = re.compile(r"^(\d{4}-\d{2}-\d{2})_review(?:-\d+)?\.md$")
 DATED = re.compile(r"^- (\d{4}-\d{2}-\d{2})\s+(.*)$")
 CONTRADICTION = re.compile(r"^(.*) \((\d+) markers?\)$")
-FM_FIELD = re.compile(r"^(title|date|gaps|mode|score)\s*:\s*(.*?)\s*$")
+FM_FIELD = re.compile(r"^(title|date|gaps|missed|mode|score)\s*:\s*(.*?)\s*$")
 EXCLUDE_TOP = {"_raw", "_indexes", "_outputs", "_graveyard", "templates", "ATTACHMENTS"}
 EXCLUDE_FILES = {"WRITING_STYLE.md", "WRITING_STYLE_ANALYSIS.md", "_index.md"}
 
@@ -260,6 +260,8 @@ def dated_outputs(root: Path, folder: str, period: dict) -> list[dict]:
         if folder == "learning":
             item["mode"] = fm.get("mode")
             item["score"] = fm.get("score")
+            missed = fm.get("missed")
+            item["missed"] = int(missed) if missed and missed.isdigit() else None
         out.append(item)
     out.sort(key=lambda i: (i["date"], i["path"]), reverse=True)
     return out
@@ -271,7 +273,10 @@ def git_part(root: Path, period: dict) -> dict:
         return {"available": False, "reason": "not the top of a git work tree"}
     if git(root, "rev-parse", "--verify", "-q", "HEAD") is None:
         return {"available": False, "reason": "no commits yet"}
-    since = f"--since={period['since']} 00:00:00 +0000"
+    # From the last review's own minute when the period starts there: its commits belong
+    # to that review. Otherwise from the start of the first day.
+    start = period["after"] or f"{period['since']} 00:00"
+    since = f"--since={start}:00 +0000"
     count = git(root, "rev-list", "--count", since, "HEAD", "--", "content")
     names = git(root, "log", since, "--format=", "--name-only", "-z", "--", "content")
     added = git(root, "log", since, "--diff-filter=A", "--format=", "--name-only", "-z",

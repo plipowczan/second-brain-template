@@ -78,20 +78,28 @@ The headings are in the vault language. What each section holds:
 
 - **What came in.** From `log.by_op`: runs and counts per operation (`ingest: 2 runs,
   5 sources, 3 notes created, 7 updated`). From `recent_changes`: the entries dated in
-  the period. From `git`: commits in the period and the notes they created or changed;
-  `git.uncommitted` as "changed but not committed yet". When `log.rows` is empty, say
+  the period, at most five (say how many more). From `git`: commits in the period and
+  the number of notes they created or changed (`git.created_count`,
+  `git.changed_count`); `git.uncommitted` as "new or changed, not committed yet". From
+  `inbox`: the sources waiting, and how many of them are unusable or duplicates of an
+  archived source. Both ends of the period are included, so the day of the last review
+  counts in both reviews. When `log.rows` is empty, say
   that the log has no rows for the period (a base fresh from an upgrade, or skills the
   owner kept at their own version, write none) and rely on the other sources.
-- **Where attention went.** `log.folders` and `git.folders`, merged, most touched first,
-  at most five.
-- **Open contradictions.** Every entry of `contradictions`: the note and the number of
-  callouts. These stay open until the owner decides which claim holds.
+- **Where attention went.** `log.folders` and `git.folders`, the counts of one folder
+  added up, most touched first, at most five.
+- **Open contradictions.** The number of notes and of callouts in `contradictions`, then
+  at most five notes, those in a folder of this period first, then the fewest callouts
+  first (one decision closes such a note). These stay open until the owner decides which
+  claim holds.
 - **Thin places.** First `thin.in_touched_folders` (orphans, isolated and weak notes in
   the folders of this period), then the totals from `metrics.snapshot` and the number of
   `islands`. At most five notes by name.
-- **Questions the base could not answer.** Every saved answer and learning session in
-  `answers` and `learning` with `gaps` above zero: its title, the count and a wikilink
-  to the file.
+- **Questions the base could not answer.** Every saved answer in `answers` and every
+  learning session in `learning` with `gaps` above zero (for a session, `gaps` counts
+  what the base or its sources lack): its title, the count and a wikilink to the file.
+  A session whose `missed` is above zero but whose `gaps` is zero goes here only as one
+  line: the owner missed points the notes have.
 - **Metrics.** A table: metric · now · previous (`metrics.previous.date`) · change ·
   four or more weeks ago (`metrics.older.date`) · change, for `notes`, `orphans`,
   `isolated`, `weak`, `links_per_note`, `islands` and `untouched_90d` (shares as
@@ -114,7 +122,9 @@ is missing because the owner deleted `brain-lint`).
 Each move is one command or one action with its target, which the owner can run as it
 stands:
 
-- `decide which claim holds in [[Note]]: <the two claims in a few words>`
+- `decide which claim holds in [[Note]]: <the two claims in a few words>` (for a note
+  with several callouts, name the subject of the first and how many there are); pick
+  the note as in Open contradictions
 - `/b:compile <subject>` or `drop a source on <subject> into the inbox`, for an
   unanswered question
 - `/b:enhance [[Note]]`, for an orphan, isolated or weak note
@@ -142,7 +152,8 @@ Moves:
 1. <move>
 2. <move>
 3. <move>
-<one line per callout, or "No metric got worse.">
+<one line per callout; "No metric got worse." when there are none; "First
+measurement: the trend starts at the next review." when metrics.previous is null>
 <one line per unavailable part, if any>
 ```
 

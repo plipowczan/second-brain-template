@@ -163,14 +163,14 @@ class TestParts(Vault):
         write(out / "answers" / "2026-11-24_nofm.md", "no frontmatter\n")
         write(out / "learning" / "2026-11-26_bread.md",
               "---\ntitle: 'Quiz: bread'\ndate: 2026-11-26\nmode: quiz  # or explain\n"
-              "score: \"3.5/5\"\ngaps: 3\n---\n")
+              "score: \"3.5/5\"\ngaps: 3\nmissed: 1\n---\n")
         data = self.gather()
         self.assertEqual([(a["title"], a["gaps"]) for a in data["answers"]],
                          [("How to bake: the basics", 2), ("2026-11-24_nofm", None)])
         self.assertEqual(data["learning"],
                          [{"path": "content/_outputs/learning/2026-11-26_bread.md",
                            "date": "2026-11-26", "title": "Quiz: bread", "gaps": 3,
-                           "mode": "quiz", "score": "3.5/5"}])
+                           "mode": "quiz", "score": "3.5/5", "missed": 1}])
 
     def test_contradictions_inbox_and_thin(self):
         rows = [row("2026-11-26 10:00", "ingest", {}, ["T/Something"])]
@@ -277,6 +277,21 @@ class TestGit(Vault):
         self.assertEqual(g["changed"], ["T/Old", "T/Zażółć"])
         self.assertEqual(g["uncommitted"], ["T/Old", "U/Pending"])
         self.assertEqual(g["folders"], [{"folder": "T", "count": 2}])
+
+    def test_commits_before_the_last_review_are_left_out(self):
+        git(self.root, "init", "-q")
+        git(self.root, "config", "user.email", "test@example.com")
+        git(self.root, "config", "user.name", "Test")
+        content = self.root / "content"
+        write(content / "T" / "Before.md", "x\n")
+        git(self.root, "add", "-A")
+        git(self.root, "commit", "-qm", "before", date="2026-11-24T09:00:00Z")
+        write(content / "T" / "After.md", "y\n")
+        git(self.root, "add", "-A")
+        git(self.root, "commit", "-qm", "after", date="2026-11-24T11:00:00Z")
+        rows = [row("2026-11-24 10:00", "review", {"days": 7})]
+        g = self.gather(rows=rows)["git"]
+        self.assertEqual((g["commits"], g["created"]), (1, ["T/After"]))
 
     def test_subfolder_of_a_repository_is_not_git_here(self):
         git(self.root.parent, "init", "-q")
