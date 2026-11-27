@@ -133,6 +133,8 @@ For each source (cluster handling per the user's choice from Phase 1), following
    - Existing note with neither: add `sources: ["<archive path>"]`.
 
    Other values (URLs, a description such as "Call with the vendor") stay as they are.
+
+   On every note type these fields hold where the note's content came from, never its subject: on a book note the book is the title and the `Author:` line, and `sources:` holds what you read. When a new note about a work (a book, a film, a talk) is written from a text about that work rather than from the work itself, the first line under its title says so in the vault language, for example "Notes from an article about this book, not from the book.", so that nobody reads `sources:` as the work.
 4. **Write the main note.** New: create it from the appropriate template under `content/templates/` (per CLAUDE.md "Templates" table). Existing: merge into it, preserving all user-authored content. Fill frontmatter: `title`, `date` (today, new notes only), `tags`, `type`, the source fields from step 3, `agent-created: true` (new notes), `summary:` (one line).
 
    For YT-origin notes, the following YT-specific fields are appended:

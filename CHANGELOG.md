@@ -8,6 +8,24 @@ The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are IS
 ## [Unreleased]
 
 ### Fixed
+- **What `sources:` holds on a book note is now written down.** Nothing said whether a
+  book note's `source:` or `sources:` names the book or what the notes were taken from.
+  When ingest wrote a new book note from an article that discussed the book, the
+  article was its only source, and a reader could take the article for what the note
+  describes. Ingest step 3, a comment in `schema.yml` and a commented line in
+  `content/templates/book.md` now say the same thing. On every note, these fields hold
+  where the content came from: a `_raw/` path, a URL or a description. The book itself
+  is the title and the `Author:` line. A new note about a work (a book, a film, a talk)
+  written from a text about it, not from the work, says so in the first line under its
+  title. No field becomes required.
+
+  Existing bases: `/b:upgrade` brings the skill and `schema.yml`; if you edited
+  `schema.yml`, the upgrade asks first. `content/templates/book.md` belongs to your base,
+  so no upgrade changes it. To get the hint there, add this line before the closing
+  `---` of its frontmatter:
+  `# sources: ["_raw/processed/YYYY-MM-DD_file.md"]  # where these notes came from, not the book`.
+  Book notes that an earlier ingest wrote from a text about the book don't get the first
+  line automatically. Add it by hand if you want it.
 - **Metrics in a shallow clone use the `frontmatter` basis.** In a clone made with
   `--depth` (for example a CI checkout with `fetch-depth: 1`), history stops at the
   graft. `metrics.py` then dated every older file from the graft's commit, and
