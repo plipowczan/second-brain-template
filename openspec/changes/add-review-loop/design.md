@@ -328,7 +328,8 @@ answering a question (use `/b:qa`)"; `brain-ingest` names `--backlog` against `-
 The other skills this change edits get only the log step: rewriting their descriptions
 or adding sections would change no behaviour and turn every owner-edited copy into a
 conflict at upgrade. They follow the pattern when they are next changed for a reason of
-their own.
+their own. This narrows the decision of 2026-11-04 ("in the skills the package touches"),
+so Paweł decides (question 6).
 
 New work in `dev/build_codex_files.py --check`: it also fails on a description over 500
 characters (the longest today has 454; `brain-ingest` has 405 and must stay under the
@@ -447,4 +448,5 @@ disagree about which arguments abort an ingest.
 For Paweł, each with a recommendation in the plan: metrics inside the review or as a
 third skill (D3); trend only or their 5 % threshold (D6); one `/b:learn` or two commands
 (D7); interactive ingest of more than 10 sources switches to batches by itself or only
-suggests it (D8); learning sessions committed like answers or kept local (D7).
+suggests it (D8); learning sessions committed like answers or kept local (D7); the
+description pattern on three skills or on every skill this change edits (D10).
