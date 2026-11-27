@@ -134,7 +134,10 @@ class DefaultPathTest(SkillPathCase):
         code, out, err = fx.run(*m.group(1).split(), *folders)
         self.assertEqual(code, 0, err)
         self.assertFalse([p for p in folders if Path(p).exists()])
-        self.assertIn(f"Already gone: {plan_file.parent}", out)
+        # By name: the temp path may be printed as a Windows short name (RUNNER~1 on CI).
+        gone = [Path(line.split(": ", 1)[1]).name for line in out.splitlines()
+                if line.startswith("Already gone: ")]
+        self.assertEqual(gone, [plan_file.parent.name])
 
     def test_the_plan_stays_on_the_version_the_owner_agreed_to(self):
         self.publish("0.3.0")
