@@ -249,6 +249,18 @@ class PrivateTermsTest(unittest.TestCase):
             self.assertEqual(privacy_sweep.private_hit(text, terms),
                              watch.private_hit(text, terms), text)
             self.assertEqual(privacy_sweep.mask(text, terms), watch.redact(text, terms), text)
+        # The three forms each line is checked in, and the masking of the form that hit.
+        nfd = lambda s: unicodedata.normalize("NFD", s)  # noqa: E731
+        terms = terms + ["Laka Wisnia"]
+        for text in [nfd("spotkanie w Żabka Polska"), nfd("PEOPLE/Żabka Polska/Plan.md"),
+                     "met Łąka Wiśnia", nfd("ŁĄKA-WIŚNIA wrote"), "żabka-polska and Zed",
+                     nfd("Zażółć gęślą jaźń"), "Łąka i Wiśnia", "nothing here", ""]:
+            self.assertEqual(privacy_sweep.text_forms(text), watch.text_forms(text), text)
+            self.assertEqual(privacy_sweep.private_hit(text, terms),
+                             watch.private_hit(text, terms), text)
+            self.assertEqual(privacy_sweep.term_hit(text, terms), watch.term_hit(text, terms), text)
+            self.assertEqual(privacy_sweep.mask(text, terms), watch.redact(text, terms), text)
+            self.assertEqual(privacy_sweep.mask_all(text, terms), watch.mask_all(text, terms), text)
 
 
 if __name__ == "__main__":

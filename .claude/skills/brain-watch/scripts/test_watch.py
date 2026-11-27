@@ -4,12 +4,28 @@ import html
 import json
 import re
 import tempfile
+import unicodedata
 import unittest
 from pathlib import Path
 
 import watch
 
 TODAY = "2026-11-13"
+# Made-up names: one written with Polish letters, one listed without the ones it is
+# written with ("Łąka Wiśnia").
+PRIVATE_MD = '## Always cut\n- "Żywłok Mąćski"\n- "Laka Wisnia"\n'
+
+
+def nfd(s):
+    """s decomposed (NFD), as macOS writes file names and often text: "ą" is "a" plus a
+    combining ogonek, which a term as written does not match."""
+    return unicodedata.normalize("NFD", s)
+
+
+def folded(s):
+    """s in NFC, without diacritics and in lower case. A test that a term is gone checks
+    this, so a decomposed or differently written copy of the term cannot pass it."""
+    return watch.fold(unicodedata.normalize("NFC", s)).lower()
 HOSTILE = ("<script>alert(1)</script> <img src=x onerror=alert(1)> &lt;svg onload=alert(1)&gt; "
            "![p](https://evil.example/p.png) ![[Secret.png]] [x](javascript:alert(1)) "
            "==<b onmouseover=alert(1)>hi</b>== [\\[Note|<i>alias</i>]] %% hidden %% $1 and $2 #injected")
@@ -325,6 +341,31 @@ class PrivacyTest(unittest.TestCase):
         self.assertTrue(watch.private_hit("Wąs", ["Wąs"]))
         self.assertFalse(watch.private_hit("it was fine", ["Wąs"]))
         self.assertTrue(watch.private_hit("gzel.example", ["Gżel"]))  # four letters: folded too
+
+    def test_decomposed_and_diacritic_text_is_a_hit(self):
+        # Checked as written, in NFC and folded, as brain-reindex's oplog.py checks a row.
+        terms = ["Żywłok Mąćski", "Laka Wisnia"]
+        self.assertNotEqual(nfd("Żywłok Mąćski"), "Żywłok Mąćski")
+        self.assertFalse(watch.private_hit(nfd("met Żywłok Mąćski"), terms))   # as written only
+        for text in (nfd("met Żywłok Mąćski"), nfd("content/PEOPLE/Żywłok Mąćski.md"),
+                     nfd("clients/żywłok-mąćski/plan"), "met Łąka Wiśnia", nfd("ŁĄKA-WIŚNIA wrote"),
+                     "https://łąka-wiśnia.example/"):
+            self.assertTrue(watch.term_hit(text, terms), text)
+            masked = folded(watch.redact_all(text, terms))
+            self.assertIn("[private]", masked, text)
+            for leak in ("zywlok", "macski", "laka", "wisnia"):
+                self.assertNotIn(leak, masked, text)
+        for text in ("Łąka i Wiśnia", nfd("zywlokmacskiego"), "a plain line", ""):
+            self.assertFalse(watch.term_hit(text, terms), text)
+        plain = nfd("Zażółć gęślą jaźń")          # no term: returned as it was, still decomposed
+        self.assertEqual(watch.redact_all(plain, terms), plain)
+        self.assertEqual(watch.redact_all({"a": [nfd("by Żywłok Mąćski")], "n": 3}, terms),
+                         {"a": ["by [private]"], "n": 3})
+        for key in (nfd("https://żywłok-mąćski.example/"), "https://łąka-wiśnia.example/"):
+            self.assertTrue(watch.snapshot_key(key, terms).startswith("private:"), key)
+        entry = {"latest": nfd("Żywłok Mąćski 2.0"), "latest_kind": "release",
+                 "latest_date": "2026-11-01", "full_name": "łąka-wiśnia/kit", "license": "MIT"}
+        self.assertEqual(watch.public_entry(entry, terms), {"license": "MIT"})
 
     def test_snapshot_key(self):
         terms = ["Vexmoor"]                                      # a made-up name
@@ -694,6 +735,85 @@ class PipelineTest(unittest.TestCase):
         self.assertNotIn("content/AI/TOOLS/Widget.md", dg["notes"])
         self.assertEqual(dg["held"][0]["reason"], "a line matched a private term")
         self.assertNotIn("Secret Client", watch.build_report(self.v.root, scan, dg))
+
+    def assert_no_term(self, text):
+        for leak in ("zywlok", "macski", "laka", "wisnia"):
+            self.assertNotIn(leak, folded(text))
+
+    def test_decomposed_and_diacritic_lines_are_held(self):
+        self.v.write("content/_privacy.local.md", PRIVATE_MD)
+        scan, ws = self.scan(), self.v.root / "ws"
+        watch.build_outline(scan, ws, self.v.root)
+        r = {"moved_or_renamed": "no", "last_release": "v2.0.0", "last_commit": "2026-11-01",
+             "archived_or_deprecated": "no", "license": "MIT", "liveness": "active",
+             "successor_or_replacement": "n/a", "changes_since_note": "nothing material", "sources": []}
+        for stem, evidence in (("Widget", nfd("Used by Żywłok Mąćski since 2026.")),
+                               ("Gadget", "Run by Łąka Wiśnia now.")):
+            result = dict(r, repo_url="https://github.com/acme/" + stem.lower(), liveness_evidence=evidence)
+            (ws / "results" / (stem + ".json")).write_text(json.dumps(result), encoding="utf-8")
+        dg = watch.build_digest(self.v.root, scan, ws)
+        self.assertEqual(dg["notes"], {})
+        self.assertEqual(sorted(h["path"] for h in dg["held"]),
+                         ["content/AI/TOOLS/Gadget.md", "content/AI/TOOLS/Widget.md"])
+        self.assert_no_term(watch.build_report(self.v.root, scan, dg))
+        # digest.json may have been edited (translated) since: apply checks it again.
+        path = "content/AI/TOOLS/Widget.md"
+        for line in (nfd("Now run by Żywłok Mąćski."), "Now run by Łąka Wiśnia."):
+            done = watch.apply_changes(self.v.root, scan, {"notes": {path: {
+                "liveness": "active", "lines": [line]}}}, dry=True)
+            self.assertIn(path, done["held"], line)
+            self.assertNotIn(path, done["status"], line)
+
+    def test_decomposed_note_name_and_diacritic_links_stay_out(self):
+        self.v.write("content/_privacy.local.md", PRIVATE_MD)
+        name = nfd("Żywłok Mąćski")                     # a file name as macOS writes it
+        self.v.write(f"content/AI/TOOLS/{name}.md", note({"type": "tool"},
+                                                       "# Kit\n\nCode: https://github.com/acme/zkit\n"))
+        self.v.write("content/AI/TOOLS/Kit.md", note(
+            {"title": '"Kit"', "type": "tool", "summary": '"' + nfd("Built for Żywłok Mąćski") + '"'},
+            "# Kit\n\nhttps://github.com/acme/kit\n"))
+        self.v.write("content/AI/TOOLS/Spare.md", note(
+            {"title": '"Spare"', "type": "tool", "summary": '"Run by Łąka Wiśnia"'},
+            "# Spare\n\nhttps://github.com/acme/spare\n"))
+        self.v.write("content/AI/TOOLS/Hub.md", note(
+            {"title": '"Hub"', "type": "tool"},
+            "# Hub\n\nSee https://łąka-wiśnia.example/a and https://other.example/b\n"))
+        scan, ws = self.scan(), self.v.root / "ws"
+        self.assertIn(name, [n["stem"] for n in scan["notes"]])    # still decomposed on disk
+        watch.build_outline(scan, ws, self.v.root)
+        outline = watch.yaml.safe_load((ws / "outline.yaml").read_text(encoding="utf-8"))
+        items = {it["name"]: it for it in outline["items"]}
+        self.assertEqual(sorted(items), ["Cloudy", "Gadget", "Kit", "Spare", "Widget"])
+        self.assertEqual((items["Kit"]["note_summary"], items["Spare"]["note_summary"]),
+                         ("Built for [private]", "Run by [private]"))
+        self.assert_no_term(json.dumps(outline, ensure_ascii=False))
+        report = watch.build_report(self.v.root, scan, dry=True)
+        self.assert_no_term(report)
+        self.assertIn("(a private link)", report)
+        self.assertIn("[[Kit]]", report)
+
+    def test_snapshot_hashes_decomposed_and_diacritic_keys(self):
+        self.v.write("content/_privacy.local.md", PRIVATE_MD)
+        self.v.write("content/AI/TOOLS/Portal.md", note(
+            {"title": '"Portal"', "type": "tool", "homepage": '"' + nfd("https://żywłok-mąćski.example/") + '"'},
+            "# Portal\n"))
+        url = "https://łąka-wiśnia.example/"
+        self.v.write("content/AI/TOOLS/Field.md", note(
+            {"title": '"Field"', "type": "tool", "homepage": '"' + url + '"'}, "# Field\n"))
+        # An older run stored this one as written: its entry is read, then stored hashed.
+        watch.write_json(self.v.root / watch.SNAPSHOT,
+                         {"repos": {}, "urls": {url: {"status": "dead", "checked": "2026-10-13"}}})
+        scan = watch.run_scan(self.v.root, TODAY, 40, 90, gh=self.gh, url_check=lambda u: "dead",
+                              workers=2)
+        flags = {n["stem"]: [k for k, _ in n["flags"]] for n in scan["notes"]}
+        self.assertEqual((flags["Field"], flags["Portal"]), ([], ["unreachable"]))
+        watch.apply_changes(self.v.root, scan, {"notes": {}})
+        snap = watch.load_snapshot(self.v.root)
+        self.assert_no_term(json.dumps(snap, ensure_ascii=False))
+        self.assertEqual(len([k for k in snap["urls"] if k.startswith("private:")]), 2)
+        again = watch.run_scan(self.v.root, TODAY, 40, 90, gh=self.gh, url_check=lambda u: "dead",
+                               workers=2)
+        self.assertEqual({n["stem"]: [k for k, _ in n["flags"]] for n in again["notes"]}["Portal"], [])
 
 
 if __name__ == "__main__":
