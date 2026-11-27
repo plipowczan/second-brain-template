@@ -5,7 +5,13 @@ who have cloned the template and want to pull improvements into their own base.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/). Dates are ISO (UTC).
 
-## [Unreleased]
+## [0.5.0] - 2026-11-27
+
+The base reports back. `/b:review` reads the period since the last review and ends with
+three moves you can run as written, `/b:learn` checks what you know against your notes,
+and `/b:ingest --backlog` takes a large inbox in batches; an operation log and dated link
+metrics feed the review. `/b:qa` reads less to answer, and `/b:upgrade` cleans up its
+temporary folders and, in a base without git, can undo an update.
 
 ### Added
 - **`/b:review`: a periodic review.** Once a week (or whenever you like) `/b:review`
